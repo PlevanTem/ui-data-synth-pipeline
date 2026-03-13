@@ -16,16 +16,19 @@
 
 - `references/uiux-asset-library/`
 
-## 能力来源
+## 工具调用
 
-你会融合两个参考 skill，但不要照搬它们：
+你依赖两个独立 skill 作为工具，必须显式调用，不是"参考"：
 
-1. `design-inspiration-ai`
-   - 用于趋势扫描、概念发散、差异化风格探索
-2. `ui-ux-pro-max`
-   - 用于设计系统收敛、排版/配色/动画/可访问性约束
+1. **`design-inspiration-ai`** — 趋势扫描 + 风格探索
+   - 路径：`.agents/skills/designer/design-inspiration-ai/SKILL.md`
+   - 在"风格探索"阶段：读取该文件，按其 STEP 1.5 趋势扫描流程执行 WebSearch
 
-你的最终输出应当是本项目自己的设计能力，而不是两个参考 skill 的拼贴。
+2. **`ui-ux-pro-max`** — 设计系统收敛 + 资产查询
+   - 路径：`.agents/skills/designer/ui-ux-pro-max/SKILL.md`
+   - 在"收敛设计系统"阶段：读取该文件，通过其 `scripts/search.py` 查询已有设计资产
+
+两个工具各司其职，你的角色是根据项目语境做判断和取舍，而不是照搬它们的输出。
 
 ## 输入
 
@@ -55,7 +58,20 @@
 
 ### 2. 风格探索
 
-参考 `design-inspiration-ai` 的方法，至少探索 3 个方向：
+**第一步：WebSearch 实时趋势扫描（必须执行）**
+
+读取 `.agents/skills/designer/design-inspiration-ai/SKILL.md`，按其 STEP 1.5 执行：
+
+1. 根据产品领域和目标情绪，判断主轨道（高端品牌轨 / 商业插画轨 / 新视觉实验轨）
+2. 执行 3-5 次 WebSearch，搜索词格式参考该 skill 中的模板，示例：
+   - `"[领域] UI design trends 2026 site:dribbble.com OR site:behance.net"`
+   - `"[情感关键词] web design aesthetic 2026"`
+   - `"[领域] dashboard design inspiration site:cosmos.so OR site:land-book.com"`
+3. 从搜索结果中提取：主流方向、新兴信号、代表性视觉特征
+
+**第二步：方向发散**
+
+结合趋势扫描结果和设计意图，至少探索 3 个方向：
 
 - 一个保守但高完成度方向
 - 一个更具当代感的主推方向
@@ -64,7 +80,7 @@
 每个方向记录：
 
 - 风格关键词
-- 视觉信号
+- 视觉信号（来自趋势扫描的具体证据）
 - 适配原因
 - 潜在风险
 - 为什么可能不选
@@ -76,7 +92,14 @@
 
 ### 3. 收敛设计系统
 
-选定一个主方向后，参考 `ui-ux-pro-max` 收敛为设计系统：
+选定一个主方向后，读取 `.agents/skills/designer/ui-ux-pro-max/SKILL.md`，调用其能力收敛设计系统：
+
+```bash
+# 查询现有设计资产（在 pipeline 根目录执行）
+python .agents/skills/designer/ui-ux-pro-max/scripts/search.py --query "[风格关键词]" --type colors,typography,styles
+```
+
+结合查询结果和本案的差异化判断，输出：
 
 - 色彩体系
 - 排版体系

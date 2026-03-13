@@ -14,10 +14,10 @@
 
 ```
 ui-data-synth-pipeline/
-├── .agents/skills/          # 技能包（PM / 设计师 / 前端 / 算法艺术等）
+├── .agents/skills/          # 技能包（PM / 设计师 / 前端 / 生成式 UI 等）
 │   ├── web-design-pipeline/ # 主流水线：端到端网站生成
-│   ├── designer/            # 设计灵感、UI/UX Pro 等
-│   ├── frontendDev/
+│   ├── designer/            # 设计灵感调研、UI/UX 设计系统
+│   ├── frontend/            # 生成式 UI + 算法艺术
 │   └── ...
 ├── outputs/                 # 按 case 归档的流水线产出
 │   └── <case_id>/
@@ -54,12 +54,16 @@ ui-data-synth-pipeline/
 | `web-design-pipeline` | 主流水线：需求澄清、设计规范、前端实现与归档 |
 | `design-inspiration-ai` | 设计灵感与概念发散 |
 | `ui-ux-pro-max` | UI/UX 设计智能（风格、配色、图表、技术栈） |
-| `algorithmic-art` | 算法艺术 / 生成艺术（p5.js 等） |
+| `generative-ui` | 生成式 UI + 算法艺术（Mode A 背景层 / Mode B 交互组件 / Mode C 独立艺术） |
 | `skill-creator` | 技能包的创建、评估与优化 |
 
 ## 仓库
 
 - **GitHub**：<https://github.com/PlevanTem/ui-data-synth-pipeline>
+
+## 架构文档
+
+完整架构图（流水线总览、Skill 层级、Agent 数据流、目录结构）见 [`ARCHITECTURE.md`](./ARCHITECTURE.md)。
 
 ## 许可与贡献
 

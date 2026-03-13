@@ -58,11 +58,11 @@
 - 性能是否可接受
 - 是否需要降级方案
 
-若使用 WebGL / p5.js / generative layer：
+若使用 WebGL / p5.js / Canvas / 生成式 UI 层：
 
-- 参考 `.agents/skills/frontendDev/algorithmic-art/SKILL.md`
-- 只借用其算法艺术思路和工程约束
-- 把它作为网站中的一层，不要让页面变成孤立艺术实验
+- **读取** `.agents/skills/frontend/generative-ui/SKILL.md`，按其工程约束（seeded randomness、参数化设计、性能保障）实现视觉层
+- 把该 skill 的算法艺术能力作为网站的一个**层**（background、hero、data vis），而不是让整个页面变成艺术实验
+- 落地时参考 Google Generative UI 论文的核心原则：交互优先、无占位符、数据驱动，视觉效果服务于内容信息而非遮盖它
 
 ## 实现要求
 

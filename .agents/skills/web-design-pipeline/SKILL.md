@@ -141,7 +141,7 @@ Frontend Agent 需要先做 `tech_decision.json`，再实现。
 
 如果 `visual_effects.json` 建议加入 WebGL、p5.js 或数字艺术动效，Frontend Agent 可参考：
 
-- `.agents/skills/frontendDev/algorithmic-art/SKILL.md`
+- `.agents/skills/frontend/generative-ui/SKILL.md`
 
 但只借用其算法艺术方法，不要把整个任务变成艺术作品生成器。
 
@@ -235,6 +235,6 @@ Frontend Agent 需要先做 `tech_decision.json`，再实现。
 
 - `.agents/skills/designer/design-inspiration-ai/SKILL.md`
 - `.agents/skills/designer/ui-ux-pro-max/SKILL.md`
-- `.agents/skills/frontendDev/algorithmic-art/SKILL.md`
+- `.agents/skills/frontend/generative-ui/SKILL.md`
 
 这些参考用于吸收方法，不用于复制结构。
