@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PerfScope - Precision Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #0b0f14;
+      --bg-elevated: #10161d;
+      --bg-panel: #131a22;
+      --bg-panel-alt: #161f29;
+      --canvas-grid: #202b36;
+      --canvas-axis: #334150;
+      --text-primary: #e6edf3;
+      --text-secondary: #a9b4c0;
+      --text-muted: #7e8a97;
+      --border-subtle: #25303a;
+      --border-default: #2f3c48;
+      --border-strong: #425364;
+      --info: #58c4dd;
+      --success: #7fd46b;
+      --warning: #f1b84b;
+      --danger: #ff6b57;
+      --selection: rgba(88, 196, 221, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(88,196,221,0.06), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(127,212,107,0.04), transparent 22%),
+        var(--bg-base);
+      color: var(--text-primary);
+      font-family: "IBM Plex Sans", sans-serif;
+      overflow: hidden;
+    }
+
+    .mono { font-family: "JetBrains Mono", monospace; }
+    .text-secondary { color: var(--text-secondary); }
+    .text-muted { color: var(--text-muted); }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0)), var(--bg-panel-alt);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02), transparent);
+      pointer-events: none;
+    }
+
+    .sidebar {
+      width: 248px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), var(--bg-elevated);
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    .topbar {
+      height: 56px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0)), var(--bg-panel);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .details {
+      width: 360px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), var(--bg-panel-alt);
+      border-left: 1px solid var(--border-default);
+    }
+
+    .nav-btn, .chip-btn, .ghost-btn, .primary-btn, .metric-card, .bottleneck-item, .table-row {
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+    }
+
+    .nav-btn:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+    .nav-btn.active {
+      background: rgba(88,196,221,0.10);
+      color: var(--text-primary);
+      border-color: rgba(88,196,221,0.20);
+      box-shadow: inset 3px 0 0 var(--info);
+    }
+
+    .soft {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .chip::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .chip-danger { color: var(--danger); background: rgba(255,107,87,0.10); border-color: rgba(255,107,87,0.24); }
+    .chip-warning { color: var(--warning); background: rgba(241,184,75,0.10); border-color: rgba(241,184,75,0.24); }
+    .chip-info { color: var(--info); background: rgba(88,196,221,0.10); border-color: rgba(88,196,221,0.24); }
+    .chip-success { color: var(--success); background: rgba(127,212,107,0.10); border-color: rgba(127,212,107,0.24); }
+    .chip-neutral { color: var(--text-secondary); background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+
+    .chip-btn, .ghost-btn, .primary-btn {
+      border-radius: 10px;
+      border: 1px solid var(--border-default);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-primary);
+    }
+
+    .chip-btn:hover, .ghost-btn:hover { background: rgba(255,255,255,0.06); border-color: var(--border-strong); }
+    .chip-btn.active {
+      background: linear-gradient(180deg, rgba(88,196,221,0.18), rgba(88,196,221,0.10));
+      color: #e8fbff;
+      border-color: rgba(88,196,221,0.34);
+      box-shadow: inset 0 0 0 1px rgba(88,196,221,0.16), 0 0 0 1px rgba(88,196,221,0.06);
+    }
+
+    .primary-btn {
+      background: linear-gradient(180deg, rgba(88,196,221,0.18), rgba(88,196,221,0.10));
+      border-color: rgba(88,196,221,0.34);
+      color: #dff8ff;
+    }
+
+    .primary-btn:hover { background: linear-gradient(180deg, rgba(88,196,221,0.22), rgba(88,196,221,0.12)); }
+
+    .query-input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .query-input::placeholder { color: var(--text-muted); }
+    .query-input:focus {
+      border-color: var(--info);
+      box-shadow: 0 0 0 3px rgba(88,196,221,0.16);
+    }
+
+    .metric-card {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+    }
+
+    .metric-card:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.035); }
+    .metric-value { font-size: 30px; line-height: 1; letter-spacing: -0.02em; }
+
+    .label-kicker {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .bottleneck-item, .table-row {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .bottleneck-item:hover, .table-row:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
+    .bottleneck-item.active, .table-row.active {
+      background: linear-gradient(180deg, rgba(88,196,221,0.14), rgba(88,196,221,0.08));
+      border-color: rgba(88,196,221,0.28);
+      box-shadow: inset 2px 0 0 var(--info);
+    }
+
+    .timeline-canvas {
+      width: 100%;
+      height: 290px;
+      display: block;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0)), #0f141b;
+      border: 1px solid var(--border-subtle);
+      cursor: crosshair;
+    }
+
+    .table-grid {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-grid th, .table-grid td {
+      padding: 0.72rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    .table-grid thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: rgba(19,26,34,0.96);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .table-grid td.num { text-align: right; font-family: "JetBrains Mono", monospace; }
+    .table-grid td.wrap { white-space: normal; }
+
+    body[data-density="comfortable"] .timeline-canvas { height: 330px; }
+    body[data-density="comfortable"] .table-grid th,
+    body[data-density="comfortable"] .table-grid td { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+    body[data-density="comfortable"] .bottleneck-item { padding-top: 1rem; padding-bottom: 1rem; }
+    body[data-density="comfortable"] .metric-card { padding-top: 1rem; padding-bottom: 1rem; }
+
+    .sort-btn {
+      all: unset;
+      cursor: pointer;
+    }
+
+    .sort-btn:hover { color: var(--text-primary); }
+
+    .query-block {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+    }
+
+    .evidence li {
+      position: relative;
+      padding-left: 0.9rem;
+    }
+
+    .evidence li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--info);
+    }
+
+    .scrollbar-thin { scrollbar-width: thin; }
+    .scrollbar-thin::-webkit-scrollbar { width: 10px; height: 10px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(66,83,100,0.62);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    button:focus-visible, input:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(88,196,221,0.18);
+      border-color: var(--info);
+    }
+
+    @media (max-width: 1200px) {
+      body { overflow: auto; }
+      #app { min-width: 1200px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="h-full flex">
+    <aside class="sidebar flex shrink-0 flex-col">
+      <div class="px-4 py-4 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 font-semibold text-cyan-300">PS</div>
+          <div>
+            <div class="text-sm font-semibold">PerfScope</div>
+            <div class="text-xs text-slate-400">Precision Console / Dry Run</div>
+          </div>
+        </div>
+        <div class="mt-4 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3">
+          <div class="label-kicker">当前会话</div>
+          <div class="mt-1 text-sm font-medium">session-2026-03-12.trace</div>
+          <div class="mt-2 text-xs text-slate-400">14 个长任务 / 7 个慢请求 / 峰值 420-640ms</div>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-auto px-3 py-3 scrollbar-thin">
+        <div class="label-kicker px-2 pb-2">工作区</div>
+        <div class="space-y-1.5">
+          <button class="nav-btn active px-3 py-2.5 text-sm font-medium" data-view="overview">总览</button>
+          <button class="nav-btn px-3 py-2.5 text-sm font-medium" data-view="trace">时间线</button>
+          <button class="nav-btn px-3 py-2.5 text-sm font-medium" data-view="bottlenecks">瓶颈</button>
+          <button class="nav-btn px-3 py-2.5 text-sm font-medium" data-view="events">明细表</button>
+          <button class="nav-btn px-3 py-2.5 text-sm font-medium" data-view="query">查询</button>
+        </div>
+
+        <div class="label-kicker px-2 pb-2 pt-6">已保存视图</div>
+        <div class="space-y-2 px-1">
+          <div class="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3">
+            <div class="text-sm font-medium">首屏交互异常排查</div>
+            <div class="mt-1 text-xs text-slate-400">0-900ms / AppShell / High+</div>
+          </div>
+          <div class="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3">
+            <div class="text-sm font-medium">Network 热点视图</div>
+            <div class="mt-1 text-xs text-slate-400">400-1100ms / slow request</div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="border-t border-white/5 px-3 py-3 text-xs text-slate-400">
+        原型聚焦信息结构、视觉层级和基础联动，未接入真实导入/导出。
+      </div>
+    </aside>
+
+    <div class="min-w-0 flex-1 flex flex-col">
+      <header class="topbar flex shrink-0 items-center justify-between gap-4 px-4">
+        <div class="min-w-0">
+          <div class="label-kicker" id="page-kicker">总览工作台</div>
+          <div class="text-base font-semibold" id="page-title">总览 Dashboard</div>
+          <div class="text-xs text-slate-400" id="page-subtitle">30 秒内识别异常方向，5 分钟内进入证据链。</div>
+        </div>
+
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="soft flex items-center gap-1 p-1">
+            <button class="chip-btn active px-3 py-1.5 text-xs" data-range="15m">15m</button>
+            <button class="chip-btn px-3 py-1.5 text-xs" data-range="30m">30m</button>
+            <button class="chip-btn px-3 py-1.5 text-xs" data-range="1h">1h</button>
+          </div>
+
+          <div class="soft flex items-center gap-2 px-3 py-2 text-xs text-slate-300">
+            <span>Filters</span>
+            <span class="chip chip-neutral">模块 3</span>
+            <span class="chip chip-neutral">严重度 High+</span>
+          </div>
+
+          <form id="topbar-query-form" class="flex items-center gap-2">
+            <input id="topbar-query-input" class="query-input w-[320px] px-3 py-2 text-sm" type="text" placeholder="例如：为什么首屏交互延迟高？" aria-label="自然语言查询" />
+            <button class="primary-btn px-3 py-2 text-sm" type="submit">运行查询</button>
+          </form>
+
+          <button class="ghost-btn px-3 py-2 text-sm" type="button">导入数据</button>
+          <button class="ghost-btn px-3 py-2 text-sm" type="button">导出摘要</button>
+        </div>
+      </header>
+
+      <div class="min-h-0 flex flex-1">
+        <main id="main" class="min-w-0 flex-1 overflow-auto p-3 scrollbar-thin"></main>
+        <aside id="details" class="details shrink-0 overflow-auto scrollbar-thin"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const META = {
+      overview: {
+        kicker: "总览工作台",
+        title: "总览 Dashboard",
+        subtitle: "30 秒内识别异常方向，5 分钟内进入证据链。"
+      },
+      trace: {
+        kicker: "Trace Explorer",
+        title: "时间线视图",
+        subtitle: "用 Canvas 承载高密度事件与证据区间。"
+      },
+      bottlenecks: {
+        kicker: "问题优先级",
+        title: "瓶颈列表",
+        subtitle: "先确定排查顺序，再进入时间线和明细表。"
+      },
+      events: {
+        kicker: "工程验证区",
+        title: "事件明细表",
+        subtitle: "用工程化表格确认模块、类型和耗时证据。"
+      },
+      query: {
+        kicker: "分析导航器",
+        title: "自然语言查询",
+        subtitle: "查询不是聊天玩具，而是证据驱动的导航入口。"
+      }
+    };
+
+    const metrics = [
+      { id: "m1", label: "交互完成时间", value: "2.43s", delta: "+18%", tone: "warning", note: "首屏主线程拥塞", view: "trace" },
+      { id: "m2", label: "长任务", value: "14", delta: "+6", tone: "danger", note: "5 个超过 120ms", view: "bottlenecks" },
+      { id: "m3", label: "慢请求", value: "7", delta: "+3", tone: "warning", note: "/api/report 占比 41%", view: "events" },
+      { id: "m4", label: "重排热点", value: "3 模块", delta: "Table", tone: "info", note: "表格与图层回流", view: "events" },
+      { id: "m5", label: "峰值区间", value: "420-640ms", delta: "CPU 92%", tone: "danger", note: "hydration 与请求重叠", view: "trace" }
+    ];
+
+    const bottlenecks = [
+      {
+        id: "bn1",
+        title: "首屏 hydration 长任务堆积",
+        severity: "critical",
+        score: 94,
+        module: "AppShell",
+        duration: 228,
+        range: [420, 640],
+        type: "Main Thread Block",
+        summary: "首屏 hydration 与组件初始化叠加，直接拉高交互完成时间。",
+        evidence: [
+          "420-640ms 主线程持续繁忙，最长片段 228ms。",
+          "同区间出现 Render lane 的样式重算与布局提交。",
+          "用户可交互元素挂载被推迟。"
+        ],
+        nextStep: "拆分 hydration 批次，延迟非首屏模块初始化。",
+        rows: ["r3", "r4"],
+        events: ["e3", "e4", "e5"]
+      },
+      {
+        id: "bn2",
+        title: "report API 返回放大峰值尾部",
+        severity: "high",
+        score: 88,
+        module: "Analytics",
+        duration: 251,
+        range: [510, 760],
+        type: "Network Stall",
+        summary: "接口返回慢且结束后触发同步更新，放大了尾部卡顿。",
+        evidence: [
+          "/api/report 请求耗时 251ms。",
+          "响应完成后触发 summary panel 更新。",
+          "请求结束时间与 hydration 尾段重叠。"
+        ],
+        nextStep: "拆分接口负载，优先返回首屏必须字段。",
+        rows: ["r5", "r6"],
+        events: ["e6", "e7", "e8"]
+      },
+      {
+        id: "bn3",
+        title: "明细表缺少虚拟化导致频繁重排",
+        severity: "high",
+        score: 82,
+        module: "SessionTable",
+        duration: 118,
+        range: [780, 950],
+        type: "Layout Thrash",
+        summary: "表格数据回填后发生多轮测量与重排，影响后续交互。",
+        evidence: [
+          "800ms 后出现多轮 Layout/Paint 连发。",
+          "表格有批量插入行迹象，未见增量渲染。"
+        ],
+        nextStep: "引入虚拟滚动，冻结列计算并推迟非关键渲染。",
+        rows: ["r7", "r8"],
+        events: ["e9", "e10", "e11"]
+      },
+      {
+        id: "bn4",
+        title: "图表 hover 触发重复布局",
+        severity: "medium",
+        score: 68,
+        module: "ChartLayer",
+        duration: 74,
+        range: [960, 1040],
+        type: "UI Feedback Cost",
+        summary: "Tooltip 与高亮层共享布局容器，hover 密集时产生回流。",
+        evidence: [
+          "pointer move 期间出现密集 style recalculation。",
+          "tooltip 与高亮条复用同一布局容器。"
+        ],
+        nextStep: "将高亮层独立为 transform/opacity 驱动。",
+        rows: ["r9"],
+        events: ["e12", "e13"]
+      }
+    ];
+
+    const rows = [
+      { id: "r1", timestamp: 92, module: "Boot", type: "network", duration: 61, label: "加载初始配置 /config.json", bottleneckId: null },
+      { id: "r2", timestamp: 188, module: "TraceWorker", type: "worker", duration: 143, label: "预解析 trace 索引", bottleneckId: null },
+      { id: "r3", timestamp: 428, module: "AppShell", type: "js", duration: 228, label: "hydrateRoot + 路由层初始化", bottleneckId: "bn1" },
+      { id: "r4", timestamp: 612, module: "Renderer", type: "render", duration: 81, label: "样式重算 + 首屏布局提交", bottleneckId: "bn1" },
+      { id: "r5", timestamp: 514, module: "Analytics", type: "network", duration: 251, label: "请求 /api/report?summary=true", bottleneckId: "bn2" },
+      { id: "r6", timestamp: 566, module: "TraceWorker", type: "worker", duration: 93, label: "聚合结果回传主线程", bottleneckId: "bn2" },
+      { id: "r7", timestamp: 816, module: "SessionTable", type: "render", duration: 118, label: "批量插入明细行并重新测量列宽", bottleneckId: "bn3" },
+      { id: "r8", timestamp: 904, module: "SessionTable", type: "js", duration: 57, label: "表格筛选状态同步到多个面板", bottleneckId: "bn3" },
+      { id: "r9", timestamp: 978, module: "ChartLayer", type: "render", duration: 74, label: "hover 高亮触发 tooltip 布局回流", bottleneckId: "bn4" }
+    ];
+
+    const events = [
+      { id: "e1", lane: "main", start: 0, end: 128, label: "bootstrap", type: "js", severity: "medium", module: "Boot", bottleneckId: null },
+      { id: "e2", lane: "network", start: 92, end: 153, label: "config", type: "network", severity: "medium", module: "Boot", bottleneckId: null },
+      { id: "e14", lane: "worker", start: 180, end: 323, label: "parse trace", type: "worker", severity: "medium", module: "TraceWorker", bottleneckId: null },
+      { id: "e3", lane: "main", start: 428, end: 656, label: "hydrateRoot", type: "js", severity: "critical", module: "AppShell", bottleneckId: "bn1" },
+      { id: "e4", lane: "render", start: 592, end: 673, label: "style recalc", type: "render", severity: "high", module: "Renderer", bottleneckId: "bn1" },
+      { id: "e5", lane: "render", start: 676, end: 728, label: "layout commit", type: "render", severity: "high", module: "Renderer", bottleneckId: "bn1" },
+      { id: "e6", lane: "network", start: 514, end: 765, label: "/api/report", type: "network", severity: "high", module: "Analytics", bottleneckId: "bn2" },
+      { id: "e7", lane: "main", start: 720, end: 784, label: "apply summary", type: "js", severity: "high", module: "Analytics", bottleneckId: "bn2" },
+      { id: "e8", lane: "worker", start: 566, end: 659, label: "aggregate batch", type: "worker", severity: "medium", module: "TraceWorker", bottleneckId: "bn2" },
+      { id: "e9", lane: "render", start: 816, end: 934, label: "table layout", type: "render", severity: "high", module: "SessionTable", bottleneckId: "bn3" },
+      { id: "e10", lane: "main", start: 842, end: 899, label: "sync filters", type: "js", severity: "medium", module: "SessionTable", bottleneckId: "bn3" },
+      { id: "e11", lane: "render", start: 904, end: 954, label: "paint rows", type: "render", severity: "medium", module: "SessionTable", bottleneckId: "bn3" },
+      { id: "e12", lane: "render", start: 978, end: 1052, label: "hover layout", type: "render", severity: "medium", module: "ChartLayer", bottleneckId: "bn4" },
+      { id: "e13", lane: "main", start: 1002, end: 1042, label: "tooltip calc", type: "js", severity: "medium", module: "ChartLayer", bottleneckId: "bn4" }
+    ];
+
+    const queries = [
+      {
+        id: "q1",
+        input: "为什么首屏交互延迟高？",
+        keywords: ["首屏", "交互", "延迟"],
+        conclusion: "首屏交互延迟主要来自 420-640ms 的 hydration 长任务堆积，并被 /api/report 返回后的同步更新进一步放大。",
+        evidence: [
+          "hydrateRoot 单段耗时 228ms。",
+          "同区间存在 Render lane 的样式重算和布局提交。",
+          "/api/report 结束后触发主线程二次更新。"
+        ],
+        nextActions: [
+          "拆分 hydration，延后非首屏模块初始化。",
+          "让 summary 接口先返回最小字段。",
+          "把侧栏和表格的非关键更新后移。"
+        ],
+        relatedBottleneckId: "bn1",
+        recommendedView: "trace"
+      },
+      {
+        id: "q2",
+        input: "哪个模块最慢？",
+        keywords: ["哪个", "模块", "最慢"],
+        conclusion: "当前最慢模块是 AppShell 与 Analytics 的组合区间，其中 AppShell 的 hydration 峰值最重。",
+        evidence: [
+          "AppShell 的主线程任务单段最长 228ms。",
+          "Analytics 的 /api/report 请求耗时 251ms。"
+        ],
+        nextActions: [
+          "先拆首屏 hydration。",
+          "再拆分 report 接口返回结构。"
+        ],
+        relatedBottleneckId: "bn2",
+        recommendedView: "bottlenecks"
+      },
+      {
+        id: "q3",
+        input: "最近的长任务集中在哪？",
+        keywords: ["长任务", "集中"],
+        conclusion: "长任务主要集中在 420-760ms 区间，核心集中在 Main Thread 的 hydration 与结果应用阶段。",
+        evidence: [
+          "420-656ms 的 hydrateRoot 为最长主线程块。",
+          "720-784ms 的 apply summary 紧接网络返回。"
+        ],
+        nextActions: [
+          "将 420-760ms 作为重点优化窗口。",
+          "从该窗口开始做任务切片。"
+        ],
+        relatedBottleneckId: "bn1",
+        recommendedView: "trace"
+      },
+      {
+        id: "q4",
+        input: "为什么表格滚动会卡？",
+        keywords: ["表格", "卡"],
+        conclusion: "表格卡顿更像回填后的布局成本问题，而不是单纯滚动监听问题，根因是批量插入行和列宽测量触发重排。",
+        evidence: [
+          "SessionTable 在 816-934ms 触发 table layout。",
+          "随后有筛选状态同步和 paint rows 连发。"
+        ],
+        nextActions: [
+          "引入虚拟滚动。",
+          "推迟列宽测量并冻结关键列布局。"
+        ],
+        relatedBottleneckId: "bn3",
+        recommendedView: "events"
+      }
+    ];
+
+    const laneOrder = ["main", "render", "network", "worker"];
+    const laneLabel = {
+      main: "Main Thread",
+      render: "Render",
+      network: "Network",
+      worker: "Worker"
+    };
+    const typeColor = {
+      js: "#58c4dd",
+      render: "#f1b84b",
+      network: "#ff8a65",
+      worker: "#7fd46b"
+    };
+
+    const state = {
+      view: "overview",
+      range: "15m",
+      selectedBottleneckId: "bn1",
+      selectedRowId: "r3",
+      selectedEventId: null,
+      detailMode: "bottleneck",
+      queryText: queries[0].input,
+      queryResult: queries[0],
+      density: "compact",
+      sortKey: "duration",
+      sortDir: "desc"
+    };
+
+    function esc(v) {
+      return String(v)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function chipClass(sev) {
+      if (sev === "critical") return "chip-danger";
+      if (sev === "high") return "chip-warning";
+      if (sev === "medium") return "chip-info";
+      if (sev === "success") return "chip-success";
+      return "chip-neutral";
+    }
+
+    function bottleneckById(id) {
+      return bottlenecks.find(x => x.id === id) || null;
+    }
+
+    function rowById(id) {
+      return rows.find(x => x.id === id) || null;
+    }
+
+    function eventById(id) {
+      return events.find(x => x.id === id) || null;
+    }
+
+    function currentRange() {
+      if (state.selectedEventId) {
+        const ev = eventById(state.selectedEventId);
+        return [ev.start, ev.end];
+      }
+      if (state.detailMode === "query" && state.queryResult.relatedBottleneckId) {
+        const bn = bottleneckById(state.queryResult.relatedBottleneckId);
+        return bn ? bn.range : null;
+      }
+      const bn = bottleneckById(state.selectedBottleneckId);
+      return bn ? bn.range : null;
+    }
+
+    function setView(view) {
+      state.view = view;
+      render();
+    }
+
+    function selectBottleneck(id, mode = "bottleneck") {
+      const bn = bottleneckById(id);
+      if (!bn) return;
+      state.selectedBottleneckId = id;
+      state.selectedRowId = bn.rows[0] || null;
+      state.selectedEventId = null;
+      state.detailMode = mode;
+      render();
+    }
+
+    function selectRow(id) {
+      const row = rowById(id);
+      if (!row) return;
+      state.selectedRowId = id;
+      state.selectedEventId = null;
+      state.detailMode = "row";
+      if (row.bottleneckId) state.selectedBottleneckId = row.bottleneckId;
+      render();
+    }
+
+    function selectEvent(id) {
+      const ev = eventById(id);
+      if (!ev) return;
+      state.selectedEventId = id;
+      state.detailMode = "event";
+      if (ev.bottleneckId) {
+        state.selectedBottleneckId = ev.bottleneckId;
+        const bn = bottleneckById(ev.bottleneckId);
+        state.selectedRowId = bn && bn.rows.length ? bn.rows[0] : null;
+      }
+      render();
+    }
+
+    function runQuery(text, switchView = false) {
+      const value = text.trim();
+      if (!value) return;
+      state.queryText = value;
+      let found = queries.find(q => q.input === value);
+      if (!found) {
+        const lower = value.toLowerCase();
+        found = queries.find(q => q.keywords.some(k => lower.includes(k.toLowerCase())));
+      }
+      if (!found) {
+        found = {
+          id: "fallback",
+          input: value,
+          conclusion: "当前原型未命中预设规则，已回退到示例分析路径。为了保持可追溯性，没有生成伪造结论。",
+          evidence: [
+            "dry run 仅内置少量规则模板。",
+            "后续应接入真实规则引擎或模型服务。"
+          ],
+          nextActions: [
+            "尝试示例 query。",
+            "补充真实查询解析逻辑。"
+          ],
+          relatedBottleneckId: "bn1",
+          recommendedView: "query"
+        };
+      }
+      state.queryResult = found;
+      state.detailMode = "query";
+      if (found.relatedBottleneckId) {
+        state.selectedBottleneckId = found.relatedBottleneckId;
+        const bn = bottleneckById(found.relatedBottleneckId);
+        state.selectedRowId = bn && bn.rows.length ? bn.rows[0] : null;
+      }
+      state.selectedEventId = null;
+      if (switchView) state.view = "query";
+      render();
+    }
+
+    function sortRows() {
+      const list = [...rows];
+      list.sort((a, b) => {
+        const ka = a[state.sortKey];
+        const kb = b[state.sortKey];
+        if (ka < kb) return state.sortDir === "asc" ? -1 : 1;
+        if (ka > kb) return state.sortDir === "asc" ? 1 : -1;
+        return 0;
+      });
+      return list;
+    }
+
+    function sortIndicator(key) {
+      if (state.sortKey !== key) return "↕";
+      return state.sortDir === "asc" ? "↑" : "↓";
+    }
+
+    function metricSection() {
+      return `
+        <section class="panel p-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="label-kicker">关键指标</div>
+              <div class="mt-1 text-sm text-slate-300">首屏异常已经聚合为可下钻的快速判断器。</div>
+            </div>
+            <span class="chip chip-warning">峰值区间 420-640ms</span>
+          </div>
+          <div class="mt-3 grid grid-cols-5 gap-3">
+            ${metrics.map(m => `
+              <button class="metric-card p-3" data-metric-view="${m.view}">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="label-kicker">${esc(m.label)}</div>
+                    <div class="metric-value mt-2 font-semibold">${esc(m.value)}</div>
+                  </div>
+                  <span class="chip ${m.tone === "danger" ? "chip-danger" : m.tone === "warning" ? "chip-warning" : "chip-info"}">${esc(m.delta)}</span>
+                </div>
+                <div class="mt-3 text-sm text-slate-300">${esc(m.note)}</div>
+                <div class="mt-2 text-xs text-slate-500">点击下钻到 ${esc(m.view)}</div>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function timelinePanel(title, desc) {
+      const range = currentRange();
+      const rangeText = range ? `${range[0]}-${range[1]}ms` : "无";
+      return `
+        <section class="panel p-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="label-kicker">${esc(title)}</div>
+              <div class="mt-1 text-sm text-slate-300">${esc(desc)}</div>
+            </div>
+            <div class="flex gap-2">
+              <button class="chip-btn px-3 py-1.5 text-xs" type="button">重置视图</button>
+              <button class="chip-btn active px-3 py-1.5 text-xs" type="button" data-density-toggle="1">${state.density === "compact" ? "切到舒适视图" : "切到紧凑视图"}</button>
+            </div>
+          </div>
+          <div class="mt-3">
+            <canvas class="timeline-canvas" data-timeline="1"></canvas>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <span class="chip chip-neutral">范围 ${esc(state.range)}</span>
+            <span class="chip chip-info">高亮 ${esc(rangeText)}</span>
+            <span class="chip chip-neutral">点击事件可同步右侧详情</span>
+          </div>
+        </section>
+      `;
+    }
+
+    function bottleneckPanel() {
+      return `
+        <section class="panel p-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="label-kicker">优先级清单</div>
+              <div class="mt-1 text-sm text-slate-300">点击瓶颈项可同步详情、表格和时间线高亮。</div>
+            </div>
+            <span class="chip chip-danger">Impact 排序</span>
+          </div>
+          <div class="mt-3 space-y-2">
+            ${bottlenecks.map(b => `
+              <button class="bottleneck-item ${state.selectedBottleneckId === b.id ? "active" : ""} p-3" data-bottleneck="${b.id}">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-slate-100">${esc(b.title)}</div>
+                    <div class="mt-1 text-xs text-slate-400">${esc(b.module)} / ${esc(b.type)}</div>
+                  </div>
+                  <span class="chip ${chipClass(b.severity)}">${esc(b.severity)}</span>
+                </div>
+                <div class="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-400">
+                  <div><div class="label-kicker">Impact</div><div class="mono mt-1 text-slate-100">${b.score}</div></div>
+                  <div><div class="label-kicker">Range</div><div class="mono mt-1 text-slate-100">${b.range[0]}-${b.range[1]}ms</div></div>
+                  <div><div class="label-kicker">Cost</div><div class="mono mt-1 text-slate-100">${b.duration}ms</div></div>
+                </div>
+                <div class="mt-3 text-sm text-slate-300">${esc(b.summary)}</div>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function tablePanel() {
+      const list = sortRows();
+      return `
+        <section class="panel p-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="label-kicker">工程明细表</div>
+              <div class="mt-1 text-sm text-slate-300">支持排序和点击选中，模拟工程验证区。</div>
+            </div>
+            <div class="text-xs text-slate-400">${list.length} 条结果 / ${state.sortKey} ${state.sortDir}</div>
+          </div>
+          <div class="mt-3 max-h-[420px] overflow-auto scrollbar-thin">
+            <table class="table-grid text-sm">
+              <thead>
+                <tr>
+                  <th><button class="sort-btn inline-flex items-center gap-1" data-sort="timestamp">时间戳 <span class="text-slate-500">${sortIndicator("timestamp")}</span></button></th>
+                  <th><button class="sort-btn inline-flex items-center gap-1" data-sort="module">模块 <span class="text-slate-500">${sortIndicator("module")}</span></button></th>
+                  <th><button class="sort-btn inline-flex items-center gap-1" data-sort="type">类型 <span class="text-slate-500">${sortIndicator("type")}</span></button></th>
+                  <th><button class="sort-btn inline-flex items-center gap-1" data-sort="duration">耗时 <span class="text-slate-500">${sortIndicator("duration")}</span></button></th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.map(r => `
+                  <tr class="table-row ${state.selectedRowId === r.id ? "active" : ""}" data-row="${r.id}">
+                    <td class="mono text-slate-300">${r.timestamp}ms</td>
+                    <td>${esc(r.module)}</td>
+                    <td><span class="chip ${r.type === "network" ? "chip-warning" : r.type === "worker" ? "chip-success" : r.type === "render" ? "chip-info" : "chip-neutral"}">${esc(r.type)}</span></td>
+                    <td class="num">${r.duration}ms</td>
+                    <td class="wrap text-slate-300">${esc(r.label)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function queryPanel() {
+      const q = state.queryResult;
+      return `
+        <section class="panel p-3">
+          <div class="label-kicker">自然语言查询</div>
+          <div class="mt-1 text-sm text-slate-300">查询结果强调结论、证据和下一步，而不是聊天气泡。</div>
+          <form class="query-form mt-3 flex gap-2">
+            <input class="query-input flex-1 px-3 py-2 text-sm" name="query" value="${esc(state.queryText)}" placeholder="例如：为什么首屏交互延迟高？" />
+            <button class="primary-btn px-3 py-2 text-sm" type="submit">查询</button>
+          </form>
+          <div class="mt-3 grid gap-2">
+            ${queries.map(item => `
+              <button class="chip-btn ${state.queryResult.id === item.id ? "active" : ""} px-3 py-2 text-left text-xs" data-query-example="${item.id}">
+                ${esc(item.input)}
+              </button>
+            `).join("")}
+          </div>
+          <div class="query-block mt-4 p-3">
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-medium">结构化结果</div>
+              <span class="chip chip-info">可追溯</span>
+            </div>
+            <div class="mt-3 text-sm leading-6 text-slate-200">${esc(q.conclusion)}</div>
+            <div class="mt-4 border-t border-white/5 pt-4">
+              <div class="label-kicker">证据</div>
+              <ul class="evidence mt-3 space-y-2">
+                ${q.evidence.map(x => `<li class="text-sm text-slate-300">${esc(x)}</li>`).join("")}
+              </ul>
+            </div>
+            <div class="mt-4 border-t border-white/5 pt-4">
+              <div class="label-kicker">推荐下一步</div>
+              <ul class="evidence mt-3 space-y-2">
+                ${q.nextActions.map(x => `<li class="text-sm text-slate-300">${esc(x)}</li>`).join("")}
+              </ul>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button class="primary-btn px-3 py-2 text-xs" data-query-action="related">聚焦关联瓶颈</button>
+              <button class="ghost-btn px-3 py-2 text-xs" data-query-action="view">跳转推荐视图</button>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function mainMarkup() {
+      if (state.view === "overview") {
+        return `
+          <div class="space-y-3">
+            ${metricSection()}
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-8">${timelinePanel("Trace Explorer", "Canvas 时间线用于验证高密度视图和点击联动。")}</div>
+              <div class="col-span-4">${queryPanel()}</div>
+            </div>
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-5">${bottleneckPanel()}</div>
+              <div class="col-span-7">${tablePanel()}</div>
+            </div>
+          </div>
+        `;
+      }
+      if (state.view === "trace") {
+        return `
+          <div class="space-y-3">
+            ${timelinePanel("时间线主视图", "以 Main、Render、Network、Worker 四条泳道验证分析流程。")}
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-4">${bottleneckPanel()}</div>
+              <div class="col-span-5">${tablePanel()}</div>
+              <div class="col-span-3">${queryPanel()}</div>
+            </div>
+          </div>
+        `;
+      }
+      if (state.view === "bottlenecks") {
+        return `
+          <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-5">${bottleneckPanel()}</div>
+            <div class="col-span-7">
+              ${timelinePanel("关联时间线", "用于观察当前瓶颈与周边事件是否重叠。")}
+              <div class="mt-3">${tablePanel()}</div>
+            </div>
+          </div>
+        `;
+      }
+      if (state.view === "events") {
+        return `
+          <div class="space-y-3">
+            ${tablePanel()}
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-8">${timelinePanel("表格关联时间线", "选中行后可回到时间轴观察上下文。")}</div>
+              <div class="col-span-4">${queryPanel()}</div>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-5">${queryPanel()}</div>
+          <div class="col-span-7">
+            ${timelinePanel("查询驱动的联动时间线", "示例 query 会高亮对应证据区间。")}
+            <div class="mt-3">${bottleneckPanel()}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function detailMarkup() {
+      if (state.detailMode === "event" && state.selectedEventId) {
+        const ev = eventById(state.selectedEventId);
+        return `
+          <div class="border-b border-white/5 px-4 py-4">
+            <div class="label-kicker">详情侧栏</div>
+            <div class="mt-1 text-sm text-slate-300">当前选中事件的上下文与动作。</div>
+          </div>
+          <div class="space-y-4 px-4 py-4">
+            <div>
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-base font-semibold">${esc(ev.label)}</div>
+                <span class="chip ${ev.type === "network" ? "chip-warning" : ev.type === "worker" ? "chip-success" : ev.type === "render" ? "chip-info" : "chip-neutral"}">${esc(ev.type)}</span>
+              </div>
+              <div class="mt-2 text-sm text-slate-400">${esc(laneLabel[ev.lane])} / ${esc(ev.module)}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="query-block p-3"><div class="label-kicker">Start</div><div class="mono mt-2 text-lg">${ev.start}ms</div></div>
+              <div class="query-block p-3"><div class="label-kicker">Duration</div><div class="mono mt-2 text-lg">${ev.end - ev.start}ms</div></div>
+            </div>
+            <div class="query-block p-3">
+              <div class="label-kicker">说明</div>
+              <div class="mt-3 text-sm text-slate-300">该事件来自时间线点击命中，用于验证 Canvas 交互与右侧详情同步。</div>
+            </div>
+            <div class="query-block p-3">
+              <div class="label-kicker">动作</div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button class="ghost-btn px-3 py-2 text-xs" data-target-view="trace">留在时间线</button>
+                <button class="ghost-btn px-3 py-2 text-xs" data-target-view="events">查看明细表</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (state.detailMode === "query") {
+        const q = state.queryResult;
+        const bn = q.relatedBottleneckId ? bottleneckById(q.relatedBottleneckId) : null;
+        return `
+          <div class="border-b border-white/5 px-4 py-4">
+            <div class="label-kicker">详情侧栏</div>
+            <div class="mt-1 text-sm text-slate-300">当前查询结果的证据与跳转动作。</div>
+          </div>
+          <div class="space-y-4 px-4 py-4">
+            <div>
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-base font-semibold">查询结果</div>
+                <span class="chip chip-info">Evidence First</span>
+              </div>
+              <div class="mt-2 text-sm text-slate-400">${esc(q.input)}</div>
+            </div>
+            <div class="query-block p-3">
+              <div class="label-kicker">结论</div>
+              <div class="mt-3 text-sm leading-6 text-slate-200">${esc(q.conclusion)}</div>
+            </div>
+            <div class="query-block p-3">
+              <div class="label-kicker">证据摘要</div>
+              <ul class="evidence mt-3 space-y-2">
+                ${q.evidence.map(x => `<li class="text-sm text-slate-300">${esc(x)}</li>`).join("")}
+              </ul>
+            </div>
+            ${bn ? `
+              <div class="query-block p-3">
+                <div class="label-kicker">关联瓶颈</div>
+                <div class="mt-3 text-sm font-medium text-slate-100">${esc(bn.title)}</div>
+                <div class="mt-1 text-xs text-slate-400">${esc(bn.module)} / ${bn.range[0]}-${bn.range[1]}ms</div>
+              </div>
+            ` : ""}
+            <div class="query-block p-3">
+              <div class="label-kicker">动作</div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button class="primary-btn px-3 py-2 text-xs" data-query-action="related">聚焦关联瓶颈</button>
+                <button class="ghost-btn px-3 py-2 text-xs" data-query-action="view">跳转推荐视图</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (state.detailMode === "row" && state.selectedRowId) {
+        const row = rowById(state.selectedRowId);
+        const bn = row.bottleneckId ? bottleneckById(row.bottleneckId) : null;
+        return `
+          <div class="border-b border-white/5 px-4 py-4">
+            <div class="label-kicker">详情侧栏</div>
+            <div class="mt-1 text-sm text-slate-300">当前表格记录的字段与关联上下文。</div>
+          </div>
+          <div class="space-y-4 px-4 py-4">
+            <div>
+              <div class="text-base font-semibold">${esc(row.module)}</div>
+              <div class="mt-2 text-sm text-slate-400">${esc(row.label)}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="query-block p-3"><div class="label-kicker">Timestamp</div><div class="mono mt-2 text-lg">${row.timestamp}ms</div></div>
+              <div class="query-block p-3"><div class="label-kicker">Duration</div><div class="mono mt-2 text-lg">${row.duration}ms</div></div>
+            </div>
+            ${bn ? `
+              <div class="query-block p-3">
+                <div class="label-kicker">关联瓶颈</div>
+                <div class="mt-3 text-sm font-medium text-slate-100">${esc(bn.title)}</div>
+                <div class="mt-2 text-xs text-cyan-300">建议：${esc(bn.nextStep)}</div>
+              </div>
+            ` : ""}
+            <div class="query-block p-3">
+              <div class="label-kicker">动作</div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button class="ghost-btn px-3 py-2 text-xs" data-target-view="events">继续看表</button>
+                <button class="ghost-btn px-3 py-2 text-xs" data-target-view="trace">定位时间线</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const bn = bottleneckById(state.selectedBottleneckId);
+      return `
+        <div class="border-b border-white/5 px-4 py-4">
+          <div class="label-kicker">详情侧栏</div>
+          <div class="mt-1 text-sm text-slate-300">当前瓶颈的证据、上下文和下一步动作。</div>
+        </div>
+        <div class="space-y-4 px-4 py-4">
+          <div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-base font-semibold">${esc(bn.title)}</div>
+              <span class="chip ${chipClass(bn.severity)}">${esc(bn.severity)}</span>
+            </div>
+            <div class="mt-2 text-sm text-slate-400">${esc(bn.module)} / ${esc(bn.type)}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="query-block p-3"><div class="label-kicker">Impact</div><div class="mono mt-2 text-lg">${bn.score}</div></div>
+            <div class="query-block p-3"><div class="label-kicker">Range</div><div class="mono mt-2 text-lg">${bn.range[0]}-${bn.range[1]}ms</div></div>
+          </div>
+          <div class="query-block p-3">
+            <div class="label-kicker">问题摘要</div>
+            <div class="mt-3 text-sm leading-6 text-slate-200">${esc(bn.summary)}</div>
+          </div>
+          <div class="query-block p-3">
+            <div class="label-kicker">证据</div>
+            <ul class="evidence mt-3 space-y-2">
+              ${bn.evidence.map(x => `<li class="text-sm text-slate-300">${esc(x)}</li>`).join("")}
+            </ul>
+          </div>
+          <div class="query-block p-3">
+            <div class="label-kicker">下一步</div>
+            <div class="mt-3 text-sm text-cyan-300">${esc(bn.nextStep)}</div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button class="primary-btn px-3 py-2 text-xs" data-target-view="trace">定位到时间线</button>
+              <button class="ghost-btn px-3 py-2 text-xs" data-target-view="events">查看明细表</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHeader() {
+      const meta = META[state.view];
+      document.getElementById("page-kicker").textContent = meta.kicker;
+      document.getElementById("page-title").textContent = meta.title;
+      document.getElementById("page-subtitle").textContent = meta.subtitle;
+      document.getElementById("topbar-query-input").value = state.queryText;
+      document.querySelectorAll("[data-view]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === state.view);
+      });
+      document.querySelectorAll("[data-range]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.range === state.range);
+      });
+    }
+
+    function render() {
+      document.body.dataset.density = state.density;
+      renderHeader();
+      document.getElementById("main").innerHTML = mainMarkup();
+      document.getElementById("details").innerHTML = detailMarkup();
+      attachCanvas();
+    }
+
+    function attachCanvas() {
+      document.querySelectorAll("[data-timeline]").forEach(canvas => {
+        drawTimeline(canvas);
+        canvas.onclick = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+          const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+          const hit = (canvas._hits || []).find(h => x >= h.x - 10 && x <= h.x + h.w + 10 && y >= h.y - 8 && y <= h.y + h.h + 8);
+          if (hit) selectEvent(hit.id);
+        };
+        canvas.onmousemove = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+          const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+          const hit = (canvas._hits || []).find(h => x >= h.x - 10 && x <= h.x + h.w + 10 && y >= h.y - 8 && y <= h.y + h.h + 8);
+          canvas.style.cursor = hit ? "pointer" : "crosshair";
+        };
+      });
+    }
+
+    function drawTimeline(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(300, Math.floor(rect.width));
+      const height = Math.max(290, Math.floor(rect.height));
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const left = 96;
+      const right = 18;
+      const top = 18;
+      const laneGap = 14;
+      const laneHeight = 44;
+      const usableWidth = width - left - right;
+      const total = 1200;
+      const hits = [];
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#0f141b";
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i <= 12; i++) {
+        const x = left + usableWidth * (i / 12);
+        ctx.strokeStyle = i === 0 ? "#334150" : "#202b36";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, top - 4);
+        ctx.lineTo(x, height - 18);
+        ctx.stroke();
+        if (i < 12) {
+          ctx.fillStyle = "#7e8a97";
+          ctx.font = "11px IBM Plex Sans";
+          ctx.fillText(String(i * 100) + "ms", x + 4, 13);
+        }
+      }
+
+      const range = currentRange();
+      if (range) {
+        const rx = left + (range[0] / total) * usableWidth;
+        const rw = ((range[1] - range[0]) / total) * usableWidth;
+        ctx.fillStyle = "rgba(88,196,221,0.12)";
+        ctx.fillRect(rx, top - 4, rw, height - top - 14);
+        ctx.strokeStyle = "#58c4dd";
+        ctx.strokeRect(rx, top - 4, rw, height - top - 14);
+      }
+
+      laneOrder.forEach((lane, index) => {
+        const y = top + index * (laneHeight + laneGap);
+        ctx.fillStyle = "#a9b4c0";
+        ctx.font = "12px IBM Plex Sans";
+        ctx.fillText(laneLabel[lane], 12, y + 24);
+
+        ctx.strokeStyle = "#25303a";
+        ctx.beginPath();
+        ctx.moveTo(left, y + laneHeight);
+        ctx.lineTo(width - right, y + laneHeight);
+        ctx.stroke();
+
+        events.filter(ev => ev.lane === lane).forEach(ev => {
+          const x = left + (ev.start / total) * usableWidth;
+          const w = Math.max(10, ((ev.end - ev.start) / total) * usableWidth);
+          const active = state.selectedEventId === ev.id || (state.selectedEventId == null && ev.bottleneckId && ev.bottleneckId === state.selectedBottleneckId && state.detailMode !== "query");
+          ctx.fillStyle = active ? "#e6edf3" : (typeColor[ev.type] || "#58c4dd");
+          ctx.globalAlpha = active ? 0.9 : 0.78;
+          ctx.fillRect(x, y + 8, w, laneHeight - 16);
+          ctx.globalAlpha = 1;
+          if (active) {
+            ctx.strokeStyle = "#58c4dd";
+            ctx.strokeRect(x, y + 8, w, laneHeight - 16);
+          }
+          ctx.fillStyle = "#0b0f14";
+          ctx.font = "11px JetBrains Mono";
+          const label = ev.label.length > 10 ? ev.label.slice(0, 10) + "…" : ev.label;
+          if (w > 42) ctx.fillText(label, x + 6, y + 27);
+          hits.push({ id: ev.id, x, y: y + 8, w, h: laneHeight - 16 });
+        });
+      });
+
+      canvas._hits = hits;
+    }
+
+    document.addEventListener("click", (e) => {
+      const nav = e.target.closest("[data-view]");
+      if (nav) {
+        setView(nav.dataset.view);
+        return;
+      }
+
+      const range = e.target.closest("[data-range]");
+      if (range) {
+        state.range = range.dataset.range;
+        render();
+        return;
+      }
+
+      const densityToggle = e.target.closest("[data-density-toggle]");
+      if (densityToggle) {
+        state.density = state.density === "compact" ? "comfortable" : "compact";
+        render();
+        return;
+      }
+
+      const metric = e.target.closest("[data-metric-view]");
+      if (metric) {
+        setView(metric.dataset.metricView);
+        return;
+      }
+
+      const bn = e.target.closest("[data-bottleneck]");
+      if (bn) {
+        selectBottleneck(bn.dataset.bottleneck);
+        return;
+      }
+
+      const row = e.target.closest("[data-row]");
+      if (row) {
+        selectRow(row.dataset.row);
+        return;
+      }
+
+      const sort = e.target.closest("[data-sort]");
+      if (sort) {
+        const key = sort.dataset.sort;
+        if (state.sortKey === key) {
+          state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        } else {
+          state.sortKey = key;
+          state.sortDir = key === "module" || key === "type" ? "asc" : "desc";
+        }
+        render();
+        return;
+      }
+
+      const example = e.target.closest("[data-query-example]");
+      if (example) {
+        const q = queries.find(x => x.id === example.dataset.queryExample);
+        state.queryText = q.input;
+        state.queryResult = q;
+        state.detailMode = "query";
+        if (q.relatedBottleneckId) state.selectedBottleneckId = q.relatedBottleneckId;
+        state.selectedEventId = null;
+        render();
+        return;
+      }
+
+      const action = e.target.closest("[data-query-action]");
+      if (action) {
+        if (action.dataset.queryAction === "related" && state.queryResult.relatedBottleneckId) {
+          selectBottleneck(state.queryResult.relatedBottleneckId, "query");
+          return;
+        }
+        if (action.dataset.queryAction === "view") {
+          setView(state.queryResult.recommendedView || "query");
+          return;
+        }
+      }
+
+      const targetView = e.target.closest("[data-target-view]");
+      if (targetView) {
+        setView(targetView.dataset.targetView);
+      }
+    });
+
+    document.addEventListener("submit", (e) => {
+      const topbarForm = e.target.closest("#topbar-query-form");
+      const panelForm = e.target.closest(".query-form");
+      if (!topbarForm && !panelForm) return;
+      e.preventDefault();
+
+      if (topbarForm) {
+        runQuery(document.getElementById("topbar-query-input").value, true);
+        return;
+      }
+
+      if (panelForm) {
+        const input = panelForm.querySelector("input[name='query']");
+        runQuery(input.value, false);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      document.querySelectorAll("[data-timeline]").forEach(drawTimeline);
+    });
+
+    render();
+  </script>
+</body>
+</html>

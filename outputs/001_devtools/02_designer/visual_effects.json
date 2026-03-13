@@ -1,0 +1,252 @@
+{
+  "meta": {
+    "product_name": "PerfScope",
+    "version": "1.0",
+    "goal": "use visual effects only when they improve analysis efficiency"
+  },
+  "strategy": {
+    "overall_direction": "restrained, signal-oriented, performance-aware",
+    "rules": [
+      "effects must clarify hierarchy, focus or state",
+      "effects must not compete with dense data reading",
+      "all non-essential motion should degrade cleanly",
+      "background ambience must stay subordinate to foreground content"
+    ]
+  },
+  "technology_recommendations": {
+    "css": {
+      "use": true,
+      "priority": "P0",
+      "recommended_for": [
+        "hover states",
+        "focus rings",
+        "segmented controls",
+        "sidebar active states",
+        "panel enter and exit",
+        "table row highlight",
+        "severity chip feedback"
+      ],
+      "why": "lowest cost, best maintainability, and sufficient for most shell and component interactions",
+      "constraints": [
+        "prefer opacity, transform and color transitions",
+        "avoid long transitions over 220ms",
+        "avoid layout-shifting hover effects"
+      ]
+    },
+    "svg": {
+      "use": true,
+      "priority": "P0",
+      "recommended_for": [
+        "icons",
+        "small trend lines",
+        "status arrows",
+        "distribution mini charts",
+        "inline evidence markers"
+      ],
+      "why": "crisp rendering and semantic control for lightweight analytical graphics",
+      "constraints": [
+        "keep path counts low in dense views",
+        "do not use SVG for the main high-density timeline layer"
+      ]
+    },
+    "canvas": {
+      "use": true,
+      "priority": "P0",
+      "recommended_for": [
+        "trace explorer main viewport",
+        "timeline minimap",
+        "dense lane aggregation",
+        "selection overlays with hybrid DOM controls"
+      ],
+      "why": "better suited than DOM or SVG for rendering many timeline events without overwhelming layout and paint",
+      "constraints": [
+        "pair with text overlays only where necessary",
+        "must provide textual summaries for selected ranges",
+        "must support reduced-motion and lower-detail rendering"
+      ],
+      "fallback": [
+        "aggregate lanes earlier",
+        "reduce visible labels",
+        "freeze animation during continuous zoom or pan"
+      ]
+    },
+    "webgl": {
+      "use": "conditional",
+      "priority": "P1",
+      "recommended_for": [
+        "extreme-scale trace sessions where Canvas cannot sustain interaction goals"
+      ],
+      "why": "can unlock larger draw volumes, but adds implementation complexity and debugging cost",
+      "do_not_use_when": [
+        "MVP data sizes are already smooth with Canvas and virtualization",
+        "team lacks evidence of rendering bottleneck",
+        "accessibility and fallback path are not ready"
+      ],
+      "entry_criteria": [
+        "measured frame drops during real trace zoom and pan",
+        "Canvas path already optimized",
+        "fallback to Canvas or aggregated view exists"
+      ]
+    },
+    "p5": {
+      "use": false,
+      "priority": "not_recommended",
+      "why": "best for expressive generative visuals, not for structured devtools analysis surfaces",
+      "avoid_because": [
+        "adds a creative-coding layer with little diagnostic value",
+        "risks introducing decorative motion unrelated to evidence discovery"
+      ]
+    }
+  },
+  "effect_library": {
+    "ambient_effects": [
+      {
+        "id": "panel_edge_sheen",
+        "enabled": true,
+        "technology": "css",
+        "usage": "subtle top-edge highlight on elevated panels",
+        "intensity": "low"
+      },
+      {
+        "id": "background_temperature_shift",
+        "enabled": true,
+        "technology": "css",
+        "usage": "very slight tonal separation between shell regions",
+        "intensity": "very_low"
+      },
+      {
+        "id": "animated_noise_or_glow",
+        "enabled": false,
+        "technology": "css",
+        "usage": "disallowed as default background effect",
+        "reason": "competes with dense analytical content"
+      }
+    ],
+    "interactive_effects": [
+      {
+        "id": "focus_ring",
+        "technology": "css",
+        "usage": "keyboard and active input focus",
+        "duration_ms": 120
+      },
+      {
+        "id": "row_highlight",
+        "technology": "css",
+        "usage": "table and bottleneck list hover or selection",
+        "duration_ms": 120
+      },
+      {
+        "id": "brush_selection",
+        "technology": "canvas",
+        "usage": "timeline selected range fill and stroke",
+        "duration_ms": 0
+      },
+      {
+        "id": "tooltip_fade",
+        "technology": "css",
+        "usage": "timeline and chart tooltip reveal",
+        "duration_ms": 100
+      },
+      {
+        "id": "sidebar_reveal",
+        "technology": "css",
+        "usage": "details sidebar open and collapse",
+        "duration_ms": 180
+      }
+    ],
+    "status_effects": [
+      {
+        "id": "severity_tint",
+        "technology": "css",
+        "usage": "chips, markers and row accents",
+        "notes": "never rely on color only"
+      },
+      {
+        "id": "delta_flash",
+        "technology": "css",
+        "usage": "brief value update emphasis on metrics",
+        "notes": "use only on real-time or refreshed values"
+      },
+      {
+        "id": "query_evidence_ping",
+        "technology": "css",
+        "usage": "highlight linked evidence after apply action",
+        "notes": "single pulse only, no looping"
+      }
+    ]
+  },
+  "component_effect_mapping": {
+    "sidebar": [
+      "active item tint",
+      "focus ring",
+      "subtle hover fill"
+    ],
+    "topbar": [
+      "segmented control press depth",
+      "filter count highlight",
+      "query input focus glow"
+    ],
+    "metric_card": [
+      "border emphasis on hover",
+      "severity chip tint",
+      "delta direction color"
+    ],
+    "timeline": [
+      "canvas lane rendering",
+      "brush selection overlay",
+      "crosshair on hover",
+      "aggregation density swap without flourish"
+    ],
+    "bottleneck_list": [
+      "row highlight",
+      "severity marker",
+      "jump-to-range emphasis"
+    ],
+    "data_table": [
+      "sticky header contrast",
+      "selected row fill",
+      "column resize affordance"
+    ],
+    "natural_language_query_panel": [
+      "input focus glow",
+      "section reveal fade",
+      "linked evidence pulse"
+    ],
+    "details_sidebar": [
+      "slide reveal",
+      "section divider fade",
+      "active evidence marker"
+    ]
+  },
+  "motion_tokens": {
+    "fast_ms": 120,
+    "base_ms": 160,
+    "slow_ms": 220,
+    "easing_standard": "cubic-bezier(0.2, 0, 0, 1)",
+    "easing_emphasis": "cubic-bezier(0.16, 1, 0.3, 1)"
+  },
+  "reduced_motion": {
+    "supported": true,
+    "rules": [
+      "disable panel slide distance and use opacity-only reveals",
+      "remove pulsing highlights",
+      "turn chart and metric transitions into instant state changes",
+      "keep timeline navigation functional without animated interpolation"
+    ]
+  },
+  "performance_guardrails": {
+    "rules": [
+      "no perpetual decorative animation in the main workspace",
+      "no large blurred layers behind dense tables or timeline",
+      "no WebGL without a measured need and a fallback",
+      "no p5-based decorative canvas",
+      "dense data views should prioritize redraw stability over visual flourish"
+    ],
+    "preferred_measurements": [
+      "zoom and pan responsiveness in timeline",
+      "table scroll smoothness at 10k plus rows",
+      "filter application latency",
+      "sidebar open latency under active data load"
+    ]
+  }
+}

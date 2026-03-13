@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "product_name": "PerfScope",
+    "version": "1.0",
+    "theme_reference": "Precision Console"
+  },
+  "components": [
+    {
+      "id": "sidebar",
+      "name": "侧边栏",
+      "purpose": "提供一级导航、当前会话概览和全局工作模式切换",
+      "placement": "left",
+      "structure": {
+        "sections": [
+          "product mark and session name",
+          "primary navigation list",
+          "saved views or recent entry slot",
+          "settings and help footer"
+        ]
+      },
+      "visual_rules": {
+        "width": 248,
+        "background": "elevated",
+        "border_right": "subtle",
+        "item_height": 40,
+        "item_radius": 10,
+        "active_state": "left accent bar plus tinted fill",
+        "icon_style": "outlined"
+      },
+      "interaction_rules": [
+        "active item must remain visible during scroll",
+        "hover changes background and label contrast only",
+        "collapsed mode is optional but not default in MVP"
+      ],
+      "content_rules": [
+        "labels should be short and task-oriented",
+        "do not show more than 7 primary items",
+        "P1 items must feel secondary"
+      ],
+      "accessibility": [
+        "visible keyboard focus",
+        "icon-only collapsed mode needs aria labels"
+      ]
+    },
+    {
+      "id": "topbar",
+      "name": "顶栏",
+      "purpose": "承载全局时间范围、筛选、快捷查询、导入和导出操作",
+      "placement": "top",
+      "structure": {
+        "zones": [
+          "left: page title or view context",
+          "center: time range and filters",
+          "right: quick query, import, export, density toggle"
+        ]
+      },
+      "visual_rules": {
+        "height": 56,
+        "background": "panel",
+        "border_bottom": "subtle",
+        "control_height": 32,
+        "query_input_width": 320
+      },
+      "interaction_rules": [
+        "import and export stay visible at all times",
+        "filters open as anchored overlays instead of full-screen modals",
+        "query field supports examples and recent prompts"
+      ],
+      "content_rules": [
+        "avoid overcrowding with low-value icons",
+        "show active filter count near filter trigger",
+        "session name should be readable but not dominant"
+      ],
+      "accessibility": [
+        "all icon buttons require labels",
+        "tab order follows visual order"
+      ]
+    },
+    {
+      "id": "metric_card",
+      "name": "指标卡",
+      "purpose": "帮助用户在首屏快速判断当前是否存在明显性能异常",
+      "placement": "overview grid",
+      "structure": {
+        "slots": [
+          "metric label",
+          "primary value",
+          "delta or trend hint",
+          "severity chip",
+          "drill-down action"
+        ]
+      },
+      "visual_rules": {
+        "min_width": 220,
+        "min_height": 104,
+        "background": "panel_alt",
+        "border": "default",
+        "radius": 12,
+        "value_font_size": 30,
+        "label_font_size": 12
+      },
+      "interaction_rules": [
+        "entire card is clickable when drill-down exists",
+        "hover uses border and contrast shift, not scale",
+        "delta and severity must be distinguishable at a glance"
+      ],
+      "content_rules": [
+        "one metric per card",
+        "use concise labels",
+        "show units explicitly",
+        "if no delta exists, replace with contextual note rather than placeholder"
+      ],
+      "accessibility": [
+        "status is not color-only",
+        "large text contrast remains above minimum threshold"
+      ]
+    },
+    {
+      "id": "timeline",
+      "name": "时间线",
+      "purpose": "在高密度事件数据中支持缩放、拖拽、定位和钻取",
+      "placement": "main analysis area",
+      "structure": {
+        "regions": [
+          "toolbar",
+          "lane header column",
+          "main render viewport",
+          "minimap",
+          "selection summary strip"
+        ]
+      },
+      "visual_rules": {
+        "lane_height_compact": 28,
+        "lane_height_comfortable": 36,
+        "background": "base",
+        "grid_lines": "canvas_grid",
+        "axis_lines": "canvas_axis",
+        "selection_fill": "chart.selection_fill",
+        "selection_stroke": "chart.selection_stroke"
+      },
+      "interaction_rules": [
+        "zoom via wheel and toolbar controls",
+        "brush selection creates linked filtering context",
+        "hover reveals compact tooltip",
+        "click opens details sidebar",
+        "dense clusters auto-aggregate before pixel overlap becomes unreadable"
+      ],
+      "content_rules": [
+        "lanes grouped by thread or module",
+        "show aggregation count when collapsed",
+        "maintain visible time scale during navigation"
+      ],
+      "performance_rules": [
+        "Canvas is preferred render surface in MVP",
+        "DOM overlays should be limited to tooltip and interactive brush layer",
+        "animation must be disabled during heavy redraw"
+      ],
+      "accessibility": [
+        "selection summary should also be available as text",
+        "keyboard zoom and reset controls must exist"
+      ]
+    },
+    {
+      "id": "bottleneck_list",
+      "name": "瓶颈列表",
+      "purpose": "把复杂性能问题整理成可排序、可行动的优先级清单",
+      "placement": "bottlenecks page or split view",
+      "structure": {
+        "row_fields": [
+          "title",
+          "severity",
+          "impact score",
+          "duration or frequency",
+          "related module",
+          "time range",
+          "recommended next step"
+        ]
+      },
+      "visual_rules": {
+        "row_height": 44,
+        "row_divider": "subtle",
+        "severity_chip_style": "solid tint with label",
+        "active_row_background": "selected_fill"
+      },
+      "interaction_rules": [
+        "sorting by impact is default",
+        "click row opens details and syncs time range",
+        "secondary action jumps directly to timeline",
+        "supports compact density toggle"
+      ],
+      "content_rules": [
+        "problem titles must be action-oriented",
+        "recommended next step should be one short line",
+        "impact score must have comparable scale across rows"
+      ],
+      "accessibility": [
+        "severity uses color plus text",
+        "row focus is visible in keyboard navigation"
+      ]
+    },
+    {
+      "id": "data_table",
+      "name": "数据表",
+      "purpose": "提供大数据量下的工程化验证、筛选、排序和导出能力",
+      "placement": "events page and linked views",
+      "structure": {
+        "regions": [
+          "toolbar",
+          "column header",
+          "virtualized body",
+          "row expansion area",
+          "footer summary"
+        ]
+      },
+      "visual_rules": {
+        "header_height": 36,
+        "row_height_compact": 32,
+        "row_height_comfortable": 40,
+        "background": "panel",
+        "sticky_header": true,
+        "sticky_key_columns": true
+      },
+      "interaction_rules": [
+        "supports virtual scrolling",
+        "column resizing and hiding are inline actions",
+        "sorting feedback must be immediate and visible",
+        "row selection syncs details sidebar"
+      ],
+      "content_rules": [
+        "numbers are right-aligned",
+        "monospace is used for ids, timestamps and raw values",
+        "long text truncates but expands on demand",
+        "show current filter and result count in toolbar"
+      ],
+      "performance_rules": [
+        "never render full 10k plus rows at once",
+        "defer expensive cell formatting until visible"
+      ],
+      "accessibility": [
+        "header actions are keyboard reachable",
+        "selected row remains announced with text state"
+      ]
+    },
+    {
+      "id": "nl_query_panel",
+      "name": "自然语言查询面板",
+      "purpose": "把自然语言输入转化为结构化分析入口和可验证结论",
+      "placement": "topbar quick entry and dedicated query workspace",
+      "structure": {
+        "sections": [
+          "input area",
+          "example prompts",
+          "structured answer",
+          "evidence links",
+          "apply-filter actions"
+        ]
+      },
+      "visual_rules": {
+        "input_height": 40,
+        "panel_background": "panel_alt",
+        "answer_sections_use_dividers": true,
+        "chat_bubbles": false
+      },
+      "interaction_rules": [
+        "submitting a query should not navigate away immediately",
+        "results must include apply and inspect actions",
+        "example prompts are concise and domain-specific"
+      ],
+      "content_rules": [
+        "answer order is conclusion then evidence then next step",
+        "avoid conversational filler",
+        "every claim should map to visible data source"
+      ],
+      "accessibility": [
+        "input has explicit label",
+        "result sections are semantically grouped"
+      ]
+    },
+    {
+      "id": "details_sidebar",
+      "name": "详情侧栏",
+      "purpose": "承载当前选中事件、瓶颈或查询证据的上下文详情，减少页面跳转",
+      "placement": "right",
+      "structure": {
+        "sections": [
+          "header with object title and severity",
+          "summary metrics",
+          "evidence fields",
+          "related links",
+          "next-step actions"
+        ]
+      },
+      "visual_rules": {
+        "width": 360,
+        "background": "panel_alt",
+        "border_left": "default",
+        "section_padding": 16,
+        "header_sticky": true
+      },
+      "interaction_rules": [
+        "opens on row or event selection",
+        "can be pinned or collapsed",
+        "related links open synchronized views rather than replacing context"
+      ],
+      "content_rules": [
+        "summary appears before raw metadata",
+        "related jumps should be limited to the most useful three",
+        "show evidence provenance when content comes from query result"
+      ],
+      "accessibility": [
+        "trap focus only when treated as modal overlay",
+        "collapsed toggle is keyboard reachable"
+      ]
+    }
+  ]
+}

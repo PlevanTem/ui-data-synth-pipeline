@@ -1,0 +1,574 @@
+{
+  "meta": {
+    "product_name": "PerfScope",
+    "version": "1.0",
+    "language": "zh-CN",
+    "ia_goal": "为高密度性能分析工作流定义清晰的信息架构与页面结构"
+  },
+  "product_principles": [
+    "分析效率优先于装饰性视觉",
+    "高密度但层级清晰",
+    "默认暗黑模式",
+    "表格、图表、时间线共同构成主工作区",
+    "自然语言查询作为导航入口，不替代专业视图"
+  ],
+  "global_navigation": {
+    "primary_nav_type": "left_sidebar",
+    "items": [
+      {
+        "id": "nav_overview",
+        "label": "总览",
+        "path": "/overview",
+        "priority": "P0"
+      },
+      {
+        "id": "nav_trace_explorer",
+        "label": "时间线",
+        "path": "/trace",
+        "priority": "P0"
+      },
+      {
+        "id": "nav_bottlenecks",
+        "label": "瓶颈",
+        "path": "/bottlenecks",
+        "priority": "P0"
+      },
+      {
+        "id": "nav_events_table",
+        "label": "明细表",
+        "path": "/events",
+        "priority": "P0"
+      },
+      {
+        "id": "nav_query_workspace",
+        "label": "查询",
+        "path": "/query",
+        "priority": "P0"
+      },
+      {
+        "id": "nav_compare",
+        "label": "对比",
+        "path": "/compare",
+        "priority": "P1"
+      },
+      {
+        "id": "nav_data_settings",
+        "label": "数据与设置",
+        "path": "/settings",
+        "priority": "P1"
+      }
+    ]
+  },
+  "global_shell": {
+    "topbar": [
+      "全局时间范围选择器",
+      "全局筛选器入口",
+      "自然语言查询快捷输入",
+      "导入数据按钮",
+      "导出按钮",
+      "主题切换或主题状态展示",
+      "当前数据会话名称"
+    ],
+    "right_panel": [
+      "事件详情",
+      "瓶颈详情",
+      "查询结果证据",
+      "快速跳转入口"
+    ],
+    "global_behaviors": [
+      "筛选条件跨页面保持一致",
+      "从任意视图可跳转到时间线或明细表",
+      "右侧详情面板可折叠",
+      "查询结果可驱动全局筛选"
+    ]
+  },
+  "routes": [
+    {
+      "id": "route_overview",
+      "path": "/overview",
+      "name": "总览",
+      "priority": "P0",
+      "purpose": "帮助用户在最短时间内识别是否存在明显性能问题以及问题方向。",
+      "primary_modules": [
+        {
+          "id": "overview_metric_cards",
+          "name": "关键指标卡",
+          "content": [
+            "总耗时",
+            "长任务数",
+            "慢请求数",
+            "渲染阻塞数",
+            "峰值区间"
+          ]
+        },
+        {
+          "id": "overview_trend_chart",
+          "name": "趋势/分布图",
+          "content": [
+            "时间趋势",
+            "事件类型分布",
+            "模块耗时分布"
+          ]
+        },
+        {
+          "id": "overview_anomaly_summary",
+          "name": "异常摘要",
+          "content": [
+            "高影响问题",
+            "推荐优先排查项",
+            "关联跳转按钮"
+          ]
+        },
+        {
+          "id": "overview_quick_filters",
+          "name": "快速过滤区",
+          "content": [
+            "按模块过滤",
+            "按事件类型过滤",
+            "按严重程度过滤"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "查看摘要",
+        "点击指标下钻",
+        "跳转到时间线",
+        "跳转到瓶颈列表"
+      ],
+      "states": {
+        "empty": [
+          "引导导入数据",
+          "示例数据说明"
+        ],
+        "loading": [
+          "指标骨架屏",
+          "图表加载态"
+        ],
+        "error": [
+          "数据解析失败提示",
+          "重试导入"
+        ]
+      }
+    },
+    {
+      "id": "route_trace",
+      "path": "/trace",
+      "name": "时间线",
+      "priority": "P0",
+      "purpose": "让用户从时间维度观察高密度事件，定位异常发生区间和上下文。",
+      "primary_modules": [
+        {
+          "id": "trace_toolbar",
+          "name": "时间线工具栏",
+          "content": [
+            "缩放控制",
+            "图层筛选",
+            "密度切换",
+            "重置视图"
+          ]
+        },
+        {
+          "id": "trace_canvas",
+          "name": "主时间线区",
+          "content": [
+            "线程/泳道分层",
+            "事件块",
+            "聚合显示",
+            "选区高亮"
+          ]
+        },
+        {
+          "id": "trace_minimap",
+          "name": "迷你概览条",
+          "content": [
+            "当前区间定位",
+            "快速拖拽跳转"
+          ]
+        },
+        {
+          "id": "trace_side_details",
+          "name": "详情侧栏",
+          "content": [
+            "事件详情",
+            "上下文属性",
+            "关联模块",
+            "跳转到明细表"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "缩放时间范围",
+        "按维度过滤",
+        "查看事件详情",
+        "从瓶颈项跳转定位"
+      ],
+      "states": {
+        "dense_data": [
+          "自动聚合",
+          "降低细节层级但保留可钻取性"
+        ],
+        "empty_selection": [
+          "提示选择时间范围或筛选条件"
+        ]
+      }
+    },
+    {
+      "id": "route_bottlenecks",
+      "path": "/bottlenecks",
+      "name": "瓶颈",
+      "priority": "P0",
+      "purpose": "将复杂原始数据转化为问题优先级列表，帮助用户决定先排查什么。",
+      "primary_modules": [
+        {
+          "id": "bottleneck_filters",
+          "name": "问题筛选器",
+          "content": [
+            "按问题类型筛选",
+            "按严重程度筛选",
+            "按模块筛选"
+          ]
+        },
+        {
+          "id": "bottleneck_list",
+          "name": "瓶颈列表",
+          "content": [
+            "问题名称",
+            "影响度",
+            "相关模块",
+            "关联时间段",
+            "建议动作"
+          ]
+        },
+        {
+          "id": "bottleneck_detail_panel",
+          "name": "瓶颈详情",
+          "content": [
+            "问题说明",
+            "证据摘要",
+            "关联事件",
+            "跳转到时间线/表格"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "按影响度排序",
+        "查看问题证据",
+        "跳转到具体时间段",
+        "导出列表"
+      ],
+      "states": {
+        "no_bottlenecks": [
+          "显示未检测到明显异常",
+          "建议切换筛选条件"
+        ]
+      }
+    },
+    {
+      "id": "route_events",
+      "path": "/events",
+      "name": "明细表",
+      "priority": "P0",
+      "purpose": "为工程用户提供高性能明细数据分析能力，用于验证、检索和导出。",
+      "primary_modules": [
+        {
+          "id": "events_table_toolbar",
+          "name": "表格工具栏",
+          "content": [
+            "列配置",
+            "排序规则",
+            "筛选器",
+            "导出"
+          ]
+        },
+        {
+          "id": "events_virtual_table",
+          "name": "虚拟表格",
+          "content": [
+            "固定表头",
+            "固定关键列",
+            "行展开详情",
+            "复制值"
+          ]
+        },
+        {
+          "id": "events_row_detail",
+          "name": "行详情区",
+          "content": [
+            "完整字段",
+            "关联事件链路",
+            "跳转入口"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "排序",
+        "筛选",
+        "复制字段",
+        "查看详情",
+        "导出当前结果"
+      ],
+      "states": {
+        "empty": [
+          "提示当前筛选无结果",
+          "支持快速清空筛选"
+        ]
+      }
+    },
+    {
+      "id": "route_query",
+      "path": "/query",
+      "name": "查询",
+      "priority": "P0",
+      "purpose": "通过自然语言降低性能分析门槛，帮助用户快速进入正确视图和问题上下文。",
+      "primary_modules": [
+        {
+          "id": "query_input",
+          "name": "查询输入区",
+          "content": [
+            "文本输入框",
+            "问题示例",
+            "最近查询"
+          ]
+        },
+        {
+          "id": "query_result",
+          "name": "结果区",
+          "content": [
+            "结论",
+            "证据",
+            "关联指标",
+            "推荐下一步"
+          ]
+        },
+        {
+          "id": "query_linked_views",
+          "name": "联动入口",
+          "content": [
+            "应用筛选器",
+            "跳转时间线",
+            "跳转瓶颈列表",
+            "跳转明细表"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "输入问题",
+        "查看结构化回答",
+        "应用结果到分析视图"
+      ],
+      "states": {
+        "empty": [
+          "显示问题示例",
+          "显示常见查询模板"
+        ],
+        "no_confident_answer": [
+          "返回有限结论",
+          "建议用户切换维度或缩小范围"
+        ]
+      }
+    },
+    {
+      "id": "route_compare",
+      "path": "/compare",
+      "name": "对比",
+      "priority": "P1",
+      "purpose": "对比两次数据会话，判断优化是否带来实际改善。",
+      "primary_modules": [
+        {
+          "id": "compare_session_picker",
+          "name": "会话选择器",
+          "content": [
+            "基准会话",
+            "对比会话"
+          ]
+        },
+        {
+          "id": "compare_summary",
+          "name": "差异摘要",
+          "content": [
+            "关键指标变化",
+            "变化方向",
+            "变化幅度"
+          ]
+        },
+        {
+          "id": "compare_charts_table",
+          "name": "图表与表格对比区",
+          "content": [
+            "趋势对比",
+            "差异表格",
+            "高变化模块"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "选择两次会话",
+        "查看差异",
+        "导出对比结果"
+      ],
+      "states": {
+        "missing_second_session": [
+          "提示先选择第二个会话"
+        ]
+      }
+    },
+    {
+      "id": "route_settings",
+      "path": "/settings",
+      "name": "数据与设置",
+      "priority": "P1",
+      "purpose": "管理数据源、主题与性能相关设置。",
+      "primary_modules": [
+        {
+          "id": "settings_data_sessions",
+          "name": "数据会话管理",
+          "content": [
+            "已导入会话列表",
+            "删除或重命名",
+            "查看导入状态"
+          ]
+        },
+        {
+          "id": "settings_display",
+          "name": "显示设置",
+          "content": [
+            "主题",
+            "表格密度",
+            "动画开关"
+          ]
+        },
+        {
+          "id": "settings_query",
+          "name": "查询设置",
+          "content": [
+            "查询模式",
+            "示例模板管理"
+          ]
+        }
+      ],
+      "primary_actions": [
+        "管理会话",
+        "调整主题",
+        "调整密度和动画策略"
+      ]
+    }
+  ],
+  "cross_page_filters": [
+    {
+      "id": "filter_time_range",
+      "label": "时间范围",
+      "applies_to": [
+        "/overview",
+        "/trace",
+        "/bottlenecks",
+        "/events",
+        "/query",
+        "/compare"
+      ]
+    },
+    {
+      "id": "filter_module",
+      "label": "模块/服务",
+      "applies_to": [
+        "/overview",
+        "/trace",
+        "/bottlenecks",
+        "/events",
+        "/query"
+      ]
+    },
+    {
+      "id": "filter_event_type",
+      "label": "事件类型",
+      "applies_to": [
+        "/overview",
+        "/trace",
+        "/events",
+        "/query"
+      ]
+    },
+    {
+      "id": "filter_severity",
+      "label": "严重程度",
+      "applies_to": [
+        "/bottlenecks",
+        "/overview"
+      ]
+    }
+  ],
+  "entry_points": [
+    {
+      "id": "entry_upload",
+      "name": "导入数据进入",
+      "lands_on": "/overview"
+    },
+    {
+      "id": "entry_deep_link",
+      "name": "通过已保存状态进入",
+      "lands_on": "/trace"
+    },
+    {
+      "id": "entry_query_first",
+      "name": "从自然语言查询进入",
+      "lands_on": "/query"
+    }
+  ],
+  "key_user_flows": [
+    {
+      "id": "flow_primary_diagnosis",
+      "name": "主诊断流程",
+      "steps": [
+        "导入数据",
+        "进入总览查看异常摘要",
+        "打开瓶颈列表确认优先级",
+        "跳转时间线定位具体区间",
+        "在明细表验证细节",
+        "导出结果"
+      ]
+    },
+    {
+      "id": "flow_nl_query",
+      "name": "自然语言查询流程",
+      "steps": [
+        "输入问题",
+        "查看结构化回答",
+        "应用建议筛选",
+        "跳转相关视图继续分析"
+      ]
+    },
+    {
+      "id": "flow_compare",
+      "name": "对比验证流程",
+      "steps": [
+        "选择两个会话",
+        "查看关键指标差异",
+        "查看异常变化模块",
+        "导出对比结果"
+      ]
+    }
+  ],
+  "layout_guidance": {
+    "desktop_first": true,
+    "recommended_layout": {
+      "left_sidebar": "一级导航",
+      "topbar": "全局控制与关键操作",
+      "main_content": "主分析区域",
+      "right_panel": "上下文详情与辅助信息"
+    },
+    "density_modes": [
+      "comfortable",
+      "compact"
+    ]
+  },
+  "risk_notes": [
+    "如果强行使用重新拟态风格，会削弱高密度信息界面的可读性与层级清晰度。",
+    "如果把语音入口放在全局主导航，会干扰核心分析心智模型，因此只应作为实验能力或后续增强。",
+    "Trace Explorer 在大数据量场景下可能成为性能瓶颈，IA 需允许聚合视图和分层降级。"
+  ],
+  "open_questions": [
+    "是否需要在首页直接支持示例数据体验，以降低首次使用门槛？",
+    "右侧详情面板是否需要固定存在，还是按需呼出？",
+    "查询页是否需要保存历史问题和结果快照？",
+    "对比页面是独立页面，还是嵌入总览中的一个模式切换？"
+  ]
+}
