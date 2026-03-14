@@ -1,33 +1,36 @@
 ---
 name: web-design-pipeline
-description: 端到端网站设计与前端生成工作流。适用于用户想根据一句 query、产品想法、测试 JSON、需求描述或案例批量生成高质量网站、landing page、dashboard、营销页或 web app 原型时。遇到网站设计、前端生成、UI 风格探索、技术栈选型、批量测试网站生成、沉淀设计资产、为 UI 数据合成保存中间过程等任务时，应优先使用此 skill，而不是直接一次性写代码。
+description: 端到端网站设计与前端生成工作流。适用于根据 query、测试 JSON、产品想法或需求描述，生成高品质、真实可交互、风格明确、可运行的前端界面，并保留必要但不过度冗余的过程规范。
 ---
 
 # Web Design Pipeline
 
-这个 skill 的目标不是“快速吐一份页面代码”，而是把一次网站生成任务拆成可复盘、可重跑、可批量化的流水线。
+这个 skill 的目标不是快速吐一份页面代码，而是用最少但足够强的中间规范，把一次前端生成任务拆成可复盘、可批量化、可继续迭代的体验系统流程。
 
-核心原则：
+## 核心原则
 
-- 先澄清需求和范围，再设计和实现
-- 参考现有 skill 的方法，但不要照搬它们的结构和措辞
-- 对每个 case 保存过程证据，便于后续批量测试和数据合成
-- 设计要兼顾前沿感、多样性与可实现性，避免模板化同质输出
+- 先理解行业、业务场景与用户真实任务，再谈风格和实现
+- 文档要少，但每一份都必须能被下游真实消费
+- 前端交付默认必须是真实可运行、可交互、可扩展的多文件项目
+- 视觉品质、交互品质和业务贴合度同等重要
+- 生成式视觉层是系统的一部分，不是脱离内容的炫技层
+- 页面内部联动必须完整实现，不能只做静态外壳
+- 特色来自体验分层、技术组合和项目专属视觉语法，不来自框架名本身
 
 ## 何时使用
 
 在这些场景使用本 skill：
 
-- 用户要“生成一个网站”“做一个 landing page”“根据需求产出前端页面”
-- 用户给一条 query、一个 JSON 测试集、一个产品想法，希望端到端生成高质量前端
-- 用户强调设计表现力、交互、前沿风格、WebGL、动效、算法艺术
-- 用户希望保存中间过程、按案例归档、支持后续批量测试或数据合成
+- 用户要生成网站、landing page、dashboard、营销页或 web app 前端
+- 用户给一条 query 或测试 JSON，希望端到端产出高质量前端
+- 用户强调视觉表达、交互品质、前沿感、生成式视觉或沉浸体验
+- 用户需要保存必要过程规范，便于批量测试、回放或数据合成
 
 不要把它用于：
 
 - 只改一个已有组件的小样式
+- 不涉及前端交付的任务
 - 纯后端任务
-- 不涉及网站或前端交付的任务
 
 ## 输入形式
 
@@ -39,196 +42,172 @@ description: 端到端网站设计与前端生成工作流。适用于用户想�
 
 2. `test file`
    - 一个 JSON 文件路径
-   - 每条记录至少包含需求文本；若存在 `id`、`domain`、`user_req` 等字段，优先用于归档命名和上下文补全
+   - 每条记录至少包含需求文本，若存在 `id`、`domain`、`user_req`、`original_example_text`，优先用于命名和补全上下文
 
-如果输入模糊但仍可推进，先在 PM 阶段补足合理假设；只有当关键信息缺失会导致架构分叉时才向用户提问。
+## 主输出集合
 
-## 交付目标
+当前主规范只保留这些核心产物：
 
-每个 case 至少产生：
+- `01_product/experience_spec.json`
+- `02_design/experience_blueprint.json`
+- `02_design/design_system.json`
+- `02_design/interaction_spec.json`
+- `03_frontend/tech_decision.json`
+- `03_frontend/self_review.json`
+- `03_frontend/` 可运行前端源码
+- `meta.json`
 
-- PM 产物：`prd.md`、`requirement_breakdown.json`、`ia_structure.json`
-- Designer 产物：`style_research.md`、`design_system.json`、`component_specs.json`、`design_brief.md`、`visual_effects.json`
-- Frontend 产物：可运行前端源码、`tech_decision.json`、`self_review.json`
-- 元数据：`meta.json`
+详细目录与字段规则统一参考：
+
+- `references/output-structure.md`
+
+技术选型统一参考：
+
+- `references/stack-selection-policy.md`
 
 ## 总流程
 
 按这个顺序执行，不要跳步：
 
 1. 解析输入并创建 case 目录
-2. 调用 PM Agent 产出需求和信息架构
-3. 调用 Designer Agent 做前沿风格探索、设计系统收敛和特效建议
-4. 调用 Frontend Agent 做技术栈决策并实现网站
-5. 归档所有结果，并把可复用设计结论沉淀到资产库
+2. 调用 PM Agent，产出 `experience_spec.json`
+3. 调用 Designer Agent，产出 `experience_blueprint.json`、`design_system.json` 和 `interaction_spec.json`
+4. 调用 Frontend Agent，产出 `tech_decision.json`、可运行前端和 `self_review.json`
+5. 如有需要，在交付后把可复用设计结论整理并沉淀到资产库
 
-## 目录与归档
-
-先读取 `references/output-structure.md`，严格按其中规则归档。
-
-如果是单条 query：
-
-- 目录命名：`YYYYMMDD_HHMMSS_{slug}`
-
-如果来自测试文件且有 `id`：
-
-- 目录命名：`{NNN}_{domain_slug}`
-
-把每个 case 的结果放在：
-
-- `outputs/<case-id>/01_pm/`
-- `outputs/<case-id>/02_designer/`
-- `outputs/<case-id>/03_frontend/`
-
-同时把可复用设计结论沉淀到：
-
-- `references/uiux-asset-library/`
-
-## Agent 调用协议
-
-不要让各 agent 各说各话。每一步都要基于上游文件继续，而不是重新发明任务。
+## Agent 边界
 
 ### PM Agent
 
-调用 `agents/pm-agent.md`，输入：
+PM 不是弱化，而是“轻文档、重理解”。
 
-- 原始 query 或测试项
-- 已知字段：`id`、`domain`、`user_req`、`original_example_text`
-- case 输出目录
+它负责：
 
-产出必须写入：
+- 行业理解
+- 业务目标与用户角色
+- 真实需求与功能优先级
+- 页面类型与 IA 骨架
+- 核心用户流
+- 边界情况
+- 影响技术选型的结构化信号
 
-- `01_pm/prd.md`
-- `01_pm/requirement_breakdown.json`
-- `01_pm/ia_structure.json`
+它不负责：
+
+- 长篇重复 narrative PRD
+- 视觉风格裁决
+- 技术栈拍板
 
 ### Designer Agent
 
-调用 `agents/designer-agent.md`，输入：
+Designer 负责体验和审美主导。
 
-- `01_pm/` 下全部产物
-- 资产库路径 `references/uiux-asset-library/`
+它负责：
 
-Designer Agent 必须先探索再收敛：
+- 北极星体验定义
+- 项目专属视觉语法
+- 风格探索与趋势判断
+- 设计系统收敛
+- 组件状态与交互合同
+- 动效节奏
+- generative / code-art 视觉策略
+- 可复用设计资产候选整理
 
-- 用 `design-inspiration-ai` 的方法做风格探索和趋势判断
-- 用 `ui-ux-pro-max` 做设计系统、排版、配色、动效和可访问性收敛
+它不负责：
 
-产出必须写入：
-
-- `02_designer/style_research.md`
-- `02_designer/design_brief.md`
-- `02_designer/design_system.json`
-- `02_designer/component_specs.json`
-- `02_designer/visual_effects.json`
+- 最终技术栈拍板
+- 重复写一份仅做摘要的设计 brief
 
 ### Frontend Agent
 
-调用 `agents/frontend-agent.md`，输入：
+Frontend 负责实现与技术选型。
 
-- `01_pm/` 和 `02_designer/` 下全部产物
+它负责：
 
-Frontend Agent 需要先做 `tech_decision.json`，再实现。
+- 根据 `experience_spec.json`、`experience_blueprint.json`、`design_system.json`、`interaction_spec.json` 做技术决策
+- 把体验蓝图拆成内容层、交互层、动画层、渲染层和系统层
+- 选择最能支撑目标体验的技术栈
+- 实现真实可用的组件、状态和联动
+- 集成生成式视觉层
+- 做诚实自审与降级说明
 
-栈选择不固定，必须根据场景判断：
+它不负责：
 
-- `html-tailwind`
-- `react`
-- `nextjs`
-- `vue`
-- `svelte`
-- 其他仅在用户明确要求时使用
+- 重新定义业务需求
+- 重新设计一套体验规范
 
-如果 `visual_effects.json` 建议加入 WebGL、p5.js 或数字艺术动效，Frontend Agent 可参考：
+## 技术选型原则
 
-- `.agents/skills/frontend/generative-ui/SKILL.md`
+这里不再维护重复的栈对比清单。统一规则只看：
 
-但只借用其算法艺术方法，不要把整个任务变成艺术作品生成器。
+- `references/stack-selection-policy.md`
 
-## 设计资产沉淀
+但顶层硬约束保持不变：
 
-每次完成 Designer 阶段后，审查哪些结论可以泛化为资产：
+- 默认前端交付必须使用 TypeScript / 组件框架
+- 默认交付必须是多文件项目
+- 默认不接受纯静态 HTML
 
-- 趋势观察放入 `trend-notes/`
-- 可复用风格定义放入 `style-recipes/`
-- 配色策略放入 `palette-strategies/`
-- 动效模式放入 `motion-patterns/`
-- 常见同质化风险更新到 `anti-patterns.md`
+## 页面内部交互完整性要求
 
-沉淀原则：
+这是 PM、Designer、Frontend 共同遵守的硬要求：
 
-- 提炼为“可复用规则”，不要粘贴当前 case 的最终文案
-- 明确适用场景和不适用场景
-- 如果只是一次性偶然选择，不要强行入库
+- 导航和视图切换必须真实可用
+- 筛选、搜索、排序必须联动内容
+- 表单必须有验证、反馈和状态流转
+- 卡片、列表、详情、图表之间的联动必须实现
+- 动画和转场必须响应真实操作
+- 模态、抽屉、toast 等叠加层必须闭环
+- 空态、加载态、错误态必须明确
+- 尽量让惊艳点绑定到真实用户操作，而不是只绑定到背景装饰层
 
-## 多样性与去同质化
+## 资产沉淀
 
-这是关键要求。
+这一步默认不阻塞主生成链路。
 
-不要机械复用同一套：
+更推荐在这些时机执行：
 
-- 英雄区结构
-- 紫蓝渐变
-- 玻璃拟态卡片
-- 居中大标题加三栏卡片
+- 单 case 交付完成后手动整理
+- 一批 case 跑完后统一批处理
+- 确认确实有可复用结论时再执行
 
-每次设计时都要明确写出：
+沉淀目标位置：
 
-- 本案探索过哪些方向
-- 为什么没选其他方向
-- 这次如何避免和过往输出变得相似
+- `references/uiux-asset-library/`
 
-如果你发现当前产出明显像“套模板”，返回 Designer 阶段重做风格探索。
+优先沉淀：
 
-## 技术栈选择原则
+- 趋势观察到 `trend-notes/`
+- 风格方法到 `style-recipes/`
+- 配色体系到 `palette-strategies/`
+- 动效语言到 `motion-patterns/`
+- generative 组合策略到 `generative-recipes/`
+- 同质化风险到 `anti-patterns.md`
 
-默认根据目标选型，而不是固定一个框架：
+资产库维护要求：
 
-- 展示型网站、作品集、快速验证：优先 `html-tailwind`
-- 复杂状态交互、SaaS、仪表盘：优先 `react`
-- 有 SEO/SSR 明确诉求：优先 `nextjs`
-- 强交互且追求轻量：可用 `svelte`
-
-技术选型要在 `tech_decision.json` 中解释：
-
-- 为什么选这个栈
-- 为什么不选其他候选
-- 是否需要 WebGL / p5.js / Canvas
-- 是否需要多文件源码结构
-
-## 质量门槛
-
-最终交付必须满足：
-
-- 页面可运行
-- 结构完整，非半成品
-- 有明确设计方向和层级
-- 有基本交互反馈
-- 响应式可用
-- 无明显可访问性硬伤
-- 产物归档完整
-
-如果无法全部满足，明确记录在 `self_review.json` 中，不要伪装成完成。
+- 统一遵守 `references/uiux-asset-library/asset-schema.md`
+- 每条资产使用统一 YAML frontmatter
+- 新增或修改资产后同步更新 `references/uiux-asset-library/catalog.json`
+- 优先使用 `references/uiux-asset-library/scripts/generate_catalog.py` 生成或校验索引，而不是手工维护
 
 ## 输出风格
 
 对用户汇报时，优先给这些信息：
 
-- 本次选择的技术栈
+- 对业务与场景的理解
 - 设计方向与差异化点
+- 技术栈和理由
+- 页面内部交互覆盖情况
 - 主要交付物路径
-- 若未完成，缺什么、为什么
-
-不要只汇报“已生成完成”，没有验证的完成是谎言。
+- 已知缺口和降级说明
 
 ## 参考文件
-
-按需阅读这些文件：
 
 - `agents/pm-agent.md`
 - `agents/designer-agent.md`
 - `agents/frontend-agent.md`
 - `references/output-structure.md`
+- `references/stack-selection-policy.md`
 - `references/uiux-asset-library/anti-patterns.md`
 
 外部参考 skill：
@@ -236,5 +215,3 @@ Frontend Agent 需要先做 `tech_decision.json`，再实现。
 - `.agents/skills/designer/design-inspiration-ai/SKILL.md`
 - `.agents/skills/designer/ui-ux-pro-max/SKILL.md`
 - `.agents/skills/frontend/generative-ui/SKILL.md`
-
-这些参考用于吸收方法，不用于复制结构。

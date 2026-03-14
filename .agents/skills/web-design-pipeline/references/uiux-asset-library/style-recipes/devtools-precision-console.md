@@ -1,3 +1,57 @@
+---
+asset_id: style-devtools-precision-console
+asset_type: style-recipe
+title: Devtools Precision Console
+summary: 面向开发者工具与分析工作台的高密度精密控制台界面语法。
+domains:
+  - developer-tools
+  - observability
+  - performance-tools
+style_keywords:
+  - precision
+  - dark-console
+  - data-dense
+  - engineering
+interaction_level: high
+visual_primitives:
+  - graphite-surface
+  - fine-borders
+  - timeline
+  - dense-table
+motion_primitives:
+  - subtle-focus
+  - semantic-highlight
+implementation_hints:
+  - canvas-timeline
+  - mono-numerics
+  - compact-density
+uiuxmax_domains:
+  - product
+  - style
+  - ux
+  - stack
+suitable_stacks:
+  - react
+  - nextjs
+  - shadcn
+avoid_patterns:
+  - purple-tech-gradient
+  - full-screen-glass-cards
+  - hero-kpi-template
+component_primitives:
+  - data-table
+  - sidebar
+  - filters-panel
+motion_stack:
+  - motion
+data_stack:
+  - tanstack-query
+  - zustand
+rendering_stack:
+  - canvas
+  - d3
+---
+
 # Devtools Precision Console
 
 ## 适用场景

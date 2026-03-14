@@ -11,7 +11,7 @@
 ```
 .agents/skills/
 ├── designer/
-│   ├── design-inspiration-ai/   ← 趋势调研 + 风格探索工具
+│   ├── design-inspiration-ai/   ← 设计研究引擎：趋势调研 + 优秀案例搜寻 + 风格探索
 │   └── ui-ux-pro-max/           ← 设计系统收敛 + 排版配色工具（含 scripts/search.py）
 ├── frontend/
 │   └── generative-ui/          ← 交互式 UI + 算法艺术（Mode A: 背景层 / Mode B: 交互组件 / Mode C: 独立艺术）
@@ -35,7 +35,7 @@
 │   └── frontend-agent.md ← Frontend 阶段系统提示（调用 frontend/ 层工具）
 └── references/
     ├── output-structure.md
-    └── uiux-asset-library/   ← 每次 pipeline 沉淀的设计资产
+    └── uiux-asset-library/   ← 带 catalog 索引与统一 schema 的设计资产库
 ```
 
 `agents/` 下的文件 **不是独立 skill**，它们是 pipeline 各阶段的执行指令，通过显式 skill 调用来驱动上层工具。
@@ -48,7 +48,7 @@
 web-design-pipeline/SKILL.md
   ├─ 调用 agents/pm-agent.md
   ├─ 调用 agents/designer-agent.md
-  │     ├─ 读取并遵循 designer/design-inspiration-ai/SKILL.md（趋势扫描）
+  │     ├─ 读取并遵循 designer/design-inspiration-ai/SKILL.md（趋势扫描 + 优秀案例搜寻 + 审美信号判断）
   │     └─ 读取并遵循 designer/ui-ux-pro-max/SKILL.md（设计系统收敛）
   └─ 调用 agents/frontend-agent.md
         └─ 按需读取 frontend/generative-ui/SKILL.md（WebGL / 生成式 UI）

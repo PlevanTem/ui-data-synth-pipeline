@@ -1,0 +1,649 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-14",
+  "root": "references/uiux-asset-library",
+  "asset_count": 10,
+  "asset_types": [
+    "anti-patterns",
+    "motion-pattern",
+    "palette-strategy",
+    "style-recipe",
+    "trend-note"
+  ],
+  "assets": [
+    {
+      "asset_id": "anti-common-web-generation-failures",
+      "asset_type": "anti-patterns",
+      "title": "Common Web Generation Anti-Patterns",
+      "summary": "汇总网站生成过程中最常见的视觉、交互、技术和资产沉淀反模式。",
+      "domains": [
+        "generic",
+        "web",
+        "pipeline"
+      ],
+      "style_keywords": [
+        "anti-template",
+        "quality-control"
+      ],
+      "interaction_level": "medium",
+      "uiuxmax_domains": [
+        "ux",
+        "style",
+        "web",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "vue",
+        "svelte"
+      ],
+      "path": "anti-patterns.md",
+      "visual_primitives": [
+        "over-glow",
+        "glass-cards",
+        "generic-hero"
+      ],
+      "motion_primitives": [
+        "decorative-hover",
+        "empty-animation"
+      ],
+      "implementation_hints": [
+        "preflight-check",
+        "review-checklist"
+      ],
+      "avoid_patterns": [
+        "default-purple-gradient",
+        "meaningless-glassmorphism",
+        "over-heavy-stack",
+        "no-fallback-webgl"
+      ],
+      "component_primitives": [],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": []
+    },
+    {
+      "asset_id": "motion-ar-wayfinding-pulses",
+      "asset_type": "motion-pattern",
+      "title": "AR Wayfinding Pulses",
+      "summary": "用低频脉冲圈层和路径尾迹构建轻量空间导向反馈的动效模式。",
+      "domains": [
+        "travel",
+        "navigation",
+        "mobility",
+        "ar"
+      ],
+      "style_keywords": [
+        "wayfinding",
+        "spatial",
+        "guided"
+      ],
+      "interaction_level": "medium",
+      "uiuxmax_domains": [
+        "ux",
+        "style",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "svelte"
+      ],
+      "path": "motion-patterns/ar-wayfinding-pulses.md",
+      "visual_primitives": [
+        "pulse-rings",
+        "path-trail",
+        "hotspot"
+      ],
+      "motion_primitives": [
+        "pulse",
+        "glow",
+        "selection-highlight"
+      ],
+      "implementation_hints": [
+        "canvas",
+        "css",
+        "reduced-motion"
+      ],
+      "avoid_patterns": [
+        "full-page-pulse-overlay",
+        "high-frequency-pulsing",
+        "hotspot-noise"
+      ],
+      "component_primitives": [
+        "map-hotspot",
+        "route-overlay"
+      ],
+      "motion_stack": [
+        "motion",
+        "css"
+      ],
+      "data_stack": [
+        "zustand"
+      ],
+      "rendering_stack": [
+        "canvas",
+        "svg"
+      ]
+    },
+    {
+      "asset_id": "palette-blue-black-wayfinding",
+      "asset_type": "palette-strategy",
+      "title": "Blue Black Wayfinding",
+      "summary": "用蓝黑主基调和少量电青、琥珀强调构建可信又具导向感的深色导航界面。",
+      "domains": [
+        "travel",
+        "navigation",
+        "mobility"
+      ],
+      "style_keywords": [
+        "blue-black",
+        "wayfinding",
+        "trustworthy-tech"
+      ],
+      "interaction_level": "medium",
+      "uiuxmax_domains": [
+        "color",
+        "style",
+        "ux"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "svelte"
+      ],
+      "path": "palette-strategies/blue-black-wayfinding.md",
+      "visual_primitives": [
+        "navy-base",
+        "electric-highlight",
+        "amber-alert"
+      ],
+      "motion_primitives": [],
+      "implementation_hints": [
+        "dark-mode-hierarchy",
+        "hotspot-contrast",
+        "cta-accent-control"
+      ],
+      "avoid_patterns": [
+        "cheap-cyberpunk",
+        "low-contrast-blue-layers",
+        "too-many-accent-colors"
+      ],
+      "component_primitives": [
+        "map-panel",
+        "path-card",
+        "alert-chip"
+      ],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": []
+    },
+    {
+      "asset_id": "palette-ice-blue-amber-ecommerce",
+      "asset_type": "palette-strategy",
+      "title": "Ice Blue and Amber Ecommerce Palette",
+      "summary": "用冰蓝冷静基调配暖琥珀 CTA 构建科技感与转化感并存的电商配色。",
+      "domains": [
+        "ecommerce",
+        "consumer-tech",
+        "premium-lifestyle"
+      ],
+      "style_keywords": [
+        "ice-blue",
+        "amber-cta",
+        "clean-tech"
+      ],
+      "interaction_level": "medium",
+      "uiuxmax_domains": [
+        "color",
+        "style",
+        "ux"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "path": "palette-strategies/ice-blue-amber-ecommerce.md",
+      "visual_primitives": [
+        "icy-background",
+        "amber-accent",
+        "slate-neutral"
+      ],
+      "motion_primitives": [],
+      "implementation_hints": [
+        "tailwind-color-mapping",
+        "contrast-check",
+        "cta-emphasis"
+      ],
+      "avoid_patterns": [
+        "low-contrast-amber-text",
+        "pure-black-tech-tone",
+        "overusing-special-offer-gradients"
+      ],
+      "component_primitives": [
+        "product-card",
+        "primary-button",
+        "promo-banner"
+      ],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": []
+    },
+    {
+      "asset_id": "style-devtools-precision-console",
+      "asset_type": "style-recipe",
+      "title": "Devtools Precision Console",
+      "summary": "面向开发者工具与分析工作台的高密度精密控制台界面语法。",
+      "domains": [
+        "developer-tools",
+        "observability",
+        "performance-tools"
+      ],
+      "style_keywords": [
+        "precision",
+        "dark-console",
+        "data-dense",
+        "engineering"
+      ],
+      "interaction_level": "high",
+      "uiuxmax_domains": [
+        "product",
+        "style",
+        "ux",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "path": "style-recipes/devtools-precision-console.md",
+      "visual_primitives": [
+        "graphite-surface",
+        "fine-borders",
+        "timeline",
+        "dense-table"
+      ],
+      "motion_primitives": [
+        "subtle-focus",
+        "semantic-highlight"
+      ],
+      "implementation_hints": [
+        "canvas-timeline",
+        "mono-numerics",
+        "compact-density"
+      ],
+      "avoid_patterns": [
+        "purple-tech-gradient",
+        "full-screen-glass-cards",
+        "hero-kpi-template"
+      ],
+      "component_primitives": [
+        "data-table",
+        "sidebar",
+        "filters-panel"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [
+        "tanstack-query",
+        "zustand"
+      ],
+      "rendering_stack": [
+        "canvas",
+        "d3"
+      ]
+    },
+    {
+      "asset_id": "style-interactive-frontend-system-baseline",
+      "asset_type": "style-recipe",
+      "title": "Interactive Frontend System Baseline",
+      "summary": "面向高品质互动产品界面的当前技术与体验基线配方。",
+      "domains": [
+        "saas",
+        "dashboard",
+        "premium-webapp",
+        "immersive-site"
+      ],
+      "style_keywords": [
+        "interactive",
+        "premium",
+        "immersive",
+        "product-system",
+        "motion-led"
+      ],
+      "interaction_level": "high",
+      "uiuxmax_domains": [
+        "style",
+        "ux",
+        "stack",
+        "chart"
+      ],
+      "suitable_stacks": [
+        "nextjs",
+        "react",
+        "shadcn"
+      ],
+      "path": "style-recipes/interactive-frontend-system-baseline.md",
+      "visual_primitives": [
+        "depth",
+        "glow",
+        "grid",
+        "panel",
+        "layer",
+        "shader",
+        "data",
+        "3d"
+      ],
+      "motion_primitives": [
+        "spring",
+        "layout-transition",
+        "scroll-sync",
+        "parallax",
+        "reveal",
+        "timeline"
+      ],
+      "implementation_hints": [
+        "nextjs15",
+        "react19",
+        "tailwind4",
+        "shadcn-ui",
+        "radix-ui",
+        "motion-react",
+        "gsap",
+        "tanstack-query",
+        "zustand",
+        "react-hook-form",
+        "zod",
+        "sonner",
+        "recharts",
+        "d3",
+        "r3f",
+        "spline"
+      ],
+      "avoid_patterns": [
+        "decorative-3d-only",
+        "fake-premium-hover-only",
+        "isolated-background-effects",
+        "template-dashboard-look"
+      ],
+      "component_primitives": [
+        "shadcn-ui",
+        "radix-dialog",
+        "radix-tabs",
+        "command-palette",
+        "data-table"
+      ],
+      "motion_stack": [
+        "motion",
+        "gsap"
+      ],
+      "data_stack": [
+        "tanstack-query",
+        "zustand",
+        "react-hook-form",
+        "zod",
+        "sonner"
+      ],
+      "rendering_stack": [
+        "recharts",
+        "d3",
+        "r3f",
+        "spline"
+      ]
+    },
+    {
+      "asset_id": "style-liquid-glass-mobile-commerce",
+      "asset_type": "style-recipe",
+      "title": "Liquid Glass Mobile Commerce",
+      "summary": "面向高端移动电商的 Liquid Glass 材质与动态模糊交互配方。",
+      "domains": [
+        "ecommerce",
+        "mobile-commerce",
+        "beauty",
+        "premium-tech"
+      ],
+      "style_keywords": [
+        "liquid-glass",
+        "mobile",
+        "premium",
+        "future-clean"
+      ],
+      "interaction_level": "high",
+      "uiuxmax_domains": [
+        "style",
+        "ux",
+        "web",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "path": "style-recipes/liquid-glass-mobile-commerce.md",
+      "visual_primitives": [
+        "glass-surface",
+        "z-layering",
+        "optical-refraction"
+      ],
+      "motion_primitives": [
+        "press-feedback",
+        "dynamic-blur"
+      ],
+      "implementation_hints": [
+        "backdrop-filter",
+        "dark-mode-adaptation",
+        "mobile-gpu-budget"
+      ],
+      "avoid_patterns": [
+        "strong-blur-under-long-text",
+        "full-screen-backdrop-filter-on-low-end-android",
+        "fully-transparent-glass"
+      ],
+      "component_primitives": [
+        "mobile-nav",
+        "product-sheet",
+        "floating-toolbar"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "css"
+      ]
+    },
+    {
+      "asset_id": "style-liquid-glass-spatial-commerce",
+      "asset_type": "style-recipe",
+      "title": "Liquid Glass Spatial Commerce",
+      "summary": "将液态玻璃材质、空间层次和物理化交互结合起来的高端电商体验配方。",
+      "domains": [
+        "luxury-ecommerce",
+        "future-tech",
+        "ar-vr-showcase"
+      ],
+      "style_keywords": [
+        "liquid",
+        "glass",
+        "spatial",
+        "luxury",
+        "dark-mode"
+      ],
+      "interaction_level": "high",
+      "uiuxmax_domains": [
+        "style",
+        "ux",
+        "landing",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs"
+      ],
+      "path": "style-recipes/liquid-glass-spatial-commerce.md",
+      "visual_primitives": [
+        "glow",
+        "glass",
+        "fluid",
+        "3d",
+        "orb"
+      ],
+      "motion_primitives": [
+        "physics",
+        "morph",
+        "float"
+      ],
+      "implementation_hints": [
+        "webgl-shader",
+        "r3f",
+        "d3",
+        "backdrop-filter"
+      ],
+      "avoid_patterns": [
+        "flat-backgrounds",
+        "heavy-borders",
+        "static-list-layout"
+      ],
+      "component_primitives": [
+        "floating-nav",
+        "spatial-graph",
+        "product-surface"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "d3",
+        "r3f"
+      ]
+    },
+    {
+      "asset_id": "trend-ios26-liquid-glass-web-adaptation",
+      "asset_type": "trend-note",
+      "title": "iOS 26 Liquid Glass Web Adaptation",
+      "summary": "记录 iOS 26 Liquid Glass 在 Web 端的适配边界、降级要求和使用位置。",
+      "domains": [
+        "premium-consumer",
+        "ecommerce",
+        "mobile-app",
+        "wellness"
+      ],
+      "style_keywords": [
+        "liquid-glass",
+        "material-depth",
+        "premium-surface"
+      ],
+      "interaction_level": "medium",
+      "uiuxmax_domains": [
+        "style",
+        "ux",
+        "web",
+        "stack"
+      ],
+      "suitable_stacks": [
+        "nextjs",
+        "react",
+        "svelte"
+      ],
+      "path": "trend-notes/ios26-liquid-glass-web-adaptation.md",
+      "visual_primitives": [
+        "glass-surface",
+        "thin-border",
+        "blur"
+      ],
+      "motion_primitives": [
+        "micro-hover",
+        "spring-entry"
+      ],
+      "implementation_hints": [
+        "backdrop-filter",
+        "prefers-reduced-motion",
+        "supports-fallback"
+      ],
+      "avoid_patterns": [
+        "glass-on-dense-content",
+        "full-page-glass",
+        "no-fallback-blur"
+      ],
+      "component_primitives": [
+        "sticky-nav",
+        "bottom-sheet",
+        "modal-overlay"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "css"
+      ]
+    },
+    {
+      "asset_id": "trend-travel-frictionless-flow-2026",
+      "asset_type": "trend-note",
+      "title": "Travel Frictionless Flow 2026",
+      "summary": "总结旅行产品从内容展示转向阶段感知与低摩擦任务推进的趋势变化。",
+      "domains": [
+        "travel",
+        "city-guide",
+        "ticketing",
+        "trip-planning"
+      ],
+      "style_keywords": [
+        "frictionless",
+        "stage-aware",
+        "contextual"
+      ],
+      "interaction_level": "high",
+      "uiuxmax_domains": [
+        "product",
+        "ux",
+        "style"
+      ],
+      "suitable_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "path": "trend-notes/travel-frictionless-flow-2026.md",
+      "visual_primitives": [
+        "stage-switch",
+        "progressive-reveal",
+        "journey-priority"
+      ],
+      "motion_primitives": [
+        "state-transition",
+        "guided-progression"
+      ],
+      "implementation_hints": [
+        "stage-based-ui",
+        "contextual-cta",
+        "progressive-disclosure"
+      ],
+      "avoid_patterns": [
+        "homepage-gamification-primary",
+        "all-modules-exposed-at-once",
+        "over-hidden-trust-info"
+      ],
+      "component_primitives": [
+        "stage-tabs",
+        "contextual-panel",
+        "reward-module"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [
+        "zustand",
+        "tanstack-query"
+      ],
+      "rendering_stack": []
+    }
+  ]
+}

@@ -1,11 +1,45 @@
 ---
 name: ui-ux-pro-max
-description: "UI/UX design intelligence. 50 styles, 21 palettes, 50 font pairings, 20 charts, 9 stacks (React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind, shadcn/ui). Actions: plan, build, create, design, implement, review, fix, improve, optimize, enhance, refactor, check UI/UX code. Projects: website, landing page, dashboard, admin panel, e-commerce, SaaS, portfolio, blog, mobile app, .html, .tsx, .vue, .svelte. Elements: button, modal, navbar, sidebar, card, table, form, chart. Styles: glassmorphism, claymorphism, minimalism, brutalism, neumorphism, bento grid, dark mode, responsive, skeuomorphism, flat design. Topics: color palette, accessibility, animation, layout, typography, font pairing, spacing, hover, shadow, gradient. Integrations: shadcn/ui MCP for component search and examples."
+description: "UI/UX design intelligence. 提供结构化风格、配色、排版、UX 与技术栈检索能力，适合为网站、dashboard、营销页、web app 和前端设计系统提供参考底座。CSV 数据库是召回与推理工具，不是创意边界；需要结合实时 inspiration、先锋视觉趋势与项目上下文共同判断。"
 ---
 
 # UI/UX Pro Max - Design Intelligence
 
-Comprehensive design guide for web and mobile applications. Contains 50+ styles, 97 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 9 technology stacks. Searchable database with priority-based recommendations.
+Comprehensive design guide for web and mobile applications. It provides searchable structured data for styles, colors, typography, UX, charts, icons, and multiple stacks. Treat the CSV database as a reference layer for recall and reasoning, not as a ceiling on what the design is allowed to become.
+
+## Knowledge Architecture
+
+This skill now works as the structured half of a dual-layer knowledge system:
+
+- `data/` = structured retrieval layer
+- `web-design-pipeline/references/uiux-asset-library/` = narrative reference layer
+
+Use them together, not as competing sources.
+
+### `data/` is for:
+
+- fast recall
+- stable tags
+- repeatable matching
+- domain-specific best practices
+- implementation hints that need deterministic retrieval
+
+### `references/` is for:
+
+- trend synthesis
+- reusable style recipes
+- motion language
+- anti-patterns
+- generative combinations
+- higher-order judgment that does not fit cleanly into a CSV row
+
+### Coordination rule
+
+When live research or pipeline references surface a strong new pattern:
+
+1. use `references/` to capture the narrative and context
+2. map it back into stable tags that can later enrich `data/`
+3. never let `data/` and `references/` drift into two separate taste systems
 
 ## When to Apply
 
@@ -15,6 +49,8 @@ Reference these guidelines when:
 - Reviewing code for UX issues
 - Building landing pages or dashboards
 - Implementing accessibility requirements
+- Building a structured style library that needs stable tags and repeatable retrieval
+- You want to map live inspiration findings back into reusable style, motion, and implementation rules
 
 ## Rule Categories by Priority
 
@@ -128,14 +164,14 @@ Extract key information from user request:
 - **Product type**: SaaS, e-commerce, portfolio, dashboard, landing page, etc.
 - **Style keywords**: minimal, playful, professional, elegant, dark mode, etc.
 - **Industry**: healthcare, fintech, gaming, education, etc.
-- **Stack**: React, Vue, Next.js, or default to `html-tailwind`
+- **Stack**: infer from interaction density, motion complexity, SEO needs, and delivery constraints
 
 ### Step 2: Generate Design System (REQUIRED)
 
 **Always start with `--design-system`** to get comprehensive recommendations with reasoning:
 
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
 ```
 
 This command:
@@ -143,10 +179,11 @@ This command:
 2. Applies reasoning rules from `ui-reasoning.csv` to select best matches
 3. Returns complete design system: pattern, style, colors, typography, effects
 4. Includes anti-patterns to avoid
+5. Gives you a structured baseline that should be merged with live trend research and project-specific design intent
 
 **Example:**
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --design-system -p "Serenity Spa"
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --design-system -p "Serenity Spa"
 ```
 
 ### Step 3: Supplement with Detailed Searches (as needed)
@@ -154,7 +191,7 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness serv
 After getting the design system, use domain searches to get additional details:
 
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
 ```
 
 **When to use detailed searches:**
@@ -167,15 +204,46 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <dom
 | Alternative fonts | `typography` | `--domain typography "elegant luxury"` |
 | Landing structure | `landing` | `--domain landing "hero social-proof"` |
 
-### Step 4: Stack Guidelines (Default: html-tailwind)
+### Step 4: Stack Guidelines
 
-Get implementation-specific best practices. If user doesn't specify a stack, **default to `html-tailwind`**.
+Use this step as a retrieval and comparison aid, not as the final decision authority. The pipeline's actual stack decision should be made by the Frontend stage based on the product/experience spec and the frontend stack policy.
+
+Get implementation-specific best practices. Do **not** default to `html-tailwind` just because it is easy; choose the stack based on interaction density, motion complexity, 3D / generative needs, SEO constraints, and maintainability.
 
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack html-tailwind
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "<keyword>" --stack <stack>
 ```
 
 Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`, `react-native`, `flutter`, `shadcn`
+
+Suggested stack posture:
+
+- `html-tailwind`: historical / exception path for static or constrained delivery, not the default recommendation
+- `react`: rich components, stateful interaction, design systems, dashboards
+- `nextjs`: SSR/SEO plus high-quality interaction
+- `vue`: balanced component architecture with flexible motion-rich interfaces
+- `svelte`: lightweight runtime with strong animation and interaction performance
+
+If the desired experience depends on WebGL, Canvas, 3D, illustration systems, or complex motion orchestration, combine this skill with live research and the project's frontend skill rather than forcing the output into a static-site mindset.
+
+### Current Interactive Frontend Baseline
+
+For premium interactive product interfaces and high-end immersive web experiences, the current baseline stack to be aware of is:
+
+- `Next.js 15` + `React 19` + `TypeScript`
+- `Tailwind CSS 4` + CSS variables / token-driven theming
+- `shadcn/ui` + `Radix UI`, with `React Aria` as an accessibility-oriented alternative
+- `motion` (`motion/react`, formerly Framer Motion) for core component motion
+- `GSAP` for high-value scroll, timeline, and parallax orchestration
+- `@react-three/fiber` / `Three.js` or `Spline` for 3D interaction layers
+- `TanStack Query` for server state
+- `Zustand` for client/UI state
+- `React Hook Form` + `Zod` for forms and validation
+- `Sonner` for toast feedback
+- `Recharts` or `D3` for data visualization
+- `pnpm` as the cleanest package manager in modern React 19 / Next 15 setups
+
+This is not a mandatory default for every project, but it is a current high-quality interaction stack that should inform recommendations, comparisons, and implementation hints.
 
 ---
 
@@ -200,7 +268,7 @@ Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`
 
 | Stack | Focus |
 |-------|-------|
-| `html-tailwind` | Tailwind utilities, responsive, a11y (DEFAULT) |
+| `html-tailwind` | Static or exceptional delivery path, legacy-friendly reference |
 | `react` | State, hooks, performance, patterns |
 | `nextjs` | SSR, routing, images, API routes |
 | `vue` | Composition API, Pinia, Vue Router |
@@ -220,12 +288,12 @@ Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`
 - Product type: Beauty/Spa service
 - Style keywords: elegant, professional, soft
 - Industry: Beauty/Wellness
-- Stack: html-tailwind (default)
+- Stack: infer from experience target; only choose `html-tailwind` if a lightweight static presentation is enough and the main pipeline rules allow that exception
 
 ### Step 2: Generate Design System (REQUIRED)
 
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service elegant" --design-system -p "Serenity Spa"
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "beauty spa wellness service elegant" --design-system -p "Serenity Spa"
 ```
 
 **Output:** Complete design system with pattern, style, colors, typography, effects, and anti-patterns.
@@ -234,19 +302,19 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness serv
 
 ```bash
 # Get UX guidelines for animation and accessibility
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "animation accessibility" --domain ux
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "animation accessibility" --domain ux
 
 # Get alternative typography options if needed
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "elegant luxury serif" --domain typography
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "elegant luxury serif" --domain typography
 ```
 
 ### Step 4: Stack Guidelines
 
 ```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "layout responsive form" --stack html-tailwind
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "layout responsive form" --stack react
 ```
 
-**Then:** Synthesize design system + detailed searches and implement the design.
+**Then:** Synthesize design system + detailed searches + live inspiration findings, and implement the design.
 
 ---
 
@@ -256,10 +324,10 @@ The `--design-system` flag supports two output formats:
 
 ```bash
 # ASCII box (default) - best for terminal display
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system
 
 # Markdown - best for documentation
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system -f markdown
+python3 .agents/skills/designer/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system -f markdown
 ```
 
 ---
@@ -268,10 +336,43 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design
 
 1. **Be specific with keywords** - "healthcare SaaS dashboard" > "app"
 2. **Search multiple times** - Different keywords reveal different insights
-3. **Combine domains** - Style + Typography + Color = Complete design system
+3. **Combine domains** - Style + Typography + Color + UX + live inspiration = complete design system
 4. **Always check UX** - Search "animation", "z-index", "accessibility" for common issues
-5. **Use stack flag** - Get implementation-specific best practices
+5. **Use stack flag** - Get implementation-specific best practices, but choose stack based on experience goals rather than habit
 6. **Iterate** - If first search doesn't match, try different keywords
+
+---
+
+## Relationship To Pipeline Assets
+
+When used inside `web-design-pipeline`, this skill should exchange information with `references/uiux-asset-library/`, especially its `catalog.json` index, unified asset schema, and reviewable CSV sync candidates.
+
+Use CSV data for:
+
+- fast recall
+- domain classification
+- consistent terminology
+- reasoning baselines
+
+Use pipeline Markdown assets for:
+
+- trend notes
+- style recipes
+- motion patterns
+- palette strategies
+- anti-pattern accumulation
+
+When a new visual or interaction direction emerges from live research, convert it into reusable metadata whenever possible:
+
+- `style_keywords`
+- `interaction_level`
+- `visual_primitives`
+- `motion_primitives`
+- `implementation_hints`
+- `suitable_stacks`
+- `avoid_patterns`
+
+This keeps CSV retrieval and Markdown knowledge aligned instead of drifting apart.
 
 ---
 

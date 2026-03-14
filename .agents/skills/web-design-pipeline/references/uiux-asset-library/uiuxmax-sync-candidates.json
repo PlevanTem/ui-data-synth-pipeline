@@ -1,0 +1,503 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-14",
+  "source_catalog": "references/uiux-asset-library/catalog.json",
+  "review_policy": [
+    "These candidates are advisory and should be reviewed before updating CSV files.",
+    "colors.csv candidates intentionally leave hex columns blank for manual completion.",
+    "products.csv candidates are low-confidence because asset-level knowledge is more granular than product taxonomy."
+  ],
+  "style_candidates": [
+    {
+      "source_asset_id": "motion-ar-wayfinding-pulses",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "AR Wayfinding Pulses",
+        "Type": "General",
+        "Keywords": "wayfinding, spatial, guided, travel, navigation, mobility, ar",
+        "Primary Colors": "pulse-rings, path-trail, hotspot",
+        "Effects & Animation": "pulse, glow, selection-highlight",
+        "Best For": "travel, navigation, mobility, ar",
+        "Do Not Use For": "full-page-pulse-overlay, high-frequency-pulsing, hotspot-noise",
+        "Framework Compatibility": "react, nextjs, svelte",
+        "Complexity": "Medium"
+      }
+    },
+    {
+      "source_asset_id": "style-devtools-precision-console",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "Devtools Precision Console",
+        "Type": "General",
+        "Keywords": "precision, dark-console, data-dense, engineering, developer-tools, observability, performance-tools",
+        "Primary Colors": "graphite-surface, fine-borders, timeline, dense-table",
+        "Effects & Animation": "subtle-focus, semantic-highlight",
+        "Best For": "developer-tools, observability, performance-tools",
+        "Do Not Use For": "purple-tech-gradient, full-screen-glass-cards, hero-kpi-template",
+        "Framework Compatibility": "react, nextjs, shadcn",
+        "Complexity": "High"
+      }
+    },
+    {
+      "source_asset_id": "style-interactive-frontend-system-baseline",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "Interactive Frontend System Baseline",
+        "Type": "General",
+        "Keywords": "interactive, premium, immersive, product-system, motion-led, saas, dashboard, premium-webapp, immersive-site",
+        "Primary Colors": "depth, glow, grid, panel, layer, shader, data, 3d",
+        "Effects & Animation": "spring, layout-transition, scroll-sync, parallax, reveal, timeline",
+        "Best For": "saas, dashboard, premium-webapp, immersive-site",
+        "Do Not Use For": "decorative-3d-only, fake-premium-hover-only, isolated-background-effects, template-dashboard-look",
+        "Framework Compatibility": "nextjs, react, shadcn",
+        "Complexity": "High"
+      }
+    },
+    {
+      "source_asset_id": "style-liquid-glass-mobile-commerce",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "Liquid Glass Mobile Commerce",
+        "Type": "General",
+        "Keywords": "liquid-glass, mobile, premium, future-clean, ecommerce, mobile-commerce, beauty, premium-tech",
+        "Primary Colors": "glass-surface, z-layering, optical-refraction",
+        "Effects & Animation": "press-feedback, dynamic-blur",
+        "Best For": "ecommerce, mobile-commerce, beauty, premium-tech",
+        "Do Not Use For": "strong-blur-under-long-text, full-screen-backdrop-filter-on-low-end-android, fully-transparent-glass",
+        "Framework Compatibility": "react, nextjs, shadcn",
+        "Complexity": "High"
+      }
+    },
+    {
+      "source_asset_id": "style-liquid-glass-spatial-commerce",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "Liquid Glass Spatial Commerce",
+        "Type": "General",
+        "Keywords": "liquid, glass, spatial, luxury, dark-mode, luxury-ecommerce, future-tech, ar-vr-showcase",
+        "Primary Colors": "glow, glass, fluid, 3d, orb",
+        "Effects & Animation": "physics, morph, float",
+        "Best For": "luxury-ecommerce, future-tech, ar-vr-showcase",
+        "Do Not Use For": "flat-backgrounds, heavy-borders, static-list-layout",
+        "Framework Compatibility": "react, nextjs",
+        "Complexity": "High"
+      }
+    },
+    {
+      "source_asset_id": "trend-ios26-liquid-glass-web-adaptation",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "iOS 26 Liquid Glass Web Adaptation",
+        "Type": "General",
+        "Keywords": "liquid-glass, material-depth, premium-surface, premium-consumer, ecommerce, mobile-app, wellness",
+        "Primary Colors": "glass-surface, thin-border, blur",
+        "Effects & Animation": "micro-hover, spring-entry",
+        "Best For": "premium-consumer, ecommerce, mobile-app, wellness",
+        "Do Not Use For": "glass-on-dense-content, full-page-glass, no-fallback-blur",
+        "Framework Compatibility": "nextjs, react, svelte",
+        "Complexity": "Medium"
+      }
+    },
+    {
+      "source_asset_id": "trend-travel-frictionless-flow-2026",
+      "target_csv": "styles.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Style Category": "Travel Frictionless Flow 2026",
+        "Type": "General",
+        "Keywords": "frictionless, stage-aware, contextual, travel, city-guide, ticketing, trip-planning",
+        "Primary Colors": "stage-switch, progressive-reveal, journey-priority",
+        "Effects & Animation": "state-transition, guided-progression",
+        "Best For": "travel, city-guide, ticketing, trip-planning",
+        "Do Not Use For": "homepage-gamification-primary, all-modules-exposed-at-once, over-hidden-trust-info",
+        "Framework Compatibility": "react, nextjs, shadcn",
+        "Complexity": "High"
+      }
+    }
+  ],
+  "color_candidates": [
+    {
+      "source_asset_id": "palette-blue-black-wayfinding",
+      "target_csv": "colors.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Product Type": "Blue Black Wayfinding",
+        "Keywords": "travel, navigation, mobility, blue-black, wayfinding, trustworthy-tech",
+        "Primary (Hex)": "",
+        "Secondary (Hex)": "",
+        "CTA (Hex)": "",
+        "Background (Hex)": "",
+        "Text (Hex)": "",
+        "Border (Hex)": "",
+        "Notes": "用蓝黑主基调和少量电青、琥珀强调构建可信又具导向感的深色导航界面。"
+      }
+    },
+    {
+      "source_asset_id": "palette-ice-blue-amber-ecommerce",
+      "target_csv": "colors.csv",
+      "confidence": "medium",
+      "candidate_row": {
+        "Product Type": "Ice Blue and Amber Ecommerce Palette",
+        "Keywords": "ecommerce, consumer-tech, premium-lifestyle, ice-blue, amber-cta, clean-tech",
+        "Primary (Hex)": "",
+        "Secondary (Hex)": "",
+        "CTA (Hex)": "",
+        "Background (Hex)": "",
+        "Text (Hex)": "",
+        "Border (Hex)": "",
+        "Notes": "用冰蓝冷静基调配暖琥珀 CTA 构建科技感与转化感并存的电商配色。"
+      }
+    }
+  ],
+  "product_candidates": [
+    {
+      "source_asset_id": "palette-blue-black-wayfinding",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Blue Black Wayfinding",
+        "Keywords": "travel, navigation, mobility, blue-black, wayfinding, trustworthy-tech",
+        "Primary Style Recommendation": "Blue Black Wayfinding",
+        "Secondary Styles": "blue-black, wayfinding, trustworthy-tech",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "navy-base, electric-highlight, amber-alert",
+        "Key Considerations": "用蓝黑主基调和少量电青、琥珀强调构建可信又具导向感的深色导航界面。"
+      }
+    },
+    {
+      "source_asset_id": "palette-ice-blue-amber-ecommerce",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Ice Blue and Amber Ecommerce Palette",
+        "Keywords": "ecommerce, consumer-tech, premium-lifestyle, ice-blue, amber-cta, clean-tech",
+        "Primary Style Recommendation": "Ice Blue and Amber Ecommerce Palette",
+        "Secondary Styles": "ice-blue, amber-cta, clean-tech",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "icy-background, amber-accent, slate-neutral",
+        "Key Considerations": "用冰蓝冷静基调配暖琥珀 CTA 构建科技感与转化感并存的电商配色。"
+      }
+    },
+    {
+      "source_asset_id": "style-devtools-precision-console",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Devtools Precision Console",
+        "Keywords": "developer-tools, observability, performance-tools, precision, dark-console, data-dense, engineering",
+        "Primary Style Recommendation": "Devtools Precision Console",
+        "Secondary Styles": "precision, dark-console, data-dense, engineering",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "graphite-surface, fine-borders, timeline, dense-table",
+        "Key Considerations": "面向开发者工具与分析工作台的高密度精密控制台界面语法。"
+      }
+    },
+    {
+      "source_asset_id": "style-interactive-frontend-system-baseline",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Interactive Frontend System Baseline",
+        "Keywords": "saas, dashboard, premium-webapp, immersive-site, interactive, premium, immersive, product-system, motion-led",
+        "Primary Style Recommendation": "Interactive Frontend System Baseline",
+        "Secondary Styles": "interactive, premium, immersive, product-system, motion-led",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "depth, glow, grid, panel, layer, shader, data, 3d",
+        "Key Considerations": "面向高品质互动产品界面的当前技术与体验基线配方。"
+      }
+    },
+    {
+      "source_asset_id": "style-liquid-glass-mobile-commerce",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Liquid Glass Mobile Commerce",
+        "Keywords": "ecommerce, mobile-commerce, beauty, premium-tech, liquid-glass, mobile, premium, future-clean",
+        "Primary Style Recommendation": "Liquid Glass Mobile Commerce",
+        "Secondary Styles": "liquid-glass, mobile, premium, future-clean",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "glass-surface, z-layering, optical-refraction",
+        "Key Considerations": "面向高端移动电商的 Liquid Glass 材质与动态模糊交互配方。"
+      }
+    },
+    {
+      "source_asset_id": "style-liquid-glass-spatial-commerce",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Liquid Glass Spatial Commerce",
+        "Keywords": "luxury-ecommerce, future-tech, ar-vr-showcase, liquid, glass, spatial, luxury, dark-mode",
+        "Primary Style Recommendation": "Liquid Glass Spatial Commerce",
+        "Secondary Styles": "liquid, glass, spatial, luxury, dark-mode",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "glow, glass, fluid, 3d, orb",
+        "Key Considerations": "将液态玻璃材质、空间层次和物理化交互结合起来的高端电商体验配方。"
+      }
+    },
+    {
+      "source_asset_id": "trend-ios26-liquid-glass-web-adaptation",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "iOS 26 Liquid Glass Web Adaptation",
+        "Keywords": "premium-consumer, ecommerce, mobile-app, wellness, liquid-glass, material-depth, premium-surface",
+        "Primary Style Recommendation": "iOS 26 Liquid Glass Web Adaptation",
+        "Secondary Styles": "liquid-glass, material-depth, premium-surface",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "glass-surface, thin-border, blur",
+        "Key Considerations": "记录 iOS 26 Liquid Glass 在 Web 端的适配边界、降级要求和使用位置。"
+      }
+    },
+    {
+      "source_asset_id": "trend-travel-frictionless-flow-2026",
+      "target_csv": "products.csv",
+      "confidence": "low",
+      "candidate_row": {
+        "Product Type": "Travel Frictionless Flow 2026",
+        "Keywords": "travel, city-guide, ticketing, trip-planning, frictionless, stage-aware, contextual",
+        "Primary Style Recommendation": "Travel Frictionless Flow 2026",
+        "Secondary Styles": "frictionless, stage-aware, contextual",
+        "Landing Page Pattern": "",
+        "Dashboard Style (if applicable)": "",
+        "Color Palette Focus": "stage-switch, progressive-reveal, journey-priority",
+        "Key Considerations": "总结旅行产品从内容展示转向阶段感知与低摩擦任务推进的趋势变化。"
+      }
+    }
+  ],
+  "stack_signals": [
+    {
+      "source_asset_id": "anti-common-web-generation-failures",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "vue",
+        "svelte"
+      ],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": [],
+      "implementation_hints": [
+        "preflight-check",
+        "review-checklist"
+      ]
+    },
+    {
+      "source_asset_id": "motion-ar-wayfinding-pulses",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "svelte"
+      ],
+      "motion_stack": [
+        "motion",
+        "css"
+      ],
+      "data_stack": [
+        "zustand"
+      ],
+      "rendering_stack": [
+        "canvas",
+        "svg"
+      ],
+      "implementation_hints": [
+        "canvas",
+        "css",
+        "reduced-motion"
+      ]
+    },
+    {
+      "source_asset_id": "palette-blue-black-wayfinding",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "svelte"
+      ],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": [],
+      "implementation_hints": [
+        "dark-mode-hierarchy",
+        "hotspot-contrast",
+        "cta-accent-control"
+      ]
+    },
+    {
+      "source_asset_id": "palette-ice-blue-amber-ecommerce",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "motion_stack": [],
+      "data_stack": [],
+      "rendering_stack": [],
+      "implementation_hints": [
+        "tailwind-color-mapping",
+        "contrast-check",
+        "cta-emphasis"
+      ]
+    },
+    {
+      "source_asset_id": "style-devtools-precision-console",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [
+        "tanstack-query",
+        "zustand"
+      ],
+      "rendering_stack": [
+        "canvas",
+        "d3"
+      ],
+      "implementation_hints": [
+        "canvas-timeline",
+        "mono-numerics",
+        "compact-density"
+      ]
+    },
+    {
+      "source_asset_id": "style-interactive-frontend-system-baseline",
+      "recommended_stacks": [
+        "nextjs",
+        "react",
+        "shadcn"
+      ],
+      "motion_stack": [
+        "motion",
+        "gsap"
+      ],
+      "data_stack": [
+        "tanstack-query",
+        "zustand",
+        "react-hook-form",
+        "zod",
+        "sonner"
+      ],
+      "rendering_stack": [
+        "recharts",
+        "d3",
+        "r3f",
+        "spline"
+      ],
+      "implementation_hints": [
+        "nextjs15",
+        "react19",
+        "tailwind4",
+        "shadcn-ui",
+        "radix-ui",
+        "motion-react",
+        "gsap",
+        "tanstack-query",
+        "zustand",
+        "react-hook-form",
+        "zod",
+        "sonner",
+        "recharts",
+        "d3",
+        "r3f",
+        "spline"
+      ]
+    },
+    {
+      "source_asset_id": "style-liquid-glass-mobile-commerce",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "css"
+      ],
+      "implementation_hints": [
+        "backdrop-filter",
+        "dark-mode-adaptation",
+        "mobile-gpu-budget"
+      ]
+    },
+    {
+      "source_asset_id": "style-liquid-glass-spatial-commerce",
+      "recommended_stacks": [
+        "react",
+        "nextjs"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "d3",
+        "r3f"
+      ],
+      "implementation_hints": [
+        "webgl-shader",
+        "r3f",
+        "d3",
+        "backdrop-filter"
+      ]
+    },
+    {
+      "source_asset_id": "trend-ios26-liquid-glass-web-adaptation",
+      "recommended_stacks": [
+        "nextjs",
+        "react",
+        "svelte"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [],
+      "rendering_stack": [
+        "css"
+      ],
+      "implementation_hints": [
+        "backdrop-filter",
+        "prefers-reduced-motion",
+        "supports-fallback"
+      ]
+    },
+    {
+      "source_asset_id": "trend-travel-frictionless-flow-2026",
+      "recommended_stacks": [
+        "react",
+        "nextjs",
+        "shadcn"
+      ],
+      "motion_stack": [
+        "motion"
+      ],
+      "data_stack": [
+        "zustand",
+        "tanstack-query"
+      ],
+      "rendering_stack": [],
+      "implementation_hints": [
+        "stage-based-ui",
+        "contextual-cta",
+        "progressive-disclosure"
+      ]
+    }
+  ]
+}

@@ -1,3 +1,47 @@
+---
+asset_id: anti-common-web-generation-failures
+asset_type: anti-patterns
+title: Common Web Generation Anti-Patterns
+summary: 汇总网站生成过程中最常见的视觉、交互、技术和资产沉淀反模式。
+domains:
+  - generic
+  - web
+  - pipeline
+style_keywords:
+  - anti-template
+  - quality-control
+interaction_level: medium
+visual_primitives:
+  - over-glow
+  - glass-cards
+  - generic-hero
+motion_primitives:
+  - decorative-hover
+  - empty-animation
+implementation_hints:
+  - preflight-check
+  - review-checklist
+uiuxmax_domains:
+  - ux
+  - style
+  - web
+  - stack
+suitable_stacks:
+  - react
+  - nextjs
+  - vue
+  - svelte
+avoid_patterns:
+  - default-purple-gradient
+  - meaningless-glassmorphism
+  - over-heavy-stack
+  - no-fallback-webgl
+component_primitives: []
+motion_stack: []
+data_stack: []
+rendering_stack: []
+---
+
 # Anti-Patterns
 
 这个文件记录网站生成过程中常见的同质化和低质量设计问题。

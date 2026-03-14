@@ -1,309 +1,439 @@
 # Architecture
 
-UI Data Synth Pipeline 的整体架构、Agent 实体关系与数据流文档。
+`UI Data Synth Pipeline` 的目标不是生成某一个固定网站，而是把“业务理解 -> 体验系统设计 -> 分层前端交付 -> 资产整理与沉淀”做成一条可复盘、可扩展、可对比版本的生产流水线。
+
+这份文档描述的是当前仓库的真实架构：它包含 skill 工具层、pipeline 编排层、版本化 outputs，以及资产库与案例库之间的关系。
 
 ---
 
-## 1. 端到端流水线总览
+## 1. 系统定位
 
-从一条 query 或测试 JSON 出发，经三个 Agent 阶段，产出可运行前端与完整过程数据。
+这个仓库本质上是三件东西的组合：
+
+- **编排协议**：定义 PM、Designer、Frontend 三阶段如何协作
+- **能力底座**：把设计灵感、UI/UX 收敛、生成式视觉等能力做成独立 skill
+- **样例与证据库**：保留不同 pipeline 版本生成出的完整 case，便于回看、比较和评估
+
+因此它不是传统意义上的“根目录启动型应用”。仓库根目录没有统一的 `package.json` 或 `src/`，真正可运行的前端入口通常位于某个 case 的 `03_frontend/`。
+
+---
+
+## 2. 顶层架构总览
 
 ```mermaid
 flowchart TD
-    INPUT[/"📥 Input\nQuery 自然语言\n或 Test JSON 测试集"/]
+    INPUT[/"输入\nquery 或 test JSON"/]
 
-    subgraph PIPELINE ["🔄 Web Design Pipeline  ·  web-design-pipeline/SKILL.md"]
+    subgraph PIPELINE["web-design-pipeline 编排层"]
         direction TB
-        PM["🗂️ PM Agent\n─────────────\n需求压缩 · 范围定义\n信息架构 · PRD 生成"]
-        D["🎨 Designer Agent\n─────────────\n趋势调研 · 风格探索\n设计系统 · 组件规格\n视觉特效判断"]
-        FE["💻 Frontend Agent\n─────────────\n技术栈选型 · 代码实现\n自检 self_review"]
+        ENTRY["SKILL.md\n流程入口"]
+        PM["PM Agent\n行业理解 / 业务语义 / IA 与范围"]
+        D["Designer Agent\n北极星体验 / 视觉母语 / 交互合同"]
+        FE["Frontend Agent\n分层体验架构 / 技术映射 / 实现自检"]
 
-        PM -->|prd.md\nrequirement_breakdown.json\nia_structure.json| D
-        D  -->|design_brief.md\ndesign_system.json\ncomponent_specs.json\nvisual_effects.json| FE
+        ENTRY --> PM
+        PM --> D
+        D --> FE
     end
 
-    subgraph TOOLS ["🔧 Standalone Skills  ·  独立可复用工具层"]
-        DI["design-inspiration-ai\n趋势扫描 + WebSearch\n风格发散"]
-        UU["ui-ux-pro-max\n设计系统收敛\nscripts/search.py"]
-        GU["generative-ui\nMode A 背景层\nMode B 交互组件\nMode C 算法艺术"]
-    end
-
-    subgraph ASSETS ["📚 Asset Library  ·  references/uiux-asset-library/"]
-        AL["trend-notes/\nstyle-recipes/\npalette-strategies/\nmotion-patterns/\nanti-patterns.md"]
-    end
-
-    subgraph OUT ["📦 outputs/<case-id>/"]
-        direction LR
-        O1["01_pm/"]
-        O2["02_designer/"]
-        O3["03_frontend/"]
-        META["meta.json"]
-    end
-
-    INPUT --> PIPELINE
-
-    D  -.->|"读取 SKILL.md\n执行趋势扫描 WebSearch"| DI
-    D  -.->|"读取 SKILL.md\n调用 search.py"| UU
-    FE -.->|"按需读取 SKILL.md\nWebGL / Canvas / p5.js"| GU
-
-    PM  --> O1
-    D   --> O2
-    FE  --> O3
-    PM  --> META
-    D   -->|"可泛化结论沉淀"| AL
-    AL  -.->|"历史资产查询"| D
-```
-
----
-
-## 2. Skill 层级与调用依赖
-
-两层结构：独立工具 + pipeline 编排。
-
-```mermaid
-graph TB
-    subgraph L1 ["第一层：独立可复用 Skill（工具库）"]
-        DI["designer/\ndesign-inspiration-ai"]
-        UU["designer/\nui-ux-pro-max"]
-        GU["frontend/\ngenerative-ui"]
+    subgraph TOOLS["独立 Skill 工具层"]
+        DI["design-inspiration-ai"]
+        UU["ui-ux-pro-max"]
+        GU["generative-ui"]
         SC["skill-creator"]
     end
 
-    subgraph L2 ["第二层：Pipeline 编排层"]
-        subgraph WDP ["web-design-pipeline/"]
-            ENTRY["SKILL.md\n入口编排"]
-            PMA["agents/pm-agent.md"]
-            DA["agents/designer-agent.md"]
-            FEA["agents/frontend-agent.md"]
-            REF["references/\noutput-structure.md\nuiux-asset-library/"]
-
-            ENTRY --> PMA
-            ENTRY --> DA
-            ENTRY --> FEA
-            ENTRY --> REF
-        end
+    subgraph STORAGE["仓库存储层"]
+        OUT["outputs/v1-pipeline/\noutputs/v2-pipeline/\noutputs/v3-pipeline/"]
+        ASSET["uiux-asset-library/\ncatalog.json / asset-schema.md /\nfrontmatter-based assets"]
     end
 
-    DA  -->|"读取并遵循"| DI
-    DA  -->|"读取并调用 search.py"| UU
-    FEA -->|"按需读取"| GU
-    DA  <-->|"读取已有资产\n沉淀新结论"| REF
-
-    style L1 fill:#f0f7ff,stroke:#4a9eff
-    style L2 fill:#fff8f0,stroke:#ff9a4a
-    style WDP fill:#fff8f0,stroke:#ff9a4a,stroke-dasharray:4
+    INPUT --> ENTRY
+    D -. 调用 .-> DI
+    D -. 调用 .-> UU
+    FE -. 按需调用 .-> GU
+    PIPELINE --> OUT
+    D -. 产出候选资产 .-> ASSET
+    ASSET -. 反向参考 .-> D
 ```
+
+### 关键理解
+
+- `web-design-pipeline` 负责“串流程”
+- 其他 skill 负责“提供专长能力”
+- `outputs/` 保存每个 case 的完整结果
+- `uiux-asset-library/` 保存可跨 case 复用的设计知识，而不是某个 case 的最终成品
+- 资产沉淀更适合作为交付后的后处理或批处理阶段，而不是每次生成都同步执行
 
 ---
 
-## 3. Agent 实体关系与交付物
+## 3. Skill 分层
 
-每个 Agent 的输入、输出与外部依赖。
+仓库里的 skill 明确分成两层。
+
+### 第一层：独立可复用 Skill
+
+这些目录在任何上下文中都可以被单独调用：
+
+- `designer/design-inspiration-ai`
+- `designer/ui-ux-pro-max`
+- `frontend/generative-ui`
+- `skill-creator`
+
+它们的职责是提供通用能力，例如趋势扫描、风格检索、设计系统收敛、Canvas/WebGL 视觉层实现等。
+
+### 第二层：Pipeline 编排层
+
+这些文件只在 `web-design-pipeline` 上下文中成立：
+
+- `web-design-pipeline/SKILL.md`
+- `web-design-pipeline/agents/pm-agent.md`
+- `web-design-pipeline/agents/designer-agent.md`
+- `web-design-pipeline/agents/frontend-agent.md`
+- `web-design-pipeline/references/output-structure.md`
+- `web-design-pipeline/references/uiux-asset-library/`
+
+这一层不是“更多工具”，而是“如何组织工具”的规则。
 
 ```mermaid
-erDiagram
-    INPUT {
-        string query_or_json "用户输入"
-        string id            "可选：case ID"
-        string domain        "可选：领域标签"
-        string user_req      "可选：需求文本"
-    }
+graph TB
+    subgraph L1["独立 Skill 工具层"]
+        DI["design-inspiration-ai"]
+        UU["ui-ux-pro-max"]
+        GU["generative-ui"]
+    end
 
-    PM_AGENT {
-        string role       "需求压缩 + 信息架构"
-        string reads      "INPUT"
-        string produces   "01_pm/ 三份文件"
-    }
+    subgraph L2["Pipeline 编排层"]
+        WDP["web-design-pipeline/SKILL.md"]
+        PMA["pm-agent.md"]
+        DA["designer-agent.md"]
+        FEA["frontend-agent.md"]
+        REF["output-structure.md\nuiux-asset-library/"]
+    end
 
-    DESIGNER_AGENT {
-        string role       "风格探索 + 设计系统"
-        string reads      "01_pm/ + uiux-asset-library/"
-        string invokes    "design-inspiration-ai + ui-ux-pro-max"
-        string produces   "02_designer/ 五份文件"
-    }
-
-    FRONTEND_AGENT {
-        string role       "技术选型 + 代码实现"
-        string reads      "01_pm/ + 02_designer/"
-        string invokes    "generative-ui（按需）"
-        string produces   "03_frontend/ 源码 + 两份 JSON"
-    }
-
-    PM_DELIVERABLES {
-        file prd_md                   "产品需求文档"
-        file requirement_breakdown    "MoSCoW 需求拆解 JSON"
-        file ia_structure             "信息架构 JSON"
-    }
-
-    DESIGNER_DELIVERABLES {
-        file style_research_md        "风格探索记录（含趋势证据）"
-        file design_brief_md          "给 Frontend 的执行摘要"
-        file design_system_json       "色彩/排版/间距/动效 token"
-        file component_specs_json     "组件规格 + 状态 + 交互"
-        file visual_effects_json      "WebGL/Canvas 特效建议"
-    }
-
-    FRONTEND_DELIVERABLES {
-        file source_code              "可运行前端（单文件或多文件）"
-        file tech_decision_json       "技术栈选型 + 决策理由"
-        file self_review_json         "完成项 + 已知缺口 + 修复建议"
-    }
-
-    META {
-        string case_id
-        string domain
-        string selected_stack
-        bool   uses_visual_effects
-        string status
-        string pipeline_version
-    }
-
-    INPUT            ||--|| PM_AGENT            : "触发"
-    PM_AGENT         ||--|{ PM_DELIVERABLES     : "产出"
-    PM_DELIVERABLES  ||--|| DESIGNER_AGENT      : "输入"
-    DESIGNER_AGENT   ||--|{ DESIGNER_DELIVERABLES : "产出"
-    DESIGNER_DELIVERABLES ||--|| FRONTEND_AGENT : "输入"
-    PM_DELIVERABLES  ||--|| FRONTEND_AGENT      : "补充输入"
-    FRONTEND_AGENT   ||--|{ FRONTEND_DELIVERABLES : "产出"
-    PM_AGENT         ||--|| META               : "写入"
-    FRONTEND_AGENT   ||--|| META               : "更新"
+    WDP --> PMA
+    WDP --> DA
+    WDP --> FEA
+    WDP --> REF
+    DA --> DI
+    DA --> UU
+    FEA --> GU
 ```
 
 ---
 
-## 4. 单次执行数据流（时序）
+## 4. 单个 Case 的数据流
 
-一个 case 从触发到归档的完整时序。
+每个 case 都沿着相同的顺序推进，不允许跳过上游规范直接生成最终代码。
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant WDP  as Web Design Pipeline
-    participant PM   as PM Agent
-    participant SRCH as WebSearch
-    participant DI   as design-inspiration-ai
-    participant UU   as ui-ux-pro-max
-    participant D    as Designer Agent
-    participant GU   as generative-ui
-    participant FE   as Frontend Agent
-    participant FS   as File System
+    participant WDP as web-design-pipeline
+    participant PM as PM Agent
+    participant D as Designer Agent
+    participant FE as Frontend Agent
+    participant Asset as Asset Library
+    participant FS as File System
 
-    User  ->> WDP   : query / test JSON
+    User ->> WDP: query / test item
+    WDP ->> FS: 创建 case 目录
 
-    WDP   ->> FS    : 创建 outputs/<case-id>/ 目录
-    WDP   ->> PM    : 传入 query + case 目录
-    PM    ->> FS    : 写入 01_pm/prd.md
-    PM    ->> FS    : 写入 01_pm/requirement_breakdown.json
-    PM    ->> FS    : 写入 01_pm/ia_structure.json
+    WDP ->> PM: 输入需求
+    PM ->> FS: 写入 01_product/experience_spec.json
 
-    WDP   ->> D     : 传入 01_pm/ 路径 + asset-library 路径
-    D     ->> DI    : 读取 SKILL.md，执行 STEP 1.5
-    DI    ->> SRCH  : 3~5 次 WebSearch（趋势扫描）
-    SRCH -->> DI    : 趋势信号 + 参考案例
-    DI   -->> D     : 趋势洞察摘要
-    D     ->> UU    : 读取 SKILL.md，调用 search.py
-    UU   -->> D     : 设计资产查询结果
-    D     ->> FS    : 写入 02_designer/style_research.md
-    D     ->> FS    : 写入 02_designer/design_system.json
-    D     ->> FS    : 写入 02_designer/component_specs.json
-    D     ->> FS    : 写入 02_designer/design_brief.md
-    D     ->> FS    : 写入 02_designer/visual_effects.json
-    D     ->> FS    : 沉淀可复用结论到 uiux-asset-library/
+    WDP ->> D: 传入 experience_spec + asset library
+    D ->> FS: 写入 02_design/
 
-    WDP   ->> FE    : 传入 01_pm/ + 02_designer/ 路径
-    FE    ->> FS    : 写入 03_frontend/tech_decision.json
-    alt visual_effects.json 建议强视觉层
-        FE ->> GU   : 读取 SKILL.md，选择 Mode A / B
-        GU -->> FE  : 工程约束 + 实现模式
-    end
-    FE    ->> FS    : 写入 03_frontend/ 源码
-    FE    ->> FS    : 写入 03_frontend/self_review.json
-    WDP   ->> FS    : 更新 meta.json（status: completed）
+    WDP ->> FE: 传入 experience_spec + experience_blueprint + design_system + interaction_spec
+    FE ->> FS: 写入 03_frontend/
+    FE ->> FS: 更新 meta.json
 
-    WDP  -->> User  : 汇报：栈选择 · 设计方向 · 交付物路径
+    WDP ->> Asset: 可选后处理 / 批量沉淀候选资产
+
+    WDP -->> User: 返回交付路径、技术栈与实现摘要
 ```
+
+### 阶段职责
+
+| 阶段 | 读取 | 写入 | 目的 |
+|------|------|------|------|
+| PM | 原始需求 / 测试项 | `experience_spec.json` | 深度理解行业、业务与功能优先级，并输出 IA 与选型信号 |
+| Designer | `experience_spec.json` + 资产库 | `experience_blueprint.json`、`design_system.json`、`interaction_spec.json` | 定义北极星体验、视觉语法并收敛成可实现规范；必要时产出候选资产素材 |
+| Frontend | `experience_spec.json` + `experience_blueprint.json` + `design_system.json` + `interaction_spec.json` | 多文件源码、`tech_decision.json`、`self_review.json` | 把体验系统拆成多层并实现为真实前端 |
+
+这里的关键区别是：
+
+- 主生成链路默认到 `03_frontend/` 和 `self_review.json` 即可完成
+- 资产沉淀不是每次都必须同步执行
+- 更推荐在单 case 完成后手动整理，或在一批 case 完成后统一批处理
 
 ---
 
-## 5. 输出目录结构
+## 5. 当前标准输出模型
 
-每个 case 的标准归档格式。
+当前主规范以 `output-structure.md` 为准，推荐输出路径是：
 
+```text
+outputs/v3-pipeline/<case-id>/
+├── meta.json
+├── 01_product/
+│   └── experience_spec.json
+├── 02_design/
+│   ├── experience_blueprint.json
+│   ├── design_system.json
+│   └── interaction_spec.json
+└── 03_frontend/
+    ├── package.json
+    ├── tsconfig.json
+    ├── README.md
+    ├── tech_decision.json
+    ├── self_review.json
+    └── src/
 ```
-outputs/
-└── <case-id>/                        # 如 001_devtools 或 20260312_143022_habit-tracker
-    ├── meta.json                     # case 元数据（栈、域、状态、pipeline 版本）
-    │
-    ├── 01_pm/
-    │   ├── prd.md                    # 产品需求文档（面向下游 agent）
-    │   ├── requirement_breakdown.json  # MoSCoW 需求拆解
-    │   └── ia_structure.json         # 信息架构（页面结构 + 用户流）
-    │
-    ├── 02_designer/
-    │   ├── style_research.md         # 趋势调研 + 3 方向探索 + 最终选型
-    │   ├── design_brief.md           # 给 Frontend 的执行摘要
-    │   ├── design_system.json        # 色彩 / 排版 / 间距 / 动效 token
-    │   ├── component_specs.json      # 组件清单 + 状态 + 交互规范
-    │   └── visual_effects.json       # WebGL / Canvas 特效建议与理由
-    │
-    └── 03_frontend/
-        ├── index.html                # html-tailwind 栈交付物
-        ├── src/                      # react / vue / svelte 等多文件栈
-        ├── tech_decision.json        # 技术决策 + 选型理由
-        └── self_review.json          # 完成项 · 已知缺口 · 修复候选
 
-.agents/skills/references/uiux-asset-library/
-    ├── trend-notes/                  # 跨 case 趋势观察
-    ├── style-recipes/                # 可复用风格配方（如 devtools-precision-console.md）
-    ├── palette-strategies/           # 配色策略
-    ├── motion-patterns/              # 动效模式
-    └── anti-patterns.md             # 同质化风险清单
-```
+### 当前标准的关键约束
+
+- `03_frontend/` 默认是 **TypeScript + 多文件项目**
+- 交付物应能通过 `npm install && npm run dev` 启动
+- 组件、状态、交互和视觉层要分文件组织
+- PM 要保留强行业理解和业务判断，但不再输出多份重复 narrative
+- Designer 要先定义北极星体验和项目专属视觉语法，再定义系统细节
+- Frontend 要先做体验分层和技术映射，再进入实现
+- `meta.json` 需要记录 pipeline 版本、栈、视觉效果和交互完成度
+- `uiux-asset-library/` 负责保存可以跨 case 复用的规律，而不是最终页面内容
+
+### 为什么这很重要
+
+早期仓库里存在大量单文件 `index.html` 样例，但那已经不再代表当前主规范。当前更强调：
+
+- 组件化
+- 类型安全
+- 内部交互完整实现
+- 可继续开发的工程结构
 
 ---
 
-## 6. 技术栈选型决策树
+## 6. 运行模型
 
-Frontend Agent 在 `tech_decision.json` 中做出的核心判断。
+### 根目录运行方式
 
-```mermaid
-flowchart TD
-    Q1{页面主要目标}
+仓库根目录主要承担：
 
-    Q1 -->|"展示型 · 品牌 · 快速验证"| HT["html-tailwind\n单文件 · 零构建 · 易归档"]
-    Q1 -->|"复杂交互 · 状态管理 · SaaS"| Q2{有 SSR/SEO 要求?}
-    Q1 -->|"强交互 · 追求动画性能"| SV["svelte\n轻量 · 响应快"]
+- skill 定义
+- 文档说明
+- case 归档
+- 资产沉淀
 
-    Q2 -->|Yes| NX["nextjs\nSSR · ISR · API routes"]
-    Q2 -->|No | RC["react\nhooks · 状态 · 组件复用"]
+它 **不是** 统一运行入口。
 
-    HT --> Q3{需要强视觉特效?}
-    RC --> Q3
-    NX --> Q3
-    SV --> Q3
+### Case 级运行方式
 
-    Q3 -->|"Designer 建议 + 叙事强化"| Q4{特效规模?}
-    Q3 -->|"无明确需求 / 内容型"| DONE["✅ 按选型交付"]
+真正的运行入口通常在某个 case 下：
 
-    Q4 -->|"粒子 < 500\n氛围层"| CA["Canvas 2D\nMode A"]
-    Q4 -->|"粒子 > 10K\nshader 效果"| WGL["WebGL / Three.js\nMode A"]
-    Q4 -->|"交互组件\n数据可视化"| CB["Canvas / D3\nMode B"]
-    Q4 -->|"独立艺术作品"| P5["p5.js\nMode C"]
-
-    CA  --> DONE
-    WGL --> DONE
-    CB  --> DONE
-    P5  --> DONE
+```text
+outputs/v3-pipeline/<case-id>/03_frontend/
 ```
+
+进入该目录后执行：
+
+```bash
+npm install
+npm run dev
+```
+
+这意味着维护者在阅读仓库时，必须区分：
+
+- “仓库架构”看根目录与 skill
+- “前端运行”看具体 case
 
 ---
 
-## 迭代说明
+## 7. 资产库架构
 
-| 扩展点 | 操作 |
-|--------|------|
-| 增加新的独立工具 | 在 `.agents/skills/designer/` 或 `.agents/skills/frontend/` 下新建目录 |
-| 调整 Pipeline 某阶段行为 | 修改 `.agents/skills/web-design-pipeline/agents/<agent>.md` |
-| 增加输出格式 | 更新 `references/output-structure.md` + 对应 agent prompt |
-| 沉淀设计资产 | 直接写入 `references/uiux-asset-library/` 对应子目录 |
-| 调整技术栈选型逻辑 | 修改 `frontend-agent.md` 的选型建议部分 |
+`uiux-asset-library/` 是整个系统能持续变强的关键，因为它承担了“把案例经验抽象成知识”的角色。
+
+但它现在不再只是一个按目录分类的 Markdown 文件夹，而是一套轻量可索引知识库。
+
+当前结构建议为：
+
+```text
+uiux-asset-library/
+├── catalog.json
+├── asset-schema.md
+├── templates/
+│   └── asset-template.md
+├── trend-notes/
+├── style-recipes/
+├── palette-strategies/
+├── motion-patterns/
+├── generative-recipes/
+└── anti-patterns.md
+```
+
+其中：
+
+- `catalog.json` 是统一索引入口，方便脚本、筛选、统计和后续建库
+- `asset-schema.md` 定义统一字段模型
+- 每条资产正文保留在 Markdown 中，但顶部使用统一 YAML frontmatter
+
+资产类型仍按这几类组织：
+
+- `trend-notes/`
+- `style-recipes/`
+- `palette-strategies/`
+- `motion-patterns/`
+- `generative-recipes/`
+- `anti-patterns.md`
+
+### 资产库的双重职责
+
+- **给人读**：帮助设计师理解趋势、场景、边界和风险
+- **给系统检索**：通过 frontmatter 和 `catalog.json` 映射到 `ui-ux-pro-max` 的 CSV 维度
+
+因此资产不是“灵感随笔”，而应尽可能具备这些可检索字段：
+
+- `asset_id`
+- `asset_type`
+- `title`
+- `summary`
+- `domains`
+- `style_keywords`
+- `interaction_level`
+- `visual_primitives`
+- `motion_primitives`
+- `implementation_hints`
+- `uiuxmax_domains`
+- `suitable_stacks`
+- `avoid_patterns`
+
+### 为什么不把它完全塞回 CSV
+
+因为这层资产承担的是高阶叙事与边界说明，例如：
+
+- 趋势为什么成立
+- 风格为什么适合某类产品
+- 某种动态语言为什么不能滥用
+- 一套 recipe 的适用场景、不适用场景和降级边界
+
+这些信息很难被压扁成单行 CSV 而不损失判断力。
+
+更合理的关系是：
+
+- `ui-ux-pro-max/data/` 负责稳定、低歧义、结构化召回
+- `uiux-asset-library/` 负责高阶规则、趋势、recipe 和反模式
+- 成熟资产再逐步反哺回 `data/`
+
+### 什么时候做资产沉淀
+
+从 token 和主链路稳定性角度看，资产沉淀更适合：
+
+- 单 case 完成后的手动整理
+- 多 case 跑完后的批量抽取
+- 只在确认“有可复用结论”时执行
+
+不建议把它当作每次生成都同步执行的硬步骤。
+
+---
+
+## 8. 技术选型原则
+
+当前架构下，技术选型不再在多个文件中重复定义，而是统一收口到：
+
+- `web-design-pipeline/references/stack-selection-policy.md`
+
+这里的架构文档只解释原则，不再作为栈规则真源。
+
+### 选型目标
+
+- 优先真实交互，而不是静态落版
+- 优先视觉品质与业务贴合，而不是“最省事”
+- 优先可维护、可扩展、可继续演进的工程结构
+- 允许不同框架分流，但不允许回到模糊和随意
+- 框架只是底盘，真正的特色来自体验分层、技术组合和项目专属视觉语法
+
+### 当前架构理解
+
+- 重交互产品界面通常落在 `React + TypeScript`
+- SSR / SEO / 内容分发明确时切向 `Next.js`
+- 极强动效和轻运行时诉求时可切向 `Svelte`
+- `Vue` 和 `Astro` 是正式分支，但不是同权默认
+- `html-tailwind` 只应视为历史阶段或极特殊例外
+
+---
+
+## 9. 版本演进与迁移状态
+
+这个仓库的一个显著特点是：**架构演进本身就是仓库内容的一部分**。
+
+### 路径迁移
+
+存在从旧路径：
+
+```text
+outputs/<case-id>/
+```
+
+向版本化路径：
+
+```text
+outputs/v1-pipeline/<case-id>/
+outputs/v2-pipeline/<case-id>/
+outputs/v3-pipeline/<case-id>/
+```
+
+迁移的趋势。
+
+### 前端交付迁移
+
+也存在从：
+
+- 单文件 `index.html`
+
+迁移到：
+
+- 多文件 TypeScript / 组件框架项目
+
+的趋势。
+
+### 可以把三代理解为
+
+| 版本 | 核心特征 |
+|------|----------|
+| `v1` | 流程跑通优先，前端多为 `html-tailwind` 单文件交付 |
+| `v2` | 增强设计探索与视觉策略，仍常见单文件交付 |
+| `v3` | 多文件 TypeScript 项目成为主规范，强调完整交互与可运行性 |
+| `vNext` | 保留 3-agent 外形，但 PM 强理解、轻文档；Designer 定义体验北极星；Frontend 做分层体验架构；主产物收敛为少量强规范文件 |
+
+所以阅读仓库时，如果看到不同样式的 case，不一定是混乱，也可能是“演进证据仍然被保留”。
+
+---
+
+## 10. 维护入口
+
+如果你要修改这个系统，通常对应的入口如下：
+
+| 目标 | 修改位置 |
+|------|----------|
+| 调整整个流水线行为 | `web-design-pipeline/SKILL.md` |
+| 改 PM / Designer / Frontend 某阶段策略 | `web-design-pipeline/agents/*.md` |
+| 改输出目录与归档约束 | `web-design-pipeline/references/output-structure.md` |
+| 改技术栈决策规则 | `web-design-pipeline/references/stack-selection-policy.md` |
+| 增加或沉淀风格知识 | `web-design-pipeline/references/uiux-asset-library/` |
+| 增加新的通用能力 | `.agents/skills/designer/` 或 `.agents/skills/frontend/` |
+| 更新对外理解 | `README.md` 与 `ARCHITECTURE.md` |
+
+---
+
+## 11. 文档同步原则
+
+这个仓库最容易失真的地方，是“样例已经进化了，但 README 和架构文档还停留在旧版本认知”。
+
+因此建议在未来修改时保持同步：
+
+1. 如果修改了前端交付规范，先更新 `output-structure.md`
+2. 如果修改了技术选型规则，更新 `stack-selection-policy.md`
+3. 如果修改了 pipeline 阶段职责，更新对应 `agents/*.md`
+4. 如果修改了仓库的整体定位或主规范，再更新 `README.md` 和 `ARCHITECTURE.md`
+
+否则读者会继续把历史样例误认成当前标准。

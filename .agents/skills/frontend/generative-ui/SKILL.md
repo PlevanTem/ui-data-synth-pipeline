@@ -5,10 +5,37 @@ description: 交互式 UI 生成与算法艺术技能。覆盖两类场景：(1)
 
 # Generative UI
 
-这个 skill 覆盖两个使用场景，工作在同一技术栈上，但服务于不同目标：
+这个 skill 覆盖两个主要方向，但它们在 `web-design-pipeline` 中的地位不同：
 
 1. **网站视觉层与交互组件**：嵌入式 Canvas / WebGL / p5.js 模块，必须服务于网站内容和叙事
 2. **独立算法艺术**：自包含生成艺术作品，强调视觉哲学和美学探索
+
+在 `web-design-pipeline` 中，默认只把本 skill 用作：
+
+- `Mode A`：生成式背景层
+- `Mode B`：交互式组件
+
+`Mode C` 仅用于明确要求独立算法艺术作品的场景，不是 pipeline 默认前端交付路径。
+
+## 当前集成基线
+
+在现代交互型前端项目中，这个 skill 最常与以下能力层配合：
+
+- `Next.js 15` / `React 19`
+- `Tailwind CSS 4`
+- `motion` (`motion/react`) 处理组件级动效、手势和布局动画
+- `GSAP` 处理高价值滚动叙事、时间线和视差
+- `Three.js` / `@react-three/fiber` 处理 3D / shader / 空间层
+- `Spline` 用于更快的 3D 交互场景接入
+- `D3` / `Recharts` 处理数据可视化层
+- `Zustand` / store / URL state 作为主状态源
+
+在这种集成里：
+
+- 框架负责组织能力
+- `motion` / `GSAP` 负责时间与节奏
+- `Canvas` / `WebGL` / `R3F` / `Spline` 负责非常规视觉语言
+- store 负责把视觉层、交互层和内容层真正绑定起来
 
 核心哲学（来自 [Google Generative UI 论文](https://generativeui.github.io)）：
 
@@ -21,11 +48,11 @@ description: 交互式 UI 生成与算法艺术技能。覆盖两类场景：(1)
 
 ## 先判断：用哪种模式
 
-| 上游 `visual_effects.json` 说什么 | 对应模式 |
+| 上游 `interaction_spec.json` / 视觉策略说什么 | 对应模式 |
 |----------------------------------|---------|
 | 需要 background / 氛围层动效 | **Mode A** |
 | 需要数据可视化 / 交互组件 / 模拟器 | **Mode B** |
-| 明确要求算法艺术作品 / 没有 visual_effects 上下文 | **Mode C** |
+| 明确要求算法艺术作品 / 不在 web-design-pipeline 默认交付上下文中 | **Mode C** |
 
 ---
 
@@ -37,7 +64,7 @@ description: 交互式 UI 生成与算法艺术技能。覆盖两类场景：(1)
 
 只在满足以下条件时实施 Mode A：
 
-- Designer Agent 的 `visual_effects.json` 明确建议
+- Designer Agent 的 `interaction_spec.json` 或等价视觉策略明确建议
 - 效果能强化产品叙事（不是"为了酷"）
 - 主内容可读性不受影响
 - 有降级方案（静态或 CSS 版本）
@@ -48,7 +75,7 @@ description: 交互式 UI 生成与算法艺术技能。覆盖两类场景：(1)
 |------|------------|---------|
 | 流场粒子 (flow field) | AI、数据、技术基础设施 | Canvas 2D + Perlin noise |
 | 几何网格 + 涟漪 | SaaS 工具、设计平台 | Canvas 2D / SVG |
-| WebGL shader 渐变 | 高端品牌、创意机构 | Three.js 或 raw GLSL |
+| WebGL shader 渐变 | 高端品牌、创意机构 | Three.js / R3F 或 raw GLSL |
 | 噪声地形 / 波浪 | 环境、科学、探索 | Canvas 2D + simplex noise |
 | 有机生长系统 | 生命科学、自然主题 | p5.js |
 | 深空粒子 | 探索类、科幻产品 | Canvas 2D |
@@ -201,6 +228,14 @@ class GenerativeLayer {
 
 ## Mode C：独立算法艺术
 
+这个模式默认不用于 `web-design-pipeline` 的网站交付。
+
+如果你处于 `web-design-pipeline` 上下文：
+
+- 不要把 Mode C 的单文件艺术 viewer 当成主前端交付
+- 只能把其中的算法语言、视觉逻辑、参数化方法转译为组件化模块
+- 最终仍应回到 TypeScript / 组件框架项目中落地
+
 生成可分享的独立算法艺术作品。保留原 `algorithmic-art` 的完整工作流。
 
 ### 第一步：算法哲学创作
@@ -311,6 +346,22 @@ function dispose() {
   });
 }
 ```
+
+### R3F / Spline 何时更合适
+
+- `@react-three/fiber`
+  - 当 3D 场景需要与 React 组件状态深度耦合时优先
+  - 适合解释性 3D、场景切换、交互式产品展示
+
+- `Spline`
+  - 当目标是更快搭建 3D 交互模块，而不是深度自写渲染逻辑时适合
+  - 适合品牌段落、展示型互动、局部 3D 装置
+
+选择标准不是“哪个更酷”，而是：
+
+- 是否要深度接入状态系统
+- 是否要精细控制性能与渲染逻辑
+- 是否只是局部高价值体验模块
 
 ---
 
