@@ -1,0 +1,9 @@
+{
+  "id": "10",
+  "domain": "会议协作 (Meeting Collaboration)",
+  "slug": "meeting_collaboration_gemini3.1Pro",
+  "user_req": "办公会议入会繁琐、纪要整理低效、多设备协作不便",
+  "original_example_text": "生成一款鸿蒙原生AI会议应用，支持多设备一键入会、实时语音转写、多语言翻译、重点自动提取、会后纪要生成、任务待办同步；调用鸿蒙分布式能力，支持智慧屏投屏、手机/平板协作批注；界面清爽，适配办公场景，轻量化无冗余功能，风格贴合2026办公协作新趋势，采用极简商务风、低饱和配色，会议功能模块化，操作流畅，突出高效协作属性，适配多设备显示场景。",
+  "pipeline_version": "v3",
+  "generator": "gemini3.1Pro"
+}

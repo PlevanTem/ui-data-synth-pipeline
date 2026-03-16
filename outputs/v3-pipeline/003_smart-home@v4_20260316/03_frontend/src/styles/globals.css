@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0D0F14;
+  --bg-secondary: #161921;
+  --bg-tertiary: #1C2030;
+  --brand-blue: #4E9EFF;
+  --brand-warm: #FF8C42;
+  --success: #34D399;
+  --warning: #FBBF24;
+  --danger: #FF5C5C;
+  --text-primary: #F0F4FF;
+  --text-secondary: #8B9BB4;
+  --text-tertiary: #4A5568;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --surface-glass: rgba(255, 255, 255, 0.06);
+  --surface-glass-active: rgba(255, 255, 255, 0.10);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+
+/* Glass morphism utility */
+.glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-active {
+  background: var(--surface-glass-active);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Device card glow effects */
+.device-glow-light {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+.device-glow-climate {
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.25), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+.device-glow-security {
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.25), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+.device-glow-entertainment {
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.25), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+.device-glow-appliance {
+  box-shadow: 0 0 20px rgba(251, 146, 60, 0.25), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes rippleExpand {
+  0% { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+/* Number tabular */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Prevent text selection on control elements */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}

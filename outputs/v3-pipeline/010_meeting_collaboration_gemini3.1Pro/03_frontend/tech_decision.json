@@ -1,0 +1,95 @@
+{
+  "experience_priority": "visual-first",
+  "wow_goals": [
+    "静谧的流动背景：利用 Canvas 模拟极低对比度、低性能开销的 AI 思维流体",
+    "丝滑的视图切换：利用 Framer Motion 实现不同面板之间的弹簧过渡动效",
+    "鸿蒙分布式的概念演示：利用空间抛物线轨迹动画模拟设备间的流转"
+  ],
+  "north_star_experience": "在一个充满呼吸感的灰色数字纸面上，多端会议功能像卡片一样轻盈悬浮并智能流转。",
+  "selected_stack": {
+    "framework": "react",
+    "language": "typescript",
+    "reasoning": [
+      "由于需求中有较多组件间的共享状态（如静音状态控制背景流体、视频流布局切换），React 的组件化与 Hooks 管理非常契合。",
+      "Framer Motion 提供了卓越的物理感动画能力，非常适合模拟原生应用的空间流转感。"
+    ],
+    "why_not_others": [
+      "Svelte 适合更极致的轻量化，但考虑到复杂的多模块布局和动画，React + Framer Motion 的生态更为现成和健壮。",
+      "不使用 3D (React Three Fiber)，因为目标是 Calm UI 的“纸面悬浮感”，3D 显得过于厚重。"
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "React Three Fiber (R3F)",
+      "category": "3d",
+      "why_considered": ["可以建立真实的 3D 会议空间和物理碰撞反馈"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["会导致视觉噪声增加，破坏极简商务风，而且会大量消耗性能，不符合“清爽无冗余”原则"]
+    },
+    {
+      "name": "Framer Motion",
+      "category": "animation",
+      "why_considered": ["能实现类似于苹果和鸿蒙系统中的物理弹簧和丝滑转场"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["能用非常少的代码写出高质量的空间位移动效，完美匹配设备流转概念"]
+    },
+    {
+      "name": "Canvas Fluid Simulation (Custom p5/vanilla)",
+      "category": "generative",
+      "why_considered": ["表现 AI 转写时的无形存在感"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["相比 WebGL Shader 更好控制性能，并且可以通过调整粒子/流场的颜色实现极低的对比度"]
+    }
+  ],
+  "interaction_bets": [
+    "Canvas 基础流动层与全局麦克风/发言状态的响应绑定",
+    "各个功能面板的独立悬浮拖拽或展开/折叠反馈"
+  ],
+  "generative_art_strategy": {
+    "modes_used": ["Canvas Background Flow Field"],
+    "combination_approach": "Background Layer (Canvas Flow Field) + Interactive UI Components (Framer Motion)",
+    "inspiration_sources": ["Calm UI examples", "OpenProcessing low-contrast fluid sims"],
+    "integration_method": "将 Canvas 封装为独立的 React Component 挂载在最底层 (z-index: -1)，通过 requestAnimationFrame 更新，通过 React props 接收当前是否发言的状态来调节速度。"
+  },
+  "visual_system_modules": [
+    {
+      "name": "BackgroundFluid",
+      "role": "background",
+      "tech": ["HTML5 Canvas", "Vanilla JS physics"],
+      "must_keep": true
+    },
+    {
+      "name": "MeetingDock",
+      "role": "hero",
+      "tech": ["React", "Framer Motion", "Tailwind CSS"],
+      "must_keep": true
+    }
+  ],
+  "rendering_strategy": {
+    "use_webgl": false,
+    "use_canvas": true,
+    "use_svg_motion": true,
+    "use_3d": false,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": ["background-atmosphere"]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": ["组件较多，状态复杂，必须使用多文件项目结构来保证可维护性"],
+    "entry_points": ["src/main.tsx"]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "单页应用，通过状态切换显示 Hub/MeetingRoom/Summary",
+    "state_management": "Zustand (轻量级全局状态管理，由于组件树扁平，也可使用 React Context)",
+    "component_communication": "由 Zustand store 同步 isMuted、isSpeaking、currentView 状态",
+    "data_flow": "单向数据流",
+    "animation_orchestration": "使用 Framer Motion 的 AnimatePresence 控制面板退出和进入"
+  },
+  "performance_guardrails": [
+    "流体 Canvas 限制绘制分辨率，并对粒子数量上限做管控",
+    "离开特定视图时主动卸载 Canvas 事件循环"
+  ],
+  "fallback_plan": ["如果设备不支持 Canvas 或性能差，使用 CSS radial-gradient 的缓慢 breathing animation"],
+  "brand_experience_notes": ["尽量避免使用圆角过大的气泡感，保持微小的圆角(sm~md)来体现专业商务属性"]
+}

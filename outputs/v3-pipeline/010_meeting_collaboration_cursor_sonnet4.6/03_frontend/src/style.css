@@ -1,0 +1,78 @@
+:root {
+  --primary: #3B5998;
+  --bg-color: #F5F6F8;
+  --surface: rgba(255, 255, 255, 0.65);
+  --text-main: #1C1E21;
+  --text-muted: #8D949E;
+  --accent: #00C48C;
+  --font-family: Inter, 'HarmonyOS Sans SC', sans-serif;
+  --radius-card: 20px;
+  --radius-btn: 12px;
+  --radius-pill: 99px;
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.04);
+  --fluid-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  
+  /* Houdini-inspired generative background: ultra-soft moving gradients */
+  background-image: 
+    radial-gradient(circle at 15% 30%, rgba(59, 89, 152, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 85% 70%, rgba(0, 196, 140, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
+  background-size: 200% 200%;
+  animation: bgBreathing 20s ease-in-out infinite alternate;
+}
+
+@keyframes bgBreathing {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* Base utility classes for layout */
+.glass-panel {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.hairline-border {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Animations */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 350ms var(--fluid-ease), transform 350ms var(--fluid-ease);
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s var(--fluid-ease);
+}
+button:active {
+  transform: scale(0.96);
+}
+
+/* Typography base */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+p { margin: 0; }

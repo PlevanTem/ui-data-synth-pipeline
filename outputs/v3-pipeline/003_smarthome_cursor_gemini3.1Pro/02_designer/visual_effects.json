@@ -1,0 +1,86 @@
+{
+  "use_visual_effects": true,
+  "effect_summary": "通过底层的环境流体噪声与顶层高对比度的玻璃态卡片发光动效，构建一个具有空间深度的交互式智能管家界面。",
+  "effect_layers": [
+    {
+      "layer_id": "primary",
+      "type": "Canvas 彩色噪声流场背景 (Ambient Flow Field)",
+      "placement": "整个 Dashboard 视窗底层 (z-index: -1)",
+      "narrative_role": "隐喻当前家庭环境氛围。例如制冷时散发微弱冰蓝波纹，观影时转为深沉紫黑流体。",
+      "interaction_model": "不接受直接点击交互，只接收状态流转（场景切换/环境数据改变）带来的参数驱动"
+    },
+    {
+      "layer_id": "secondary",
+      "type": "CSS Glassmorphism & 微光影系统 (Glow effects)",
+      "placement": "所有设备卡片、模块面板",
+      "narrative_role": "构建 UI 的物理厚度。设备点亮时产生环境光溢出效果，强化操作确认感。",
+      "interaction_model": "用户 hover/click 时光晕扩散，卡片发生轻微的Z轴物理形变"
+    },
+    {
+      "layer_id": "accent",
+      "type": "动态波形/粒子动画组件 (Voice Assistant Particle Globe)",
+      "placement": "语音助手唤起后的模态中心",
+      "narrative_role": "表现 AI 的聆听生命力与思考过程",
+      "interaction_model": "根据音轨输入频率或固定算法产生律动"
+    }
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "Canvas 2D 彩色缓慢流体噪声场",
+      "purpose": "atmosphere",
+      "algorithm_family": "shader-sdf / noise-field (可以使用 ReactBits 的 FlowField 或自定义 WebGL Shader 背景)",
+      "aesthetic_reference": "灵感来自2026年 Dribbble 上的 Premium Dark Mode 仪表盘与 OpenProcessing 中的缓慢流体着色器",
+      "implementation_notes": "透明度极低（0.1 ~ 0.15），仅提供微弱色彩倾向，必须保证其上方的纯白文本 4.5:1 对比度绝对清晰"
+    },
+    "secondary_layers": [
+      {
+        "type": "CSS Backdrop-filter 叠加 Inner Box-shadow",
+        "purpose": "texture",
+        "technique": "backdrop-filter: blur(20px) saturate(120%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.1)",
+        "interaction_with_primary": "吸收底层 Canvas 流场的色彩并进行高斯模糊，让卡片呈现高级的磨砂透视感"
+      }
+    ],
+    "component_library_layer": {
+      "selections": [
+        {
+          "library": "magicui",
+          "component": "Blur Fade",
+          "placement": "设备卡片列表的初始入场",
+          "customization_intent": "调整为极短的持续时间（300ms），附带 stagger，避免干扰用户快速操作的预期"
+        },
+        {
+          "library": "magicui",
+          "component": "Number Ticker",
+          "placement": "环境温度/湿度数字",
+          "customization_intent": "采用极简等宽无衬线字体，去除多余装饰"
+        },
+        {
+          "library": "reactbits",
+          "component": "Aurora",
+          "placement": "全局底层背景",
+          "customization_intent": "深度定制为极暗的色彩组合（如 [#09090b, #121212, #1a1a2e]），极大降低动画速率，使其成为氛围而非干扰"
+        }
+      ]
+    },
+    "interaction_hooks": [
+      "用户点击场景切换（如睡眠模式）时，底层 Aurora 背景层的色彩数组平滑过渡为暗调",
+      "卡片点击时触发基于 Framer Motion 的 spring 缩放"
+    ],
+    "inspiration_sources": [
+      "https://dribbble.com/shots/25573400-Smart-Home-Smarter-Experience",
+      "https://reactbits.dev/components/aurora"
+    ],
+    "combination_rationale": "极暗极缓的生成式背景能注入奢华的空间感，配合干脆利落的卡片微动效，完美诠释了‘懂你但安静’的全屋智能管家定位。",
+    "layering_strategy": "底层背景 z: -1 -> 主体面板 z: 10 (使用模糊) -> 卡片内容 z: 20 -> 模态抽屉 z: 100"
+  },
+  "performance_notes": [
+    "为卡片层级开启 `will-change: transform, backdrop-filter`",
+    "Aurora 背景在低端移动设备或低电量模式下自动降级为静态 CSS 径向渐变"
+  ],
+  "fallback_strategy": [
+    "若设备不支持 WebGL / 复杂 Canvas，回退为暗灰到极暗蓝的深色渐变背景"
+  ],
+  "accessibility_notes": [
+    "遵循 prefers-reduced-motion，若用户开启减弱动画，则关闭背景流动，卡片状态切换由渐变变为瞬间切换"
+  ]
+}

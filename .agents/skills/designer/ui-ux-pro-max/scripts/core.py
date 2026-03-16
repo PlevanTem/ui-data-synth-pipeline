@@ -53,7 +53,7 @@ CSV_CONFIG = {
     "typography": {
         "file": "typography.csv",
         "search_cols": ["Font Pairing Name", "Category", "Mood/Style Keywords", "Best For", "Heading Font", "Body Font"],
-        "output_cols": ["Font Pairing Name", "Category", "Heading Font", "Body Font", "Mood/Style Keywords", "Best For", "Google Fonts URL", "CSS Import", "Tailwind Config", "Notes"]
+        "output_cols": ["Font Pairing Name", "Category", "Heading Font", "Body Font", "Mood/Style Keywords", "Best For", "Google Fonts URL", "CSS Import", "Tailwind Theme Variables", "Notes"]
     },
     "icons": {
         "file": "icons.csv",
@@ -73,7 +73,8 @@ STACK_CONFIG = {
     "swiftui": {"file": "stacks/swiftui.csv"},
     "react-native": {"file": "stacks/react-native.csv"},
     "flutter": {"file": "stacks/flutter.csv"},
-    "shadcn": {"file": "stacks/shadcn.csv"}
+    "shadcn": {"file": "stacks/shadcn.csv"},
+    "animated-components": {"file": "stacks/animated-components.csv"}
 }
 
 # Common columns for all stacks

@@ -1,0 +1,86 @@
+{
+    "design_direction": "Hyper-Minimal Business (2026 Trend) + Harmony Fluidity",
+    "color_palette": {
+        "primary": "#3B5998",
+        "background": "#F5F6F8",
+        "surface": "rgba(255, 255, 255, 0.65)",
+        "text_main": "#1C1E21",
+        "text_muted": "#8D949E",
+        "accent": "#00C48C"
+    },
+    "typography": {
+        "font_family": "Inter, 'HarmonyOS Sans SC', sans-serif",
+        "heading_weight": "600",
+        "body_weight": "400",
+        "letter_spacing": "-0.01em"
+    },
+    "spacing": {
+        "base": "8px",
+        "module": "24px",
+        "container": "48px"
+    },
+    "radius": {
+        "card": "20px",
+        "button": "12px",
+        "pill": "99px"
+    },
+    "shadow": {
+        "soft": "0 8px 32px rgba(0, 0, 0, 0.04)",
+        "focus": "0 0 0 3px rgba(59, 89, 152, 0.2)"
+    },
+    "motion": {
+        "timing_functions": {
+            "fluid": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+            "snappy": "cubic-bezier(0.4, 0.0, 0.2, 1)"
+        },
+        "duration_scale": {
+            "fast": "200ms",
+            "base": "350ms",
+            "slow": "600ms"
+        },
+        "orchestration_rules": [
+            "Staggered entrance for list items.",
+            "Shared element transitions for dialog expansions."
+        ],
+        "scroll_animation_strategy": "Subtle parallax on background elements only."
+    },
+    "interaction_principles": [
+        "触滑优先 (Touch-first fluid gestures)",
+        "微反馈 (Micro-haptics / visual ripple on tap)"
+    ],
+    "visual_motifs": [
+        "高斯模糊 (Glassmorphism 层级)",
+        "极细描边 (Hairline borders 定界)"
+    ],
+    "generative_aesthetics": {
+        "color_mapping": "Low-contrast analog colors",
+        "density_range": "Sparse",
+        "noise_parameters": "High frequency, extremely low opacity (2%)",
+        "motion_speed_range": "Very slow, meditative",
+        "blend_modes": [
+            "overlay"
+        ],
+        "layer_opacity_strategy": "Subtle, max 10% opacity for atmosphere layers"
+    },
+    "illustration_strategy": {
+        "style": "Abstract geometry with line art",
+        "usage": "Empty states and feature highlights"
+    },
+    "depth_strategy": {
+        "layers": [
+            "Background",
+            "Card Surface",
+            "Floating Toolbar",
+            "Modal / Overlay"
+        ],
+        "implementation": "backdrop-filter is used to establish hierarchy instead of hard box-shadows."
+    },
+    "responsive_rules": [
+        "移动端：单列卡片视图，底部悬浮呼出操作栏。",
+        "平板端：双列分栏（左侧列表，右侧详情）。"
+    ],
+    "accessibility_rules": [
+        "WCAG AA contrast ratios for all text.",
+        "Keyboard navigable toolbars in meeting room."
+    ]
+}

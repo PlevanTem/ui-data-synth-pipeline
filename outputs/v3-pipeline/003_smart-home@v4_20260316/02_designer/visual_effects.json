@@ -1,0 +1,158 @@
+{
+  "visual_strategy": "Ambient Dark Control — 多层次环境感视觉层",
+  "implementation_priority": "high",
+
+  "effects_overview": [
+    {
+      "id": "VE01",
+      "name": "Ambient Background Flow",
+      "layer": "background",
+      "description": "极缓慢流动的环境光背景，模拟家居空间中光线的细微变化。使用 Canvas 渲染噪声场，产生柔和的深色渐变流动感。",
+      "implementation": "Canvas 2D + Simplex Noise（或 WebGL fragment shader）",
+      "tech_stack": ["Canvas API", "simplex-noise npm", "requestAnimationFrame"],
+      "parameters": {
+        "noise_scale": 0.002,
+        "flow_speed": 0.0003,
+        "colors": ["#0D0F14", "#12172A", "#0F1520", "#1A1025"],
+        "opacity": "0.8 overlay",
+        "blend_mode": "screen"
+      },
+      "performance": "target 60fps，noise计算降采样(1/4分辨率)再上采样",
+      "is_required": true
+    },
+    {
+      "id": "VE02",
+      "name": "Device Card Glow System",
+      "layer": "foreground",
+      "description": "设备卡片开启时产生设备类型对应色的光晕效果，模拟真实设备发光（暖灯=黄橙，冷气=蓝，安防=绿）。CSS 实现，零 JS 开销。",
+      "implementation": "CSS box-shadow + background gradient + transition",
+      "tech_stack": ["CSS Variables", "CSS Transitions"],
+      "parameters": {
+        "glow_radius": "0 0 24px device_glow_color",
+        "background_gradient": "radial-gradient(circle at 30% 30%, glow_color_alpha 0%, transparent 70%)",
+        "transition_duration": "300ms ease"
+      },
+      "is_required": true
+    },
+    {
+      "id": "VE03",
+      "name": "Scene Trigger Ripple",
+      "layer": "foreground",
+      "description": "场景触发时，从场景卡片中心产生涟漪扩散动效，然后设备卡片按时序顺序亮起，形成'场景正在生效'的视觉叙事。",
+      "implementation": "CSS keyframes ripple + JS stagger control (Framer Motion 或 GSAP timeline)",
+      "tech_stack": ["Framer Motion", "CSS custom properties"],
+      "animation_sequence": [
+        "0ms: 场景卡片 scale 0.95 tap",
+        "50ms: 涟漪从卡片扩散",
+        "200ms: 第一批设备卡片开始变亮",
+        "200ms + n*80ms: 后续设备依次变亮",
+        "800ms: 涟漪消退，场景 active 徽章出现"
+      ],
+      "is_required": true
+    },
+    {
+      "id": "VE04",
+      "name": "Voice Waveform Canvas",
+      "layer": "overlay",
+      "description": "语音控制浮层的声纹可视化动画。使用 Canvas 绘制响应式波形，listening状态持续脉冲，processing状态收缩为中心点旋转，result状态展开为结果图标。",
+      "implementation": "Canvas 2D requestAnimationFrame，WebAudio API（可模拟）",
+      "tech_stack": ["Canvas API", "requestAnimationFrame"],
+      "states": {
+        "listening": "多频段波形，响应振幅变化，柔和蓝色",
+        "processing": "波形收缩→中心圆形旋转指示器",
+        "success": "波形展开→绿色脉冲圆→checkmark",
+        "error": "波形震动→红色抖动→X图标"
+      },
+      "is_required": true
+    },
+    {
+      "id": "VE05",
+      "name": "Energy Chart Animation",
+      "layer": "content",
+      "description": "能耗图表进入动画和交互高亮。柱状图从底部生长，面积图路径绘制动画，tooltip鼠标悬停高亮。使用 Recharts 或自定义 SVG 动画。",
+      "implementation": "Recharts (React) + CSS animation + SVG path animation",
+      "tech_stack": ["recharts", "framer-motion", "CSS"],
+      "animations": {
+        "bar_entrance": "scaleY from 0 to 1, stagger 80ms, ease-out 600ms",
+        "area_path": "SVG stroke-dashoffset animation 800ms",
+        "tooltip_appear": "scale + fade 150ms",
+        "period_switch": "bars transition height 300ms"
+      },
+      "is_required": true
+    },
+    {
+      "id": "VE06",
+      "name": "Dashboard Number Count-Up",
+      "layer": "content",
+      "description": "仪表盘统计数字进入时有滚动计数动画，赋予数据'生命感'。",
+      "implementation": "Custom React hook useCountUp 或 react-countup 库",
+      "tech_stack": ["react-countup", "framer-motion"],
+      "parameters": {
+        "duration": "600ms",
+        "easing": "ease-out",
+        "decimals": 1
+      },
+      "is_required": false,
+      "nice_to_have": true
+    },
+    {
+      "id": "VE07",
+      "name": "Skeleton Shimmer",
+      "layer": "loading",
+      "description": "页面加载时骨架屏有从左到右的流光扫描动画，避免加载白屏。",
+      "implementation": "CSS keyframes linear-gradient background-position animation",
+      "tech_stack": ["CSS"],
+      "is_required": true
+    },
+    {
+      "id": "VE08",
+      "name": "Drawer Slide Transition",
+      "layer": "overlay",
+      "description": "设备详情抽屉从右侧滑入，背景有模糊遮罩，有弹性感的 cubic-bezier。移动端从底部滑入。",
+      "implementation": "Framer Motion AnimatePresence",
+      "tech_stack": ["framer-motion"],
+      "variants": {
+        "desktop": "x: 100% → x: 0, 280ms cubic-bezier(0.32,0.72,0,1)",
+        "mobile": "y: 100% → y: 0, 300ms cubic-bezier(0.32,0.72,0,1)"
+      },
+      "is_required": true
+    },
+    {
+      "id": "VE09",
+      "name": "Page/Tab Transition",
+      "layer": "page",
+      "description": "导航标签切换时的内容区过渡动画，crossfade + subtle y shift。",
+      "implementation": "Framer Motion AnimatePresence + motion.div",
+      "tech_stack": ["framer-motion"],
+      "is_required": false,
+      "nice_to_have": true
+    }
+  ],
+
+  "generative_combinations": [
+    {
+      "combination": "Canvas 噪声背景 + CSS Glow 卡片系统",
+      "description": "背景的流动感与卡片的发光效果共同构建'有深度的黑暗空间'感",
+      "implementation_note": "背景 Canvas 固定底层，CSS glow 应用在卡片层，两者通过 mix-blend-mode:screen 形成叠加"
+    },
+    {
+      "combination": "Framer Motion 时间线 + Canvas 波形",
+      "description": "场景触发的时序动画由 Framer Motion 编排，语音界面的波形由 Canvas 实时绘制，两者分层不干扰",
+      "implementation_note": "场景 stagger 动画控制设备卡片 props，Voice Canvas 在独立 React 组件中运行"
+    },
+    {
+      "combination": "Recharts 数据图表 + Framer Motion 进入动画",
+      "description": "Recharts 负责数据渲染，Framer Motion 控制图表容器的入场和切换过渡",
+      "implementation_note": "数据更新时用 AnimatePresence 做 crossfade，Recharts 内部 animation 属性控制柱状图生长"
+    }
+  ],
+
+  "quality_checklist": {
+    "depth_layers": "背景/卡片/激活光晕/浮层 四个深度层次清晰",
+    "rhythm": "不是所有元素同时动，有时序节奏（仪表盘 stagger 进入 → 设备卡片 → 场景卡片）",
+    "atmosphere": "颜色有光影感（deep dark bg + warm/cool glow），不只是 UI 色板",
+    "feedback": "hover/active/focus/scroll 都有对应视觉响应",
+    "breathing": "卡片间距充足，有负空间",
+    "dialogue": "发光效果与'控制真实设备'的产品语义形成对话，不是纯装饰"
+  }
+}

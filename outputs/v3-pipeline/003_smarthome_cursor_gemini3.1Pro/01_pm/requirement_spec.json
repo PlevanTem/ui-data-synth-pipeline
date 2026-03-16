@@ -1,0 +1,162 @@
+{
+  "project_name": "鸿蒙智联全屋智能中控应用",
+  "domain": "智能家居 (Smart Home)",
+  "core_problem": "这个产品帮助智能家庭用户在多端设备（手机/平板/智慧屏）上解决鸿蒙智联设备操控繁琐、无统一管理入口的问题，让他们能通过极简的卡片化界面和场景联动实现全屋设备的高效管控。",
+  "design_intent": {
+    "target_users": [
+      {
+        "type": "家庭用户",
+        "tech_maturity": "medium",
+        "aesthetic_maturity": "high",
+        "primary_goal": "快速调节家庭环境，一键切换生活场景，随时了解全屋设备状态"
+      }
+    ],
+    "emotional_goal": "第一感受是宁静、极简、有秩序感；使用过程中体验到丝滑的响应和一切尽在掌控的踏实感。",
+    "trust_signals_needed": true,
+    "information_density": "medium",
+    "interaction_depth": "rich",
+    "brand_personality": ["现代", "极简", "科技感", "柔和", "智能"]
+  },
+  "entities": [
+    {
+      "name": "Environment",
+      "key_attributes": ["greeting", "temperature", "humidity", "air_quality", "weather"],
+      "relations": []
+    },
+    {
+      "name": "Scene",
+      "key_attributes": ["id", "name", "icon", "status", "theme_color"],
+      "relations": []
+    },
+    {
+      "name": "Device",
+      "key_attributes": ["id", "name", "category", "room", "is_online", "status_value"],
+      "relations": []
+    }
+  ],
+  "functional_architecture": [
+    {
+      "module": "Environment & Voice",
+      "capabilities": ["环境温湿度显示", "欢迎语提示", "语音唤醒入口"],
+      "depends_on": []
+    },
+    {
+      "module": "Scene Control",
+      "capabilities": ["一键触发场景", "场景执行状态反馈"],
+      "depends_on": []
+    },
+    {
+      "module": "Device Management",
+      "capabilities": ["按类别/房间筛选设备", "设备快速开关", "设备参数调节", "设备在线/离线状态展示"],
+      "depends_on": []
+    },
+    {
+      "module": "Energy Analytics",
+      "capabilities": ["当日能耗总览", "能耗趋势图表"],
+      "depends_on": []
+    }
+  ],
+  "data_interactions": [
+    {
+      "action": "toggle_device_status",
+      "trigger": "user",
+      "type": "async",
+      "depends_on": []
+    },
+    {
+      "action": "activate_scene",
+      "trigger": "user",
+      "type": "async",
+      "depends_on": []
+    },
+    {
+      "action": "sync_environment_data",
+      "trigger": "system",
+      "type": "realtime",
+      "depends_on": []
+    }
+  ],
+  "execution_contracts": {
+    "must_deliver": [
+      {
+        "id": "M01",
+        "feature": "环境概览与快捷语音入口",
+        "feature_type": "explicit",
+        "user_value": "用户打开应用立刻获取当前家居环境核心指标并提供最快捷交互方式",
+        "acceptance_criteria": "首页顶部呈现天气/温湿度信息，及一个常驻的语音助手（小艺）触发按钮/区域",
+        "fail_condition": "缺失环境数据展示或无显著的语音交互入口",
+        "expression_goal": "极高视觉品质，可能是带有轻微天气动态反馈或毛玻璃质感的顶栏"
+      },
+      {
+        "id": "M02",
+        "feature": "一键场景联动模块",
+        "feature_type": "explicit",
+        "user_value": "通过一键操作取代逐个关闭/打开设备，极大提升效率",
+        "acceptance_criteria": "提供至少4个高频场景卡片（回家/离家/睡眠/观影），点击后有明确的选中和执行反馈",
+        "fail_condition": "场景按钮点击无视觉反馈或无法表现“激活态”",
+        "expression_goal": "卡片按下时有真实的物理下压反馈，激活时色彩或发光状态有细腻的过渡动画"
+      },
+      {
+        "id": "M03",
+        "feature": "卡片式设备控制矩阵",
+        "feature_type": "explicit",
+        "user_value": "让单个设备的查看和操作直观、所见即所得",
+        "acceptance_criteria": "设备列表以卡片网格形式展现，卡片上直接集成开关按钮或状态指示",
+        "fail_condition": "设备控制必须进入二级页，或缺乏当前开/关状态展示",
+        "expression_goal": "卡片模块化、多态视觉（开/关呈现明显不同的对比度或色彩），点击开关时有丝滑状态反转动画"
+      },
+      {
+        "id": "M04",
+        "feature": "跨端响应式布局适配",
+        "feature_type": "implicit",
+        "user_value": "确保手机、平板、智慧屏不同尺寸下均有极佳的浏览体验",
+        "acceptance_criteria": "至少适配 Mobile (<768px) 和 Tablet/Desktop (≥768px)。宽屏下充分利用横向空间（如侧边栏+网格），手机端采用垂直流式排版",
+        "fail_condition": "大屏下内容被简单居中拉伸，空间利用率低",
+        "expression_goal": "布局切换平滑自然，栅格系统稳健"
+      }
+    ],
+    "should_deliver": [
+      {
+        "id": "S01",
+        "feature": "语音交互态微动效",
+        "feature_type": "implicit",
+        "user_value": "增强语音交互的科技感和生命力",
+        "ideal_form": "点击语音入口后，弹出覆盖层或底部抽屉，呈现带有波形音轨、流体或光晕动效的“正在聆听”视觉反馈",
+        "acceptable_fallback": "仅弹出标准模态框并显示静态文字“请说话”"
+      },
+      {
+        "id": "S02",
+        "feature": "能耗统计可视化图表",
+        "feature_type": "explicit",
+        "user_value": "满足环保与成本管理的衍生需求",
+        "ideal_form": "优雅的曲线图或柱状图呈现本周能耗，配合数据载入动画",
+        "acceptable_fallback": "仅用数字文本展示今日能耗总值，无图表"
+      }
+    ],
+    "explicitly_excluded": [
+      {
+        "id": "X01",
+        "feature": "家庭成员与权限管理体系",
+        "exclusion_reason": "本次重心为多端统一的设备交互与控制前端体验，账号权限体系会导致界面复杂度偏离核心的控制场景"
+      }
+    ]
+  },
+  "non_functional_requirements": {
+    "performance_perception": "操作必须立即产生 UI 状态变更（乐观更新），动画需保持 60fps",
+    "visual_trust_level": "premium",
+    "accessibility_baseline": "WCAG AA",
+    "responsive_priority": "mobile-first"
+  },
+  "constraints": {
+    "design_constraints": ["遵循2026主流前沿趋势，使用现代化的界面元素如Glassmorphism、柔和阴影、大圆角等"],
+    "tech_constraints": ["需使用现代前端框架开发，非静态HTML"],
+    "brand_constraints": ["科技、柔和、鸿蒙生态包容感"]
+  },
+  "open_risks": [
+    {
+      "risk": "过于复杂的3D或特效可能影响多端性能",
+      "impact": "medium",
+      "mitigation": "优先使用CSS、SVG和轻量Canvas进行视觉增强，避免重量级全屏3D场景"
+    }
+  ]
+}

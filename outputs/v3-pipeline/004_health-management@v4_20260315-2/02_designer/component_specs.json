@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "name": "VitalCard",
+      "purpose": "展示单一生命体征数据（心率/血氧/睡眠）",
+      "variants": ["standard", "elder_mode"],
+      "states": ["default", "alert"],
+      "interaction_notes": ["Click to highlight corresponding AI advice"],
+      "linkage": {
+        "affects": ["AIAdviceList"],
+        "affected_by": ["ElderModeToggle"]
+      }
+    },
+    {
+      "name": "HealthWave",
+      "purpose": "用舒缓动效波形呈现体征数据",
+      "variants": ["heart_rate", "sleep"],
+      "states": ["default", "calm"],
+      "interaction_notes": ["Smooth wave animation running at frequency derived from health data"],
+      "linkage": {
+        "affects": [],
+        "affected_by": ["ElderModeToggle"]
+      }
+    },
+    {
+      "name": "ElderModeToggle",
+      "purpose": "全局切换长辈模式",
+      "variants": ["switch"],
+      "states": ["off", "on"],
+      "interaction_notes": ["Toggles global context, triggering layout reflow and font size changes"],
+      "linkage": {
+        "affects": ["GlobalTheme", "TypographyScale", "HealthWave", "VitalCard"],
+        "affected_by": []
+      }
+    }
+  ],
+  "interaction_flows": [
+    {
+      "trigger": "Toggle Elder Mode",
+      "source_component": "ElderModeToggle",
+      "target_components": ["All text", "GenerativeBackground"],
+      "state_changes": ["Increases font sizes", "Disables complex background motion"],
+      "animation": "Framer motion layout transition"
+    }
+  ]
+}

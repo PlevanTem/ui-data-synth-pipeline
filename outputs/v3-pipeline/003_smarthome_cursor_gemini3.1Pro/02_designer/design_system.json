@@ -1,0 +1,118 @@
+{
+  "design_direction": "Dark Minimalist Fluid (深色极简流体态) - 强调空间感、宁静氛围与交互细腻反馈的高端智能管家",
+  "color_palette": {
+    "background": {
+      "base": "#09090B",
+      "surface": "rgba(24, 24, 27, 0.6)",
+      "surface_elevated": "rgba(39, 39, 42, 0.7)"
+    },
+    "text": {
+      "primary": "#FAFAFA",
+      "secondary": "#A1A1AA",
+      "muted": "#71717A",
+      "on_active": "#FFFFFF"
+    },
+    "brand_accents": {
+      "active_glow": "#38BDF8",
+      "scene_home": "#34D399",
+      "scene_leave": "#F87171",
+      "scene_sleep": "#818CF8",
+      "scene_movie": "#F472B6"
+    },
+    "status": {
+      "online": "#10B981",
+      "offline": "#52525B",
+      "error": "#EF4444",
+      "warning": "#F59E0B"
+    }
+  },
+  "typography": {
+    "font_family": "Inter, SF Pro Display, system-ui, sans-serif",
+    "headings": {
+      "h1": { "size": "32px", "weight": "600", "letter_spacing": "-0.02em" },
+      "h2": { "size": "24px", "weight": "600", "letter_spacing": "-0.01em" },
+      "h3": { "size": "20px", "weight": "500", "letter_spacing": "0" }
+    },
+    "body": {
+      "large": { "size": "16px", "weight": "400", "line_height": "1.5" },
+      "base": { "size": "14px", "weight": "400", "line_height": "1.5" },
+      "small": { "size": "12px", "weight": "500", "color_intent": "secondary" }
+    },
+    "data_display": {
+      "font_family": "Inter, monospace",
+      "size": "48px",
+      "weight": "300",
+      "letter_spacing": "-0.03em"
+    }
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px",
+    "section": "48px"
+  },
+  "radius": {
+    "sm": "8px",
+    "md": "12px",
+    "lg": "20px",
+    "xl": "24px",
+    "pill": "9999px"
+  },
+  "shadow": {
+    "glass_card": "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
+    "active_glow": "0 0 20px 0 rgba(56, 189, 248, 0.4)",
+    "inner_highlight": "inset 0 1px 0 0 rgba(255, 255, 255, 0.1)"
+  },
+  "motion": {
+    "timing_functions": {
+      "spring_snappy": "spring(mass=1, stiffness=400, damping=25)",
+      "spring_gentle": "spring(mass=1, stiffness=200, damping=20)",
+      "ease_out": "cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "duration_scale": {
+      "fast": "150ms",
+      "base": "300ms",
+      "slow": "500ms",
+      "ambient": "5000ms"
+    },
+    "orchestration_rules": [
+      "场景卡片激活时，受影响的设备卡片需错薄(stagger) 50ms 依次展现状态变化动画",
+      "进入页面时，网格卡片从下向上带有轻微缩放的滑入(fade up & scale)"
+    ],
+    "scroll_animation_strategy": "设备列表超出屏幕时，滚动时仅对进入视口的卡片施加透明度渐变(blur fade)"
+  },
+  "interaction_principles": [
+    "物理感：所有可点击的卡片必须有 scale(0.98) 的按下反馈",
+    "反馈即时性：点击开关立刻更新界面状态（乐观更新），后台请求完成后不再闪烁",
+    "光效状态：设备开启时，卡片背景微量提亮，并在图标区域产生环绕发光效果"
+  ],
+  "generative_aesthetics": {
+    "color_mapping": "基于当前环境状态或激活的场景主题色",
+    "density_range": "低频噪声，平滑大面积的色块流动",
+    "noise_parameters": { "scale": 0.002, "speed": 0.05 },
+    "blend_modes": ["screen", "color-dodge"],
+    "layer_opacity_strategy": "底层 Canvas opacity 保持在 0.15 以下，避免喧宾夺主；顶层卡片背板使用 backdrop-filter: blur(24px) 吸收底层色彩"
+  },
+  "illustration_strategy": {
+    "style": "极简线框配合软发光，无复杂插画，以功能性高品质图标为主 (推荐 Lucide 或 Phosphor Icons)"
+  },
+  "depth_strategy": {
+    "z_index": {
+      "background": -1,
+      "cards": 10,
+      "navigation": 50,
+      "overlays": 100
+    }
+  },
+  "responsive_rules": [
+    "Mobile (w < 768px): 单列或双列对称流式布局，固定底部Tab Navigation",
+    "Tablet/Desktop (w >= 768px): 左侧边栏，右侧使用 CSS Grid 进行多列排版，能耗与环境数据独立为左侧大卡片"
+  ],
+  "accessibility_rules": [
+    "对比度：即使是次要文字，在深色背景上的对比度也要 >= 4.5:1",
+    "焦点态：使用明亮的 #38BDF8 作为键盘导航的 ring color",
+    "可点击区域：至少 44x44px 的物理可点击范围"
+  ]
+}

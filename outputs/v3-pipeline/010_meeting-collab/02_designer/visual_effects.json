@@ -1,0 +1,94 @@
+{
+  "use_visual_effects": true,
+  "effect_type": "canvas+svg+css",
+  "reasoning": [
+    "本案是 AI 会议工具，核心体验是「AI 正在工作」的感知——声波、流式文字、粒子动效是功能叙事的一部分，而非装饰",
+    "深暗色底色下，细粒度 Canvas 动效对比度高、视觉效果好",
+    "Canvas 声波可视化直接传递「有人在说话」的信息，是功能性视觉",
+    "粒子聚合动效让「会议结束→AI生成纪要」的等待过程变得有意义和有趣",
+    "WebGL 全屏 shader 被明确排除：与办公工具定位不符，性能开销过大"
+  ],
+  "placement": [
+    {
+      "location": "MeetingView - TranscriptPanel 底部",
+      "component": "WaveformCanvas",
+      "role": "实时声波可视化，绑定发言人状态"
+    },
+    {
+      "location": "MeetingView → MinutesView 过渡",
+      "component": "ParticleConvergeCanvas",
+      "role": "AI 生成纪要的过渡动效，全屏覆盖 1.5 秒后消失"
+    },
+    {
+      "location": "ParticipantGrid - 每个头像",
+      "component": "SVG Pulse Ring",
+      "role": "发言状态可视化脉冲圆"
+    },
+    {
+      "location": "TranscriptPanel - 文字流",
+      "component": "Streaming Text CSS Animation",
+      "role": "逐字出现模拟 AI 实时转写"
+    }
+  ],
+  "narrative_role": [
+    "WaveformCanvas 让「AI 正在监听」的状态显化，减少用户不确定性",
+    "ParticleConverge 让等待变成期待，将技术处理过程转化为仪式感",
+    "StreamingText 是 AI 能力的直接展示，强化产品的「实时」核心价值",
+    "SVG Pulse Ring 用视觉信号消除「谁在说话」的认知歧义"
+  ],
+  "interaction_model": [
+    "WaveformCanvas：每帧根据 speakingState mock 数据更新振幅，用户无法直接交互",
+    "ParticleConverge：自动触发，不可跳过（但最长 1.5s），用户只需等待",
+    "StreamingText：用户滚动时暂停 auto-scroll，重新回到底部时恢复",
+    "SVG Pulse Ring：纯展示，跟随数据驱动"
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "canvas-particles",
+      "purpose": "section-transition",
+      "algorithm_family": "particle-system",
+      "aesthetic_reference": "Otter.ai 的语音识别可视化 + Matter.js 粒子汇聚效果"
+    },
+    "secondary_layers": [
+      {
+        "type": "canvas-particles",
+        "purpose": "background-atmosphere",
+        "technique": "WaveformCanvas：simplex noise 驱动条形图振幅，32-48 条，60fps"
+      },
+      {
+        "type": "svg-generative",
+        "purpose": "hero-focal",
+        "technique": "SVG keyframe 脉冲圆，参会者发言状态可视化"
+      },
+      {
+        "type": "css-animation",
+        "purpose": "data-mapping",
+        "technique": "Streaming Text：逐字 opacity 渐变 + translateY 微小偏移"
+      }
+    ],
+    "interaction_hooks": [
+      "speakingParticipant 状态变化 → WaveformCanvas 振幅变化",
+      "meetingStatus: generating → ParticleConverge 触发",
+      "transcriptStream 新增字符 → StreamingText 渲染新字"
+    ],
+    "inspiration_sources": [
+      "Otter.ai 声波可视化语言",
+      "NotebookLM 的 AI 生成动效",
+      "OpenAI Realtime API Demo 的音频波形",
+      "Matter.js 粒子聚合 Demo（openprocessing.org）"
+    ],
+    "combination_rationale": "三种视觉手法分别服务于三个不同的功能场景：WaveformCanvas 绑定「发言状态」、ParticleConverge 绑定「AI 处理过渡」、StreamingText 绑定「实时转写」。三者在同一时刻不会同时大量出现，避免视觉拥挤。每种手法都与产品核心功能深度绑定，而非独立的艺术表演。"
+  },
+  "performance_notes": [
+    "WaveformCanvas：requestAnimationFrame loop，60fps，离开 MeetingView 时必须 cancelAnimationFrame",
+    "ParticleConverge：单次触发，1500ms 后自动销毁，使用对象池避免 GC 压力",
+    "StreamingText：使用虚拟列表或限制最大显示行数（最近 100 行），防止 DOM 膨胀",
+    "所有 Canvas 组件必须在 useEffect cleanup 中清理 animation frame 和 event listener",
+    "prefers-reduced-motion media query：检测到后禁用所有 canvas 动效，保持静态展示"
+  ],
+  "fallback_strategy": [
+    "WaveformCanvas 不支持时：显示静态声波图标 + 发言人文字标注",
+    "ParticleConverge 不支持时：显示加载 spinner + 进度提示文字",
+    "StreamingText 在低端设备：一次性显示所有文字，取消逐字动效"
+  ]
+}

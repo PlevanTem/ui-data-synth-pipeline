@@ -1,0 +1,47 @@
+{
+  "use_visual_effects": true,
+  "effect_type": "mixed",
+  "reasoning": [
+    "为体现'Apple-style'的高级感，必须使用 WebGL Shader 模拟流体背景，而非静态图片",
+    "为解决'搜索效率低'痛点，必须使用 Canvas 力导向图展示知识图谱，而非传统列表",
+    "为体现'3D 渲染'能力，详情页必须集成 Three.js/R3F 模型查看器"
+  ],
+  "placement": ["Global Background", "Search Result Area", "Product Detail Hero"],
+  "narrative_role": [
+    "Background: 营造沉浸式氛围，统一视觉基调",
+    "Graph: 将抽象的商品关联具象化，辅助发现",
+    "3D: 提供超越图片的真实感，增加购买信心"
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "webgl-shader",
+      "purpose": "background-atmosphere",
+      "algorithm_family": "noise-field",
+      "aesthetic_reference": "Aurora Borealis / Liquid Metal"
+    },
+    "secondary_layers": [
+      {
+        "type": "canvas-force-graph",
+        "purpose": "data-mapping",
+        "technique": "d3-force-simulation"
+      },
+      {
+        "type": "three-3d",
+        "purpose": "product-visualization",
+        "technique": "r3f-stage-lighting"
+      }
+    ],
+    "interaction_hooks": ["Touch/Gyroscope affects fluid flow", "Node drag affects graph physics"],
+    "combination_rationale": "通过背景的柔和流动衬托前景的高精度数据与模型，形成'虚实结合'的空间感。"
+  },
+  "performance_notes": [
+    "Mobile Shader precision needs to be mediump",
+    "Graph nodes limit: < 100 visible",
+    "3D Model LOD strategy required"
+  ],
+  "fallback_strategy": [
+    "Shader -> CSS Gradient Animation",
+    "3D -> High-res Image Carousel",
+    "Force Graph -> Static Grid List"
+  ]
+}

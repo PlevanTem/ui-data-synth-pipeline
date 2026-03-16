@@ -1,0 +1,50 @@
+{
+  "page_type": "dashboard",
+  "navigation_model": "sidebar_with_top_bar",
+  "sections": [
+    {
+      "id": "top_bar",
+      "title": "Top Navigation & Quick Actions",
+      "purpose": "Provide global status and key actions like 'Elderly Mode' toggle and 'Sync to Cloud' button.",
+      "priority": "P0",
+      "components": ["ElderlyModeToggle", "SyncButton", "UserAvatar", "NotificationBell"]
+    },
+    {
+      "id": "sidebar",
+      "title": "Main Navigation",
+      "purpose": "Navigate between different health modules.",
+      "priority": "P0",
+      "components": ["NavMenu"]
+    },
+    {
+      "id": "health_overview",
+      "title": "Real-time Health Overview",
+      "purpose": "Display current vital signs (heart rate, blood oxygen, sleep, activity) at a glance.",
+      "priority": "P0",
+      "components": ["VitalSignCards", "MiniTrendCharts"]
+    },
+    {
+      "id": "ai_insights",
+      "title": "AI Insights & Risk Warnings",
+      "purpose": "Show AI-generated health analysis, alerts, and professional reports.",
+      "priority": "P0",
+      "components": ["AlertBanner", "HealthScoreGauge", "AIReportSummary"]
+    },
+    {
+      "id": "personalized_plans",
+      "title": "Personalized Improvement Plans",
+      "purpose": "Provide actionable advice (sleep improvement, exercise, diet).",
+      "priority": "P1",
+      "components": ["PlanCards", "DietSuggestions", "ExerciseTracker"]
+    }
+  ],
+  "user_flows": [
+    "User toggles 'Elderly Mode' -> Dashboard layout simplifies, font size increases, contrasts become higher.",
+    "User clicks 'Sync to Huawei Cloud' -> Loading animation triggers, data updates, success toast appears.",
+    "User clicks on a specific vital sign card -> Expands to show detailed historical trend chart."
+  ],
+  "responsive_priorities": [
+    "Mobile layout stacks vital cards vertically.",
+    "Elderly mode prioritizes touch target size and reduces information density on all screen sizes."
+  ]
+}

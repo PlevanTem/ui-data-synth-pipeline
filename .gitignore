@@ -22,3 +22,7 @@ node_modules/
 # Logs & cache
 *.log
 .cache/
+
+# Generated outputs
+outputs/v1-pipeline/
+outputs/v2-pipeline/

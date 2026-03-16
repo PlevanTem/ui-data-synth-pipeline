@@ -1,0 +1,152 @@
+{
+  "experience_priority": "interaction-first",
+  "wow_goals": [
+    "实时转写面板的流式文字涌现动效——每个字符像真实 AI 在打字，配合声波可视化",
+    "会议结束时的粒子聚合过渡动效——让 AI 处理过程变成视觉仪式",
+    "声波 Canvas 与发言人状态实时联动——「有人在说话」的感知被可视化",
+    "极简深暗色系 + 冰蓝强调色的专业视觉层次——有设计感但不过度装饰",
+    "四视图之间的完整状态流转——可以真实演示完整会议生命周期"
+  ],
+  "north_star_experience": "用户看到这个 demo 时，应该感受到「这是一款真实能用的 AI 会议工具」，而不是「这是一个设计稿截图」",
+  "selected_stack": {
+    "framework": "React 18 + TypeScript + Vite",
+    "language": "typescript",
+    "reasoning": [
+      "复杂状态管理需求：meetingStatus / transcriptStream / taskList / selectedTask 等多个独立但相互联动的状态",
+      "Canvas 动效组件需要 useEffect + useRef + requestAnimationFrame 的完整 React 生命周期管理",
+      "Zustand 作为轻量状态管理，避免 Context drilling 同时保持简洁",
+      "Framer Motion 提供 spring 动画和 layout animation，与 React 生态深度集成",
+      "Tailwind CSS 4.x 快速实现暗色系设计系统，配合 CSS 变量双主题",
+      "Phosphor React 提供统一的线性图标系统"
+    ],
+    "why_not_others": [
+      "Vue：Framer Motion 生态在 React 更完善，且 React Three Fiber 将来扩展更容易",
+      "Svelte：SvelteKit 初始化更重，项目规模不需要 SvelteKit 的路由能力",
+      "Next.js：无 SSR 需求，Vite 更轻量启动更快，避免不必要的复杂度",
+      "Angular：TypeScript 支持好但框架太重，学习曲线对演示原型不合适"
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "Framer Motion",
+      "category": "animation",
+      "why_considered": ["spring 曲线动画、layout animation、exit animation 均原生支持", "与 React 生命周期完美集成"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["stagger 入场动画、view 切换、drawer slide-in 全部使用 Framer Motion 实现"]
+    },
+    {
+      "name": "Zustand",
+      "category": "framework",
+      "why_considered": ["轻量状态管理，无 Provider 包裹，任意组件直接订阅"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["meetingStore / taskStore / uiStore 分别管理会议状态、任务数据、UI 状态"]
+    },
+    {
+      "name": "Canvas 2D API (原生)",
+      "category": "generative",
+      "why_considered": ["WaveformCanvas 和 ParticleConverge 需要自定义绘制逻辑，原生 Canvas 性能最优"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["无需引入 Three.js 等重库，自定义 React hooks 封装 Canvas 生命周期"]
+    },
+    {
+      "name": "React Three Fiber / Three.js",
+      "category": "3d",
+      "why_considered": ["如果需要 3D 场景可以引入"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["本案不需要 3D 物体，Canvas 2D 已满足声波和粒子需求，Three.js 引入过重"]
+    },
+    {
+      "name": "GSAP",
+      "category": "animation",
+      "why_considered": ["时间线动画编排能力强"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["Framer Motion 在 React 生态的集成更自然，GSAP 免费版限制较多，重复引入不必要"]
+    }
+  ],
+  "interaction_bets": [
+    "流式文字动效（useStreamingText hook）：这是整个 demo 的核心视觉交互，必须做到「逼真的 AI 打字感」",
+    "声波 Canvas 与 speakingParticipant 状态绑定：每次切换发言人，声波振幅实时响应",
+    "粒子聚合过渡动效：会议结束的「仪式感」是产品差异化的重要体验节点",
+    "任务筛选 + layout animation：过滤时列表项平滑重排，而不是跳变"
+  ],
+  "generative_art_strategy": {
+    "modes_used": [
+      "Canvas 2D 声波可视化（WaveformCanvas hook）",
+      "Canvas 2D 粒子系统（ParticleConverge component）",
+      "CSS animation 流式文字出现（StreamingText hook）",
+      "SVG keyframe 脉冲圆（PulseRing component）"
+    ],
+    "combination_approach": "三个 Canvas/SVG 动效分别服务于三个功能场景，在同一时刻最多只有一个主动效，避免视觉噪音",
+    "inspiration_sources": ["Otter.ai 声波 UI", "OpenAI Realtime API Demo", "NotebookLM AI 生成动效"],
+    "integration_method": "每个生成式模块封装为独立 React 组件 + custom hook，通过 Zustand store 订阅数据状态"
+  },
+  "visual_system_modules": [
+    {
+      "name": "WaveformCanvas",
+      "role": "background",
+      "tech": ["Canvas 2D", "requestAnimationFrame", "simplex noise (custom)"],
+      "must_keep": true
+    },
+    {
+      "name": "ParticleConvergeCanvas",
+      "role": "section-transition",
+      "tech": ["Canvas 2D", "particle system"],
+      "must_keep": true
+    },
+    {
+      "name": "StreamingTextEffect",
+      "role": "data-module",
+      "tech": ["CSS animation", "React hooks", "setInterval"],
+      "must_keep": true
+    },
+    {
+      "name": "PulseRingEffect",
+      "role": "hero-focal",
+      "tech": ["SVG animate", "CSS keyframe"],
+      "must_keep": false
+    },
+    {
+      "name": "DualThemeSystem",
+      "role": "background",
+      "tech": ["CSS variables", "Tailwind dark mode"],
+      "must_keep": true
+    }
+  ],
+  "rendering_strategy": {
+    "use_webgl": false,
+    "use_canvas": true,
+    "use_svg_motion": true,
+    "use_3d": false,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": ["waveform-canvas", "particle-convergence", "streaming-text-css", "svg-pulse"]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": ["复杂状态管理需要分离 store 层", "Canvas 动效需要独立模块便于性能管理和清理"],
+    "entry_points": ["src/main.tsx", "src/App.tsx"]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "Zustand currentView state 控制 MainContent 渲染哪个视图，AnimatePresence 管理过渡动效，无 URL 路由（单页 demo）",
+    "state_management": "Zustand 3 个 store：meetingStore（会议状态+数据）、taskStore（任务列表+筛选）、uiStore（主题+侧边栏+模态）",
+    "component_communication": "组件通过 Zustand actions 触发状态变更，订阅 store 获取数据，无 prop drilling",
+    "data_flow": "mock 数据定义在 src/data/mockData.ts，store 初始化时加载，用户操作触发 store mutations",
+    "animation_orchestration": "Framer Motion AnimatePresence 处理视图切换，motion.div 处理组件入场，Framer variants 统一动画规格"
+  },
+  "performance_guardrails": [
+    "Canvas animationFrame 在组件 unmount 时必须 cancel",
+    "StreamingText 使用 windowed rendering，最多显示最近 200 行",
+    "所有 setInterval 在 useEffect cleanup 中 clearInterval",
+    "图片/图标使用 Phosphor 按需引入，避免全量 bundle"
+  ],
+  "fallback_plan": [
+    "WaveformCanvas 报错：显示静态声波条形图（CSS bars）",
+    "ParticleConverge 报错：直接跳转视图，显示简单 loading spinner",
+    "StreamingText 性能差：关闭逐字动效，一次性渲染文本块"
+  ],
+  "brand_experience_notes": [
+    "冰蓝 #38bdf8 是唯一强调色，不要引入第二个高饱和色",
+    "暗色系要有层次感：base / surface / elevated 三层背景色明显区分",
+    "「AI 感」通过功能性动效体现，不通过炫彩装饰体现"
+  ]
+}

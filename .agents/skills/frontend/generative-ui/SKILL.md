@@ -329,8 +329,119 @@ function dispose() {
 
 ---
 
+## Mode D：动效组件库集成（新增 2026）
+
+当 Designer Agent 的 `visual_effects.json` 要求"精致的微交互、文字动效、品牌感按钮、特效背景组件"，且目标栈为 React / Next.js 时，MagicUI / ReactBits / AnimateUI 是与 shadcn/ui 同层级的**组件增强层**（不是独立框架），通过 MCP 集成后可与 Canvas/WebGL 等 generative 层并行叠加使用。
+
+### 三大核心动效组件库对比
+
+| 库 | 定位 | 核心特色 | 安装方式 | MCP 支持 |
+|---|---|---|---|---|
+| **MagicUI** | SaaS / landing page 专用 | Globe、Bento Grid、Text Animate、Border Beam、Particles、Marquee、Dot/Grid Pattern 背景系列 | `npx shadcn@latest add <component>` | `npx @magicuidesign/mcp@latest` |
+| **ReactBits** | 泛用动效组件 | Dither、FlowField、Aurora 等独立生成式背景；FadeContent、BlurIn 等交互动效；文字动效系列 | shadcn registry `@react-bits` | shadcn MCP + `@react-bits` registry |
+| **AnimateUI** | 基于 Radix/Framer Motion | Button（hoverScale/tapScale）、Dialog、Popover 等含物理感动效的 headless-animated 组件；与 shadcn/ui 风格高度兼容 | `npx shadcn@latest add animate-ui/<component>` | shadcn MCP（同 ReactBits）|
+
+### 何时使用哪个库
+
+```
+if (需要"Globe 地球仪、Orbiting Circles、AnimatedBeam 连线")
+  → MagicUI（最丰富的 SaaS 展示性组件）
+
+if (需要"Dither 蚀刻背景、FlowField 流场、Aurora 极光、独立生成式背景")
+  → ReactBits（最接近 generative art 的背景系列）
+
+if (需要"带物理感弹性动画的表单/弹窗/按钮，且要保持与 Radix 兼容")
+  → AnimateUI（最适合交互组件级动效）
+
+if (需要"Text Animate / Blur Fade / Morphing Text / Word Rotate / Number Ticker")
+  → MagicUI 文字动效系列（最全面）
+
+if (需要"FadeContent / SplitText / CountUp / TextPressure")
+  → ReactBits 文字动效系列
+```
+
+### MCP 集成方法（在 Cursor 中）
+
+```bash
+# MagicUI MCP（推荐用于 Next.js + shadcn 项目）
+npx @magicuidesign/cli@latest install cursor
+
+# ReactBits + AnimateUI（通过 shadcn MCP + registry）
+# 1. 在 components.json 中添加 registry：
+{
+  "registries": {
+    "@react-bits": "https://reactbits.dev/r/{name}.json"
+  }
+}
+# 2. 启用 shadcn MCP server（Cursor 下运行）
+npx shadcn@latest mcp init --client cursor
+```
+
+**使用 MCP 的提示词范例（可直接用于 AI IDE）**：
+- `"Add the Dither background from React Bits to the hero section, make it slate-blue"`
+- `"Add a vertical Marquee of technology logos using MagicUI"`
+- `"Add MagicUI Globe component to the world coverage section"`
+- `"Add MagicUI BlurFade text animation to the heading"`
+- `"Add AnimateUI Button with hoverScale=1.08 and tapScale=0.94"`
+
+### 效果选型扩展表（补充 Mode A/B）
+
+| 效果分类 | 具体效果 | 推荐来源 | 适用产品语境 | 实现提示 |
+|---------|---------|---------|------------|---------|
+| **生成式背景** | Dither / Aurora / FlowField | ReactBits | AI 工具、创意机构、科技产品 | ReactBits registry 直接安装 |
+| **生成式背景** | Grid Pattern / Dot Pattern / Flickering Grid | MagicUI | SaaS 工具、dashboard、开发者工具 | MagicUI MCP 安装 |
+| **生成式背景** | Retro Grid / Warp Background | MagicUI | 品牌站、营销页、复古科技 | MagicUI MCP 安装 |
+| **特效组件** | Globe（3D 地球） | MagicUI | 全球化平台、地图类产品 | Three.js 封装，注意移动端降级 |
+| **特效组件** | Orbiting Circles / Animated Beam | MagicUI | AI 工具关系图、连接叙事 | CSS animation + SVG |
+| **特效组件** | Particles / Meteors / Confetti | MagicUI | 庆祝态、科技感氛围 | Canvas 粒子，注意上限 |
+| **文字动效** | Text Animate / Blur Fade / Word Rotate | MagicUI | 品牌 hero 区、标题序列 | Framer Motion 封装 |
+| **文字动效** | Morphing Text / Hyper Text / Aurora Text | MagicUI | AI / 变形叙事产品 | GSAP / CSS clip 技术 |
+| **文字动效** | SplitText / FadeContent / TextPressure | ReactBits | 内容型网站、scroll-driven | IntersectionObserver |
+| **文字动效** | Scroll Based Velocity / Text Reveal | MagicUI | 滚动叙事、品牌故事 | scroll-driven animations |
+| **交互组件** | Magic Card（鼠标跟踪渐变）| MagicUI | 卡片悬停、产品展示 | CSS 变量 + mousemove |
+| **交互组件** | Shine Border / Border Beam | MagicUI | 卡片高亮、Premium 感 | CSS 动画描边 |
+| **交互组件** | AnimateUI Button（物理感）| AnimateUI | 所有需要"手感"的 CTA | Framer Motion spring |
+| **Marquee 跑马灯** | Marquee / Scroll Based Velocity | MagicUI | Logo 墙、评论流、合作伙伴 | CSS animation |
+| **数据展示** | Bento Grid | MagicUI | Feature 展示、SaaS 落地页 | CSS Grid + Framer Motion |
+| **设备 Mock** | iPhone / Android / Safari 模拟 | MagicUI | 移动 App 产品展示 | SVG frame + 内容插槽 |
+
+### 工程注意事项
+
+```typescript
+// 1. MagicUI / ReactBits 组件默认依赖 Framer Motion，确保已安装
+// npm install framer-motion
+
+// 2. AnimateUI 需要 Radix UI 基础组件（通常 shadcn/ui 项目已包含）
+
+// 3. Globe 组件依赖 cobe（WebGL 地球库）
+// npm install cobe
+
+// 4. 所有动效组件都应遵守 prefers-reduced-motion
+// AnimateUI / MagicUI 大多数组件已内置，自定义时记得加：
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// 5. 这些库的组件是"复制到项目中"模式（不是 npm 包）
+// 通过 CLI 安装后直接在 src/components/ui/ 下编辑
+```
+
+### 与 generative-ui Mode A/B 的组合策略
+
+```
+Mode A（自写 Canvas 生成层）+ MagicUI 文字动效  → 高端品牌站
+Mode A（ReactBits Dither/Aurora 背景）+ AnimateUI 交互组件  → AI 工具 / 创意产品
+Mode B（D3/Chart 数据可视化）+ MagicUI Bento Grid 布局  → SaaS dashboard
+Mode B（Three.js 3D 场景）+ MagicUI Globe + Orbiting Circles  → 全球化平台 hero
+Mode C（算法艺术）独立作品 → 不引入这些库，保持纯算法美学
+```
+
+---
+
 ## 参考资源
 
 - `templates/viewer.html` — Mode C 独立艺术的 HTML 起点（严格按模板来）
 - `templates/generator_template.js` — p5.js 结构和 seeded randomness 最佳实践
 - [Google Generative UI 论文](https://generativeui.github.io) — Mode B 的设计哲学与案例来源
+- [MagicUI 组件库](https://magicui.design/docs/components) — SaaS / landing page 动效组件
+- [ReactBits 组件库](https://reactbits.dev/get-started/index) — 生成式背景 + 文字 + 交互动效
+- [AnimateUI 组件库](https://animate-ui.com/docs/components) — 基于 Framer Motion 的物理感组件
+- [Vercel Next.js Templates](https://vercel.com/templates/next.js) — Next.js 生产级模板参考（AI、电商、SaaS、博客）

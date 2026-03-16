@@ -1,0 +1,21 @@
+{
+  "case_id": "010_meeting-collab",
+  "source_type": "test_file",
+  "source_file": "example_inputs",
+  "input_summary": "鸿蒙原生AI会议应用：多设备一键入会、实时语音转写、多语言翻译、会后纪要生成、任务待办同步，极简商务风、低饱和配色",
+  "domain": "会议协作 (Meeting Collaboration)",
+  "selected_stack": "React 18 + TypeScript + Vite",
+  "stack_language": "typescript",
+  "delivery_mode": "multi-file",
+  "uses_visual_effects": true,
+  "effect_type": "canvas+svg+css",
+  "generative_modes": [
+    "waveform-canvas",
+    "particle-convergence",
+    "streaming-text-css",
+    "svg-pulse-ring"
+  ],
+  "interaction_completeness": "full",
+  "created_at": "2026-03-15",
+  "pipeline_version": "v3"
+}

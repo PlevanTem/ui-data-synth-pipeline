@@ -1,0 +1,52 @@
+{
+  "page_type": "mobile_web_app",
+  "navigation_model": "bottom_tab_bar_with_overlay_drawer",
+  "sections": [
+    {
+      "id": "splash_onboarding",
+      "title": "启动与引导",
+      "purpose": "品牌印象植入与偏好快速收集",
+      "priority": "P1",
+      "components": ["3D_logo_animation", "preference_bubbles", "glass_login_modal"]
+    },
+    {
+      "id": "home_discovery",
+      "title": "探索首页",
+      "purpose": "通过知识图谱和语义搜索发现商品",
+      "priority": "P0",
+      "components": ["semantic_search_bar", "knowledge_graph_canvas", "trending_products_carousel"]
+    },
+    {
+      "id": "product_detail",
+      "title": "商品详情",
+      "purpose": "高沉浸感展示商品细节与参数",
+      "priority": "P0",
+      "components": ["webgl_product_viewer", "glass_info_sheet", "sticky_buy_bar"]
+    },
+    {
+      "id": "cart_checkout",
+      "title": "购物车与结算",
+      "purpose": "高效、无障碍的支付流程",
+      "priority": "P0",
+      "components": ["a11y_form_groups", "currency_converter", "swipe_payment_action"]
+    },
+    {
+      "id": "user_profile",
+      "title": "个人中心",
+      "purpose": "订单管理与个性化设置",
+      "priority": "P2",
+      "components": ["glass_card_list", "setting_toggles"]
+    }
+  ],
+  "user_flows": [
+    {
+      "name": "语义搜索与购买",
+      "steps": ["输入自然语言需求", "浏览知识图谱结果", "进入商品详情查看 3D", "加入购物车", "无障碍结算"]
+    }
+  ],
+  "responsive_priorities": [
+    "Touch targets size (至少 44px)",
+    "Bottom sheet interaction (单手操作)",
+    "Performance on mobile GPU"
+  ]
+}

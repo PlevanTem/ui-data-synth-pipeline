@@ -1,0 +1,18 @@
+{
+  "case_id": "004_health-management",
+  "pipeline_version": "v4",
+  "generated_date": "20260315",
+  "source_type": "test_file",
+  "source_file": "",
+  "input_summary": "AI健康管理应用，对接华为穿戴设备，支持长辈模式与温暖治愈风格",
+  "domain": "健康管理 (Health Management)",
+  "selected_stack": "react",
+  "stack_language": "typescript",
+  "delivery_mode": "multi-file",
+  "uses_visual_effects": true,
+  "effect_type": "mixed",
+  "generative_modes": ["css-houdini/gradient-mesh"],
+  "component_library_used": ["framer-motion"],
+  "interaction_completeness": "full",
+  "created_at": "2026-03-15T12:00:00Z"
+}

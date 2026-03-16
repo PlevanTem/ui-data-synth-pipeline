@@ -1,0 +1,150 @@
+{
+  "experience_priority": "visual-first",
+  "wow_goals": [
+    "High-end Apple-style frosted glass UI with fluid motion",
+    "Interactive 3D product exploration",
+    "Data-driven knowledge graph for semantic discovery"
+  ],
+  "north_star_experience": "A seamless, liquid-like browsing experience where users navigate through a universe of products using natural gestures and semantic connections, feeling like they are manipulating physical objects under glass.",
+  "selected_stack": {
+    "framework": "react",
+    "language": "typescript",
+    "reasoning": [
+      "React ecosystem offers the best libraries for WebGL (R3F) and D3 integration.",
+      "Component-based architecture essential for complex interactive modules like the Knowledge Graph and 3D Viewer.",
+      "TypeScript provides necessary type safety for complex data structures in the graph."
+    ],
+    "why_not_others": [
+      "Vue: Good, but R3F ecosystem is stronger than TresJS for this specific high-fidelity 3D requirement.",
+      "Svelte: Excellent performance, but fewer drop-in advanced 3D/graph libraries compared to React."
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "React Three Fiber",
+      "category": "3d",
+      "why_considered": [
+        "Standard for React 3D",
+        "Declarative scene graph matches React mental model"
+      ],
+      "adoption_decision": "chosen",
+      "decision_reason": [
+        "Mature, performance optimized, large community."
+      ]
+    },
+    {
+      "name": "D3.js",
+      "category": "generative",
+      "why_considered": [
+        "Best in class for force-directed graphs",
+        "Can drive Canvas or SVG"
+      ],
+      "adoption_decision": "chosen",
+      "decision_reason": [
+        "Essential for the Knowledge Graph visualization requirements."
+      ]
+    },
+    {
+      "name": "Framer Motion",
+      "category": "animation",
+      "why_considered": [
+        "Layout animations (Shared Element Transition)",
+        "Spring physics"
+      ],
+      "adoption_decision": "chosen",
+      "decision_reason": [
+        "Critical for the 'morphing' and 'fluid' feel described in design system."
+      ]
+    }
+  ],
+  "interaction_bets": [
+    "Force-directed graph as primary navigation",
+    "Seamless shared element transitions between list and detail",
+    "Real-time 3D manipulation on mobile"
+  ],
+  "generative_art_strategy": {
+    "modes_used": [
+      "mode_a_background",
+      "mode_b_component"
+    ],
+    "combination_approach": "Layered: Fluid WebGL background (Mode A) + D3 Force Graph foreground (Mode B)",
+    "inspiration_sources": [
+      "Apple iOS Gaussian Blur",
+      "Liquid metal shaders",
+      "Force-directed data visualizations"
+    ],
+    "integration_method": "React context for shared state, Canvas layers for performance"
+  },
+  "visual_system_modules": [
+    {
+      "name": "LiquidBackground",
+      "role": "background",
+      "tech": [
+        "WebGL",
+        "GLSL"
+      ],
+      "must_keep": true
+    },
+    {
+      "name": "KnowledgeGraph",
+      "role": "narrative-block",
+      "tech": [
+        "D3",
+        "Canvas"
+      ],
+      "must_keep": true
+    },
+    {
+      "name": "ProductViewer3D",
+      "role": "hero",
+      "tech": [
+        "R3F",
+        "Three.js"
+      ],
+      "must_keep": true
+    }
+  ],
+  "rendering_strategy": {
+    "use_webgl": true,
+    "use_canvas": true,
+    "use_svg_motion": true,
+    "use_3d": true,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": [
+      "noise-field",
+      "force-simulation"
+    ]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": [
+      "Complexity of 3D, Graph, and UI logic requires separation of concerns."
+    ],
+    "entry_points": [
+      "src/main.tsx"
+    ]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "Client-side routing (React Router) with Framer Motion transitions",
+    "state_management": "Zustand for global store (cart, user preferences, graph state)",
+    "component_communication": "Props for simple hierarchy, Context/Store for cross-cutting concerns (theme, data)",
+    "data_flow": "Unidirectional data flow, local state for UI interactions",
+    "animation_orchestration": "Framer Motion AnimatePresence for page exits/enters"
+  },
+  "performance_guardrails": [
+    "LOD for 3D models",
+    "Canvas for graph > 100 nodes",
+    "Debounced resize observers",
+    "Suspense for lazy loading 3D assets"
+  ],
+  "fallback_plan": [
+    "Static gradient background if WebGL fails",
+    "Image carousel if 3D context lost",
+    "Grid list if Graph crashes"
+  ],
+  "brand_experience_notes": [
+    "Glassmorphism must be performant (backdrop-filter usage carefully monitored)",
+    "Typography must remain legible over complex backgrounds"
+  ]
+}

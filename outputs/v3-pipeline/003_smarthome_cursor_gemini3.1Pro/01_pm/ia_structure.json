@@ -1,0 +1,120 @@
+{
+  "page_type": "dashboard",
+  "navigation_model": "hybrid",
+  "content_zones": [
+    {
+      "id": "zone_header_environment",
+      "label": "环境总览与用户问候区",
+      "content_intent": "向用户提供所处环境的基础情况，建立欢迎感和全盘掌控的基础认知",
+      "priority": "P0",
+      "must_contain": [
+        "欢迎语/问候",
+        "室内温度",
+        "室内湿度",
+        "天气/空气质量摘要",
+        "语音助手(小艺)唤起入口"
+      ],
+      "user_goal": "一眼了解家中环境，能够快速发起语音指令",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M01", "S01"]
+    },
+    {
+      "id": "zone_scenes",
+      "label": "一键场景区",
+      "content_intent": "提供对多个设备协同执行的快捷入口，满足生活状态切换的高频需求",
+      "priority": "P0",
+      "must_contain": [
+        "回家模式按钮",
+        "离家模式按钮",
+        "睡眠模式按钮",
+        "观影模式按钮"
+      ],
+      "user_goal": "一键完成环境切换，无需逐个调整设备",
+      "designer_latitude": "fully-open",
+      "linked_contracts": ["M02"]
+    },
+    {
+      "id": "zone_devices_grid",
+      "label": "设备监控与控制区",
+      "content_intent": "展列全屋IoT设备状态，提供直接的操作控制功能",
+      "priority": "P0",
+      "must_contain": [
+        "分类筛选标签(如: 所有、灯光、环境、安防)",
+        "设备卡片(包含图标、名称、位置)",
+        "设备状态指示(在线/离线/开/关)",
+        "快捷控制开关"
+      ],
+      "user_goal": "查阅特定设备并直接执行开/关或参数调整",
+      "designer_latitude": "fully-open",
+      "linked_contracts": ["M03", "M04"]
+    },
+    {
+      "id": "zone_energy_summary",
+      "label": "能耗统计区",
+      "content_intent": "提供家庭能源使用的反馈",
+      "priority": "P1",
+      "must_contain": [
+        "今日用电量",
+        "对比昨日变化趋势",
+        "能耗走势图表(可选)"
+      ],
+      "user_goal": "获取家庭能耗的直观印象",
+      "designer_latitude": "fully-open",
+      "linked_contracts": ["S02"]
+    },
+    {
+      "id": "zone_bottom_nav",
+      "label": "全局底部/侧边导航",
+      "content_intent": "在系统各主要功能模块间穿梭",
+      "priority": "P0",
+      "must_contain": [
+        "首页/控制中心",
+        "自动化/智能场景设定",
+        "数据统计",
+        "设置"
+      ],
+      "user_goal": "明确当前位置并能在不同大模块中切换",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M04"]
+    }
+  ],
+  "critical_flows": [
+    {
+      "flow_name": "一键场景切换",
+      "steps": [
+        "用户点击某场景卡片",
+        "卡片呈现激活中(加载/发光)的动效",
+        "关联的设备卡片状态随之自动变更为对应状态",
+        "场景卡片保持激活态"
+      ],
+      "success_condition": "视觉上明确反馈了命令下发及状态响应的闭环"
+    },
+    {
+      "flow_name": "单设备控制",
+      "steps": [
+        "用户点击设备卡片上的开关",
+        "开关产生物理反馈动效，状态立刻反转(乐观更新)",
+        "设备卡片的整体色彩/亮度对比度随之变化，强调设备当前的明暗/工作状态"
+      ],
+      "success_condition": "单体设备的反馈迅速且视觉层级变化清晰"
+    }
+  ],
+  "responsive_priorities": [
+    {
+      "breakpoint": "mobile",
+      "key_adaptations": [
+        "采用底部导航栏 (Bottom Tab Bar)",
+        "卡片流式排列 (1-2列网格)",
+        "竖向滚动为主"
+      ]
+    },
+    {
+      "breakpoint": "tablet",
+      "key_adaptations": [
+        "可能转为侧边导航栏 (Side Nav) 释放垂直空间",
+        "场景与能耗区可与设备区左右分栏显示",
+        "卡片采用更丰富的多列栅格布局 (3-4列)"
+      ]
+    }
+  ]
+}

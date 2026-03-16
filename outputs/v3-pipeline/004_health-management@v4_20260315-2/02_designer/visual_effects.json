@@ -1,0 +1,45 @@
+{
+  "use_visual_effects": true,
+  "effect_type": "mixed",
+  "reasoning": [
+    "生动感与治愈感能有效降低用户阅读健康数据时的焦虑",
+    "采用呼吸节律映射，将冰冷数据转化为有生命的视觉反馈",
+    "长辈模式下支持平滑降级关闭复杂特效"
+  ],
+  "placement": ["Background (App shell)", "Data visual layers (Wave/Rings)"],
+  "narrative_role": ["Set a calming, therapeutic mood", "Translate numerical data into natural feelings"],
+  "interaction_model": ["Passive observation with dynamic data mapping"],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "css-houdini|svg-generative",
+      "purpose": "background-atmosphere",
+      "algorithm_family": "wave|fluid",
+      "aesthetic_reference": "Refik Anadol 'Sense of Healing', organic breathing loops"
+    },
+    "secondary_layers": [
+      {
+        "type": "framer-motion",
+        "purpose": "component-micro-interaction",
+        "technique": "spring physics on cards and layout reflows"
+      }
+    ],
+    "interaction_hooks": [
+      "Elder mode toggle completely disables primary layer for clarity"
+    ],
+    "combination_rationale": "用柔和的流体力学渐变作为底层氛围，配合卡片的物理弹性动画，创造生命力与科技感的平衡。"
+  },
+  "component_library_selections": {
+    "magicui": ["NumberTicker"],
+    "reactbits": ["Aurora Background"],
+    "animateui": [],
+    "install_method": "manual/simulated",
+    "customization_notes": "Aurora 调整色彩为 Warm Sand / Forest Green 等治愈系配色，速度极缓。"
+  },
+  "performance_notes": [
+    "需确保 CSS 渐变在移动端上的性能",
+    "长辈模式直接移除相关 DOM 节点优化耗电"
+  ],
+  "fallback_strategy": [
+    "开启长辈模式时，退退为纯色 #FDFBF7 背景，确保最高对比度和防眩晕。"
+  ]
+}

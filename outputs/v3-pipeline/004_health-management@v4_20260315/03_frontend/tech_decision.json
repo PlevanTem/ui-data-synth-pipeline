@@ -1,0 +1,12 @@
+{
+  "stack": "React + TypeScript + Vite",
+  "styling": "Tailwind CSS + Framer Motion",
+  "charts": "Recharts (for simple, clean splines and data visualization)",
+  "state_management": "Zustand (for global state like Elderly Mode toggle)",
+  "icons": "Lucide React",
+  "reasoning": {
+    "framework": "React provides a robust component ecosystem, perfect for handling complex layout shifts between normal and elderly modes.",
+    "styling": "Tailwind allows rapid prototyping of glassmorphism and soft UI requirements. Framer Motion is essential for the smooth layout flips and micro-interactions required in the brief.",
+    "generative_ui": "Using Framer Motion and custom CSS to create the slow, breathing Aurora background without the heavy overhead of a full 3D library, ensuring performance remains high even for elderly devices."
+  }
+}
