@@ -1,0 +1,498 @@
+{
+  "case_id": "004_ecommerce",
+  "domain": "ecommerce",
+  "pipeline_version": "v3",
+  "original_prompt": "构建一个名为 Nebula Commerce 的跨境电商移动端应用，面向 25-35 岁高品质追求用户。核心要求：可视化知识图谱语义搜索、WebGL 3D 商品查看器、Apple-style 磨砂玻璃质感 UI、无障碍表单系统。视觉风格为 Liquid Glass（流体玻璃），背景使用实时 WebGL 流体渐变，前景使用高透磨砂玻璃卡片，数据层使用 Canvas 力导向知识图谱。导航采用底部悬浮 Tab Bar，支持单手操作。",
+  "causal_chains": [
+    {
+      "id": "chain_01",
+      "anchor_question": "为什么选择 React + TypeScript 而非 Vue 或 Svelte？",
+      "chain_type": "selection",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户需要在移动端通过 3D 模型全方位查看商品细节，并通过知识图谱发现关联商品——这要求前端同时集成高质量 3D 渲染引擎和复杂数据可视化能力",
+          "source": "01_pm/prd.md → §4.1 可视化知识图谱, §4.2 WebGL 渲染引擎"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "将「基于 WebGL 的高性能商品渲染」和「可视化知识图谱搜索」同时列为 P0 必备功能，意味着技术栈必须在 3D 和数据可视化两个维度都有成熟生态",
+          "source": "01_pm/requirement_breakdown.json → must_have[2,1]"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "React 生态拥有最成熟的 WebGL 集成方案 React Three Fiber (R3F)，其声明式场景图与 React 组件模型完美匹配；Vue 的 TresJS 在高保真 3D 场景下不够成熟；Svelte 的高级 3D/图表库数量明显不足",
+          "source": "03_frontend/tech_decision.json → selected_stack.reasoning + why_not_others"
+        },
+        {
+          "stage": "code_impl",
+          "content": "package.json 中同时安装了 @react-three/fiber、@react-three/drei、d3、framer-motion 等 React 生态专属库，构成了完整的 3D + 可视化 + 动画技术矩阵",
+          "source": "03_frontend/package.json → dependencies"
+        }
+      ],
+      "code_snippet": "// package.json dependencies\n\"@react-three/drei\": \"^9.99.0\",\n\"@react-three/fiber\": \"^8.15.16\",\n\"d3\": \"^7.8.5\",\n\"framer-motion\": \"^11.0.3\",\n\"react\": \"^18.2.0\",\n\"three\": \"^0.161.0\",\n\"zustand\": \"^4.5.0\"",
+      "related_files": ["src/main.tsx", "src/App.tsx"]
+    },
+    {
+      "id": "chain_02",
+      "anchor_question": "为什么使用 Zustand 管理全局状态，而不是 Redux 或纯 Context？",
+      "chain_type": "selection",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户的核心操作路径是「语义搜索 → 浏览知识图谱 → 进入商品详情 → 加入购物车 → 结算」，每一步都需要读写共享状态（搜索词、选中节点、购物车数据）",
+          "source": "01_pm/ia_structure.json → user_flows[0].steps"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "信息架构中 5 个 section（首页探索、商品详情、购物车结算等）需要跨视图共享搜索状态和购物车数据，而不是各自维护独立状态",
+          "source": "01_pm/ia_structure.json → sections[1-3].components"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "选择 Zustand 作为全局状态管理：轻量无 Provider 包裹，任意组件可直接订阅；放弃 Redux 因为样板代码过重不适合中等规模项目，放弃纯 Context 因为频繁更新会导致不必要的重渲染",
+          "source": "03_frontend/tech_decision.json → internal_interaction_plan.state_management"
+        },
+        {
+          "stage": "code_impl",
+          "content": "用一个 Zustand store 统一管理 searchQuery、selectedNode、isGraphView、products、cart 五大状态切片，各页面和组件直接通过 useStore 钩子订阅",
+          "source": "03_frontend/src/store/useStore.ts"
+        }
+      ],
+      "code_snippet": "// src/store/useStore.ts\nexport const useStore = create<AppState>((set) => ({\n  searchQuery: '',\n  setSearchQuery: (query) => set({ searchQuery: query }),\n  selectedNode: null,\n  setSelectedNode: (id) => set({ selectedNode: id }),\n  isGraphView: false,\n  setIsGraphView: (isGraph) => set({ isGraphView: isGraph }),\n  products: MOCK_PRODUCTS,\n  cart: [],\n  addToCart: (product) => set((state) => ({ cart: [...state.cart, product] })),\n}));",
+      "related_files": ["src/store/useStore.ts", "src/App.tsx", "src/pages/Home.tsx", "src/components/SemanticSearchBar.tsx"]
+    },
+    {
+      "id": "chain_03",
+      "anchor_question": "为什么搜索结果用 D3 力导向知识图谱展示，而非传统商品列表？",
+      "chain_type": "structure",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户希望用自然语言（如「适合送给设计师的极简风格桌面摆件」）进行模糊搜索，不仅要找到匹配商品，还要发现关联品，传统关键词列表无法满足这种「关联发现」需求",
+          "source": "01_pm/prd.md → §2 核心场景 + §3 搜索效率低"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "将知识图谱可视化搜索定为 P0，明确要求「不直接展示列表，而是先展示基于 Canvas/D3 的交互式节点图，显示商品与属性、场景、关联品的连接」",
+          "source": "01_pm/prd.md → §4.1 可视化知识图谱与语义搜索"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计师选择无限画布模式的力导向图，用粒子流连接线替代僵硬直线，让节点像漂浮在玻璃液态环境中的气泡，与 Liquid Glass 整体视觉语言统一",
+          "source": "02_designer/design_brief.md → Generative 视觉层指南 + 02_designer/style_research.md → §3"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "选择 D3.js 驱动 Canvas 力导向模拟：D3 是力导向图领域的行业标准，可以同时驱动 Canvas 或 SVG 渲染",
+          "source": "03_frontend/tech_decision.json → frontier_candidates_considered[1]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "KnowledgeGraphCanvas 组件基于 d3.forceSimulation 构建节点图，使用 Canvas 2D 上下文逐帧渲染节点和连线，点击节点后弹出玻璃面板底部卡片",
+          "source": "03_frontend/src/components/KnowledgeGraphCanvas.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/KnowledgeGraphCanvas.tsx\nsimulationRef.current = d3.forceSimulation<Node, Link>(nodes)\n  .force(\"link\", d3.forceLink<Node, Link>(links).id((d: Node) => d.id).distance(150))\n  .force(\"charge\", d3.forceManyBody().strength(-300))\n  .force(\"center\", d3.forceCenter(width / 2, height / 2))\n  .force(\"collide\", d3.forceCollide<Node>().radius((d) => (d as Node).r + 10))\n  .on(\"tick\", ticked);",
+      "related_files": ["src/components/KnowledgeGraphCanvas.tsx", "src/pages/Home.tsx", "src/store/useStore.ts"]
+    },
+    {
+      "id": "chain_04",
+      "anchor_question": "为什么全局背景使用自定义 GLSL Shader 实现流体效果，而非 CSS 渐变或静态图片？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "目标用户对视觉美感极度敏感，习惯 iOS 原生动效的高级感，「千篇一律的白色卡片设计」是需要解决的核心视觉痛点",
+          "source": "01_pm/prd.md → §3 视觉平庸"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "Apple-style 磨砂玻璃质感 UI 被列为 P0，要求大面积使用 Backdrop Filter 配合半透明背景营造层次感",
+          "source": "01_pm/prd.md → §4.4 + 01_pm/requirement_breakdown.json → must_have[4]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "选择 Liquid Glass 方向后，设计明确要求背景必须是「实时的 WebGL 流体渐变（Aurora），模拟极光或液态金属流动」，并在风格研究中明确否决了静态图片方案",
+          "source": "02_designer/design_brief.md → 核心视觉方向 + 02_designer/visual_effects.json → generative_combination.primary_layer"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "将 LiquidBackground 设为 must_keep 的 WebGL 背景模块，采用 noise-field 算法族，并预设了「Shader → CSS Gradient Animation」的降级策略",
+          "source": "03_frontend/tech_decision.json → visual_system_modules[0] + fallback_plan[0]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "LiquidBackground 组件通过 R3F Canvas 挂载全屏平面，使用自定义 GLSL fragment shader 基于 Simplex 2D noise 混合深蓝、主蓝、亮蓝三色实现缓慢流动的液态光影效果",
+          "source": "03_frontend/src/components/LiquidBackground.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/LiquidBackground.tsx - fragmentShader\nvoid main() {\n    vec2 uv = vUv;\n    float time = uTime * 0.2;\n    float n1 = snoise(uv * 3.0 + vec2(time * 0.5, time * 0.2));\n    float n2 = snoise(uv * 6.0 - vec2(time * 0.8, time * 0.4));\n    float noise = mix(n1, n2, 0.5);\n    vec3 deepBlue = vec3(0.06, 0.09, 0.16);\n    vec3 primary = vec3(0.23, 0.51, 0.96);\n    vec3 color = mix(deepBlue, primary, smoothstep(-0.5, 0.5, noise));\n    gl_FragColor = vec4(color, 1.0);\n}",
+      "related_files": ["src/components/LiquidBackground.tsx", "src/App.tsx"]
+    },
+    {
+      "id": "chain_05",
+      "anchor_question": "为什么导航采用底部悬浮 Tab Bar 而非侧边抽屉或顶部导航？",
+      "chain_type": "structure",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "目标用户是 25-35 岁移动端重度用户，核心场景包括「在通勤途中单手操作，快速浏览高品质商品」，这对单手可达性提出了硬性要求",
+          "source": "01_pm/prd.md → §2 核心场景"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "信息架构选择 bottom_tab_bar_with_overlay_drawer 导航模型，配合全屏手势返回；响应式优先级明确列出 Touch targets ≥ 44px 和 Bottom sheet 单手操作",
+          "source": "01_pm/ia_structure.json → navigation_model + responsive_priorities"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计要求导航栏全部悬浮，不贴底不贴顶，强化 Floating UI 的层级感，与 Liquid Glass 的空间感一致",
+          "source": "02_designer/design_brief.md → 布局策略 → Floating UI"
+        },
+        {
+          "stage": "code_impl",
+          "content": "FloatingTabBar 组件使用 fixed 定位悬浮于底部 32px 处，水平居中，带有 backdrop-blur-xl 磨砂玻璃效果，切换 tab 时使用 Framer Motion layoutId 实现 morphing 指示器动画",
+          "source": "03_frontend/src/components/FloatingTabBar.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/FloatingTabBar.tsx\n<div className=\"fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50\">\n  <div className=\"bg-backgroundDark/60 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center shadow-glass\">\n    {tabs.map((tab) => {\n      const isActive = activeTab === tab.id;\n      return (\n        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className=\"relative px-6 py-3 rounded-full\">\n          {isActive && (\n            <motion.div layoutId=\"active-tab-indicator\" className=\"absolute inset-0 bg-white/10 rounded-full\" />\n          )}\n        </button>\n      );\n    })}\n  </div>\n</div>",
+      "related_files": ["src/components/FloatingTabBar.tsx", "src/App.tsx"]
+    },
+    {
+      "id": "chain_06",
+      "anchor_question": "为什么商品卡片使用磨砂玻璃效果（backdrop-filter）而非纯色背景卡片？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "传统电商「千篇一律的白色卡片式设计」缺乏品牌辨识度和高级感，用户期待有差异化视觉体验",
+          "source": "01_pm/prd.md → §3 视觉平庸"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计系统建立了严格的玻璃态规范：glass_surface rgba(255,255,255,0.1)、glass_border rgba(255,255,255,0.2)、glass shadow，并明令禁止使用纯色白背景（#FFFFFF），必须叠加噪声纹理或渐变",
+          "source": "02_designer/design_system.json → color_palette.glass_surface + 02_designer/design_brief.md → 禁止事项"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "在 CSS 层面定义了 .glass-panel 通用工具类，统一所有卡片和面板的磨砂玻璃外观，确保风格一致性",
+          "source": "03_frontend/src/index.css → .glass-panel"
+        },
+        {
+          "stage": "code_impl",
+          "content": "GlassProductCard 组件直接引用 glass-panel 类实现磨砂玻璃基底，hover 时边框发光（border-primary/50）、图片放大、透明度提升，营造多层视觉反馈",
+          "source": "03_frontend/src/components/GlassProductCard.tsx"
+        }
+      ],
+      "code_snippet": "// src/index.css - glass utility\n.glass-panel {\n  @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-glass rounded-2xl;\n}\n\n// src/components/GlassProductCard.tsx - hover glow\n<div className=\"absolute inset-0 border-2 border-primary/0 group-hover:border-primary/50 rounded-2xl transition-colors duration-300 pointer-events-none\" />",
+      "related_files": ["src/components/GlassProductCard.tsx", "src/index.css", "src/pages/Home.tsx"]
+    },
+    {
+      "id": "chain_07",
+      "anchor_question": "为什么结算表单组件包含 aria-invalid、aria-describedby 和 role='alert' 等无障碍属性？",
+      "chain_type": "interaction",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "产品需达到 WCAG 2.1 AA 标准，所有表单均可通过 Screen Reader 正常操作，错误反馈不能仅靠颜色变化",
+          "source": "01_pm/prd.md → §4.3 无障碍适配表单系统 + §5 可访问性"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "无障碍表单被列为 P0，要求所有控件必须有 label 和 aria 属性，错误信息必须有图标和文字说明",
+          "source": "01_pm/prd.md → §4.3"
+        },
+        {
+          "stage": "design_decision",
+          "content": "组件规格中 CheckoutFormGroup 的 Error 状态明确包含「Shake 动画 + 红色边框 + Aria-live 播报」三重反馈",
+          "source": "02_designer/component_specs.json → components[4].interaction_notes"
+        },
+        {
+          "stage": "code_impl",
+          "content": "CheckoutFormGroup 组件为 input 绑定 aria-invalid={!!error} 和 aria-describedby 指向错误容器，错误消息容器设置 role='alert' 使屏幕阅读器自动播报错误",
+          "source": "03_frontend/src/components/CheckoutFormGroup.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/CheckoutFormGroup.tsx\n<input\n  id={name}\n  name={name}\n  type={type}\n  aria-invalid={!!error}\n  aria-describedby={error ? `${name}-error` : undefined}\n  className={clsx(\n    \"w-full glass-input text-lg\",\n    error ? \"border-accent focus:ring-accent/50\" : \"border-glassBorder focus:ring-primary/50\"\n  )}\n/>\n{error && (\n  <motion.div id={`${name}-error`} role=\"alert\">\n    <span className=\"ml-1\">{error}</span>\n  </motion.div>\n)}",
+      "related_files": ["src/components/CheckoutFormGroup.tsx", "src/pages/Checkout.tsx"]
+    },
+    {
+      "id": "chain_08",
+      "anchor_question": "为什么商品详情页使用 React Three Fiber 的 3D 查看器而非静态图片轮播？",
+      "chain_type": "interaction",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户在购买前需要全方位查看商品细节（3D/高清细节），这是跨境电商高客单价场景下建立购买信心的关键",
+          "source": "01_pm/prd.md → §2 核心场景"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "详情页支持 WebGL 驱动的 3D 模型查看或高性能图片流缩放被定为 P0，验收标准要求在 iPhone 12 及以上机型流畅运行",
+          "source": "01_pm/prd.md → §4.2 + §7 验收标准[2]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计交互要求「单指旋转，双指缩放，惯性阻尼必须调教顺滑」，不接受静态图片代替 3D 交互",
+          "source": "02_designer/design_brief.md → 交互重点[4]"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "React Three Fiber 被选为 3D 方案：声明式场景图匹配 React 心智模型，社区成熟，同时设定了 LOD 策略和 Suspense 懒加载作为性能保障",
+          "source": "03_frontend/tech_decision.json → frontier_candidates_considered[0] + performance_guardrails[0,3]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "ProductViewer3D 组件使用 R3F Canvas + Stage 环境光 + OrbitControls 实现交互式 3D 展示，自动旋转并支持手势操控，当前用 torusKnot 占位实际 GLTF 模型",
+          "source": "03_frontend/src/components/ProductViewer3D.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/ProductViewer3D.tsx\nexport const ProductViewer3D: React.FC<ProductViewer3DProps> = ({ product }) => {\n  return (\n    <div className=\"w-full h-full min-h-[400px] relative\">\n      <Canvas dpr={[1, 2]} camera={{ fov: 50 }}>\n        <Suspense fallback={null}>\n          <Stage environment=\"city\" intensity={0.5}>\n            <PlaceholderModel />\n          </Stage>\n        </Suspense>\n        <OrbitControls autoRotate autoRotateSpeed={4} enableZoom={false} />\n      </Canvas>\n    </div>\n  );\n};",
+      "related_files": ["src/components/ProductViewer3D.tsx", "src/pages/ProductDetail.tsx", "src/pages/Home.tsx"]
+    },
+    {
+      "id": "chain_09",
+      "anchor_question": "为什么使用 Framer Motion 作为动画引擎而非 CSS Transition 或 GSAP？",
+      "chain_type": "selection",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户对交互流畅度极度敏感，习惯 iOS 原生动效的无缝过渡体验，页面切换不能有硬切感",
+          "source": "01_pm/prd.md → §6 转场：页面间无缝过渡 (Shared Element Transition)"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计要求点击商品时玻璃卡片通过 Spring 物理动画平滑形变展开，搜索栏背景展开时使用 Shared Element Transition，所有可点击区域必须有 Scale 或 Brightness 响应",
+          "source": "02_designer/design_brief.md → 交互重点 + 禁止事项 + 02_designer/component_specs.json → interaction_flows[0].animation"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "Framer Motion 被选中的决定性原因是其 layout animations（Shared Element Transition）和 spring physics 能力，这正好匹配设计中的 morphing 和 fluid feel 需求",
+          "source": "03_frontend/tech_decision.json → frontier_candidates_considered[2].decision_reason"
+        },
+        {
+          "stage": "code_impl",
+          "content": "在 App.tsx 中使用 AnimatePresence mode='wait' 管理路由切换的进出动画，GlassProductCard 使用 layoutId 实现列表到详情的 Shared Element 过渡，FloatingTabBar 的 tab 指示器也使用 layoutId 实现 morphing 效果",
+          "source": "03_frontend/src/App.tsx + 03_frontend/src/components/GlassProductCard.tsx"
+        }
+      ],
+      "code_snippet": "// src/App.tsx - Route transitions\nfunction AnimatedRoutes() {\n  const location = useLocation();\n  return (\n    <AnimatePresence mode=\"wait\">\n      <Routes location={location} key={location.pathname}>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/product/:id\" element={<ProductDetail />} />\n        <Route path=\"/checkout\" element={<Checkout />} />\n      </Routes>\n    </AnimatePresence>\n  );\n}",
+      "related_files": ["src/App.tsx", "src/components/GlassProductCard.tsx", "src/components/FloatingTabBar.tsx", "src/pages/Home.tsx"]
+    },
+    {
+      "id": "chain_10",
+      "anchor_question": "为什么结算页面没有真实的支付接口集成，而是用 alert 模拟提交？",
+      "chain_type": "constraint",
+      "polarity": "negative",
+      "depth": 3,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "pm_decision",
+          "content": "需求明确将「完整的物流追踪系统」排除在本次范围外，定义为「仅做展示层」——这意味着所有后端依赖的功能（支付、物流）都不需要真实实现",
+          "source": "01_pm/requirement_breakdown.json → out_of_scope[1]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "组件规格中 CheckoutFormGroup 只定义了表单交互状态（focus/valid/error），没有定义支付成功/失败的完整流程界面，表明设计层也认同只需展示表单能力",
+          "source": "02_designer/component_specs.json → components[4]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "Checkout 页面的 handleSubmit 直接使用 alert('Order placed successfully!') 模拟提交，没有任何 API 调用、支付网关对接或错误处理逻辑",
+          "source": "03_frontend/src/pages/Checkout.tsx"
+        }
+      ],
+      "code_snippet": "// src/pages/Checkout.tsx\nconst handleSubmit = (e: React.FormEvent) => {\n  e.preventDefault();\n  // Mock submission\n  alert('Order placed successfully!');\n  navigate('/');\n};",
+      "related_files": ["src/pages/Checkout.tsx", "src/store/useStore.ts"]
+    },
+    {
+      "id": "chain_11",
+      "anchor_question": "为什么整个项目没有任何 PC 端管理后台页面或响应式桌面端优化？",
+      "chain_type": "constraint",
+      "polarity": "negative",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "项目目标用户是 25-35 岁习惯 iOS 生态的移动端消费者，不是运营管理人员——C 端移动体验是唯一焦点",
+          "source": "01_pm/prd.md → §2 目标用户"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "需求文档在 out_of_scope 中明确排除「PC 端复杂管理后台（本次专注移动端 C 端体验）」，将资源集中在移动端",
+          "source": "01_pm/requirement_breakdown.json → out_of_scope[0]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "设计布局策略定义为 Mobile-First Bento Grid，所有响应式优先级都围绕 Touch targets、Bottom sheet 和 Mobile GPU 性能，没有任何桌面端 breakpoint 设计",
+          "source": "02_designer/design_brief.md → 布局策略 + 01_pm/ia_structure.json → responsive_priorities"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所有页面的布局类名以移动端为基准（grid-cols-1），仅在 md/lg 断点做简单列数扩展（md:grid-cols-2 lg:grid-cols-3），没有侧边栏、表格等桌面管理界面组件",
+          "source": "03_frontend/src/pages/Home.tsx"
+        }
+      ],
+      "code_snippet": "// src/pages/Home.tsx - mobile-first grid\n<motion.div\n  className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\"\n>\n  {products.slice(1).map((product) => (\n    <GlassProductCard\n      key={product.id}\n      product={product}\n      onClick={() => navigate(`/product/${product.id}`)}\n      variant=\"grid\"\n    />\n  ))}\n</motion.div>",
+      "related_files": ["src/pages/Home.tsx", "src/pages/Checkout.tsx", "src/App.tsx"]
+    },
+    {
+      "id": "chain_12",
+      "anchor_question": "为什么 Tailwind 配置中的色值与设计系统 JSON 完全一一对应？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 3,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "design_decision",
+          "content": "设计系统精确定义了色板（primary #3B82F6、accent #F97316、backgroundDark #0F172A 等）、阴影（glass shadow、glow shadow）和排版（Inter 字体族、heading weight 600、letter-spacing -0.02em），作为前端实现的硬性约束",
+          "source": "02_designer/design_system.json → color_palette + shadow + typography"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "选择 Tailwind CSS 通过 theme.extend 将设计 token 映射为语义化工具类，实现设计系统到代码的零损耗传导",
+          "source": "03_frontend/tailwind.config.js"
+        },
+        {
+          "stage": "code_impl",
+          "content": "tailwind.config.js 中的 colors 定义与 design_system.json 的色板一一对应：primary、secondary、accent、backgroundDark、glassSurface、glassBorder、textPrimary、textSecondary 全部精确匹配",
+          "source": "03_frontend/tailwind.config.js"
+        }
+      ],
+      "code_snippet": "// tailwind.config.js\ncolors: {\n  primary: \"#3B82F6\",\n  primaryGlow: \"rgba(59, 130, 246, 0.5)\",\n  secondary: \"#60A5FA\",\n  accent: \"#F97316\",\n  backgroundDark: \"#0F172A\",\n  glassSurface: \"rgba(255, 255, 255, 0.1)\",\n  glassBorder: \"rgba(255, 255, 255, 0.2)\",\n  textPrimary: \"#FFFFFF\",\n  textSecondary: \"rgba(255, 255, 255, 0.7)\"\n}",
+      "related_files": ["src/index.css", "src/components/GlassProductCard.tsx", "src/components/FloatingTabBar.tsx"]
+    },
+    {
+      "id": "chain_13",
+      "anchor_question": "为什么知识图谱使用 Canvas 2D 渲染节点而非 SVG DOM 元素？",
+      "chain_type": "performance",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "pm_decision",
+          "content": "非功能需求要求移动端交互 FID < 100ms，而知识图谱节点数量可能较大，在移动 GPU 上每一帧都不能卡顿",
+          "source": "01_pm/prd.md → §5 性能 + 01_pm/ia_structure.json → responsive_priorities[2]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "视觉效果方案限制图谱可见节点 < 100 个，但即使在 100 节点规模下，SVG DOM 操作的开销也会拖累移动端帧率",
+          "source": "02_designer/visual_effects.json → performance_notes[1]"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "性能防护栏明确规定「Canvas for graph > 100 nodes」，自我审查也确认「D3 simulation 使用 Canvas 而非 SVG 进行节点渲染以优化性能」",
+          "source": "03_frontend/tech_decision.json → performance_guardrails[1] + 03_frontend/self_review.json → performance_notes[1]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "KnowledgeGraphCanvas 通过 canvas.getContext('2d') 获取 2D 上下文，在 D3 tick 回调中直接绘制圆形节点和连线，避免了 SVG 的 DOM 开销",
+          "source": "03_frontend/src/components/KnowledgeGraphCanvas.tsx"
+        }
+      ],
+      "code_snippet": "// src/components/KnowledgeGraphCanvas.tsx - Canvas rendering in tick\nfunction ticked() {\n  if (!context) return;\n  context.clearRect(0, 0, width, height);\n  context.strokeStyle = \"rgba(255, 255, 255, 0.2)\";\n  links.forEach(link => {\n    const source = link.source as Node;\n    const target = link.target as Node;\n    context.beginPath();\n    context.moveTo(source.x, source.y);\n    context.lineTo(target.x, target.y);\n    context.stroke();\n  });\n}",
+      "related_files": ["src/components/KnowledgeGraphCanvas.tsx"]
+    }
+  ],
+  "chain_summary": {
+    "total_chains": 13,
+    "by_type": {
+      "selection": 3,
+      "structure": 2,
+      "visual": 3,
+      "interaction": 2,
+      "constraint": 2,
+      "performance": 1
+    },
+    "by_polarity": {
+      "positive": 11,
+      "negative": 2
+    },
+    "avg_depth": 3.9
+  },
+  "final_code": {
+    "stack": "react + typescript + vite + tailwind + framer-motion + three-fiber + d3 + zustand",
+    "files": {
+      "src/main.tsx": "import React from 'react'\nimport ReactDOM from 'react-dom/client'\nimport App from './App.tsx'\nimport './index.css'\n\nReactDOM.createRoot(document.getElementById('root')!).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>,\n)\n",
+      "src/App.tsx": "import React, { useEffect } from 'react';\nimport { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';\nimport { AnimatePresence } from 'framer-motion';\nimport { useStore } from './store/useStore';\nimport { Home } from './pages/Home';\nimport { ProductDetail } from './pages/ProductDetail';\nimport { Checkout } from './pages/Checkout';\nimport { FloatingTabBar } from './components/FloatingTabBar';\nimport { SemanticSearchBar } from './components/SemanticSearchBar';\nimport { LiquidBackground } from './components/LiquidBackground';\n\nfunction AnimatedRoutes() {\n  const location = useLocation();\n\n  return (\n    <AnimatePresence mode=\"wait\">\n      <Routes location={location} key={location.pathname}>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/product/:id\" element={<ProductDetail />} />\n        <Route path=\"/checkout\" element={<Checkout />} />\n      </Routes>\n    </AnimatePresence>\n  );\n}\n\nfunction App() {\n  const { isGraphView } = useStore();\n\n  return (\n    <Router>\n      <div className=\"relative min-h-screen overflow-hidden font-sans text-white\">\n        <LiquidBackground />\n        \n        <header className=\"fixed top-0 left-0 right-0 z-40 p-4 flex justify-center pointer-events-none\">\n          <div className=\"pointer-events-auto w-full max-w-2xl\">\n            <SemanticSearchBar />\n          </div>\n        </header>\n\n        <main className=\"pt-24 pb-32 px-4 max-w-7xl mx-auto min-h-screen\">\n          <AnimatedRoutes />\n        </main>\n\n        <FloatingTabBar />\n      </div>\n    </Router>\n  );\n}\n\nexport default App;\n",
+      "src/index.css": "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  body {\n    @apply bg-backgroundDark text-textPrimary antialiased selection:bg-primary selection:text-white;\n    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;\n  }\n}\n\n@layer components {\n  .glass-panel {\n    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-glass rounded-2xl;\n  }\n  \n  .glass-input {\n    @apply bg-white/5 backdrop-blur-lg border border-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl px-4 py-3 transition-all duration-300;\n  }\n\n  .text-glow {\n    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);\n  }\n}\n\n::-webkit-scrollbar {\n  width: 8px;\n}\n\n::-webkit-scrollbar-track {\n  background: #0F172A; \n}\n\n::-webkit-scrollbar-thumb {\n  background: #334155; \n  border-radius: 4px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: #475569; \n}\n",
+      "src/store/useStore.ts": "import { create } from 'zustand';\n\nexport interface Product {\n  id: string;\n  name: string;\n  price: number;\n  category: string;\n  description: string;\n  image: string;\n  modelUrl?: string;\n  relatedIds: string[];\n}\n\ninterface AppState {\n  searchQuery: string;\n  setSearchQuery: (query: string) => void;\n  selectedNode: string | null;\n  setSelectedNode: (id: string | null) => void;\n  isGraphView: boolean;\n  setIsGraphView: (isGraph: boolean) => void;\n  products: Product[];\n  cart: Product[];\n  addToCart: (product: Product) => void;\n}\n\nconst MOCK_PRODUCTS: Product[] = [\n  {\n    id: '1',\n    name: 'Minimalist Desk Lamp',\n    price: 129,\n    category: 'Home',\n    description: 'Matte finish aluminum alloy, 3000K warm light.',\n    image: 'https://images.unsplash.com/photo-1507473888900-52e1ad14592d?q=80&w=2000&auto=format&fit=crop',\n    relatedIds: ['2', '3']\n  },\n  {\n    id: '2',\n    name: 'Ergonomic Chair',\n    price: 499,\n    category: 'Furniture',\n    description: 'Breathable mesh, lumbar support, adjustable height.',\n    image: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?q=80&w=1000&auto=format&fit=crop',\n    relatedIds: ['1', '4']\n  },\n  {\n    id: '3',\n    name: 'Mechanical Keyboard',\n    price: 159,\n    category: 'Tech',\n    description: 'Wireless, tactile switches, aluminum case.',\n    image: 'https://images.unsplash.com/photo-1587829741301-dc798b91add1?q=80&w=1000&auto=format&fit=crop',\n    relatedIds: ['1']\n  },\n  {\n    id: '4',\n    name: 'Noise Cancelling Headphones',\n    price: 299,\n    category: 'Tech',\n    description: 'Active noise cancellation, 30-hour battery life.',\n    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop',\n    relatedIds: ['2', '3']\n  },\n  {\n    id: '5',\n    name: 'Smart Watch',\n    price: 349,\n    category: 'Wearable',\n    description: 'Health tracking, always-on display.',\n    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop',\n    relatedIds: ['4']\n  }\n];\n\nexport const useStore = create<AppState>((set) => ({\n  searchQuery: '',\n  setSearchQuery: (query) => set({ searchQuery: query }),\n  selectedNode: null,\n  setSelectedNode: (id) => set({ selectedNode: id }),\n  isGraphView: false,\n  setIsGraphView: (isGraph) => set({ isGraphView: isGraph }),\n  products: MOCK_PRODUCTS,\n  cart: [],\n  addToCart: (product) => set((state) => ({ cart: [...state.cart, product] })),\n}));\n",
+      "src/components/LiquidBackground.tsx": "import { useRef, useMemo } from 'react';\nimport { Canvas, useFrame } from '@react-three/fiber';\nimport * as THREE from 'three';\n\nconst vertexShader = `\n  varying vec2 vUv;\n  void main() {\n    vUv = uv;\n    gl_Position = vec4(position, 1.0);\n  }\n`;\n\nconst fragmentShader = `\n  uniform float uTime;\n  varying vec2 vUv;\n\n  vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }\n\n  float snoise(vec2 v){\n    const vec4 C = vec4(0.211324865405187, 0.366025403784439,\n             -0.577350269189626, 0.024390243902439);\n    vec2 i  = floor(v + dot(v, C.yy) );\n    vec2 x0 = v -   i + dot(i, C.xx);\n    vec2 i1;\n    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);\n    vec4 x12 = x0.xyxy + C.xxzz;\n    x12.xy -= i1;\n    i = mod(i, 289.0);\n    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))\n    + i.x + vec3(0.0, i1.x, 1.0 ));\n    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);\n    m = m*m ;\n    m = m*m ;\n    vec3 x = 2.0 * fract(p * C.www) - 1.0;\n    vec3 h = abs(x) - 0.5;\n    vec3 ox = floor(x + 0.5);\n    vec3 a0 = x - ox;\n    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );\n    vec3 g;\n    g.x  = a0.x  * x0.x  + h.x  * x0.y;\n    g.yz = a0.yz * x12.xz + h.yz * x12.yw;\n    return 130.0 * dot(m, g);\n  }\n\n  void main() {\n    vec2 uv = vUv;\n    float time = uTime * 0.2;\n    \n    float n1 = snoise(uv * 3.0 + vec2(time * 0.5, time * 0.2));\n    float n2 = snoise(uv * 6.0 - vec2(time * 0.8, time * 0.4));\n    \n    float noise = mix(n1, n2, 0.5);\n    \n    vec3 deepBlue = vec3(0.06, 0.09, 0.16);\n    vec3 primary = vec3(0.23, 0.51, 0.96);\n    vec3 accent = vec3(0.38, 0.65, 0.98);\n    \n    vec3 color = mix(deepBlue, primary, smoothstep(-0.5, 0.5, noise));\n    color = mix(color, accent, smoothstep(0.2, 0.8, n2) * 0.4);\n    \n    gl_FragColor = vec4(color, 1.0);\n  }\n`;\n\nconst BackgroundMesh = () => {\n  const mesh = useRef<THREE.Mesh>(null);\n  \n  const uniforms = useMemo(\n    () => ({\n      uTime: { value: 0 },\n    }),\n    []\n  );\n\n  useFrame((state) => {\n    if (mesh.current) {\n      uniforms.uTime.value = state.clock.getElapsedTime();\n    }\n  });\n\n  return (\n    <mesh ref={mesh}>\n      <planeGeometry args={[2, 2]} />\n      <shaderMaterial\n        fragmentShader={fragmentShader}\n        vertexShader={vertexShader}\n        uniforms={uniforms}\n        depthWrite={false}\n        depthTest={false}\n      />\n    </mesh>\n  );\n};\n\nexport const LiquidBackground = () => {\n  return (\n    <div className=\"fixed inset-0 -z-10 w-full h-full\">\n      <Canvas camera={{ position: [0, 0, 1] }} dpr={[1, 2]}>\n        <BackgroundMesh />\n      </Canvas>\n    </div>\n  );\n};\n",
+      "src/components/KnowledgeGraphCanvas.tsx": "import React, { useRef, useEffect, useState } from 'react';\nimport * as d3 from 'd3';\nimport { useStore } from '../store/useStore';\nimport { motion, AnimatePresence } from 'framer-motion';\nimport { useNavigate } from 'react-router-dom';\n\ninterface Node extends d3.SimulationNodeDatum {\n  id: string;\n  group: number;\n  image: string;\n  name: string;\n  r: number;\n}\n\ninterface Link extends d3.SimulationLinkDatum<Node> {\n  source: string | Node;\n  target: string | Node;\n  value: number;\n}\n\nexport const KnowledgeGraphCanvas: React.FC = () => {\n  const canvasRef = useRef<HTMLCanvasElement>(null);\n  const { products, selectedNode, setSelectedNode } = useStore();\n  const [nodes, setNodes] = useState<Node[]>([]);\n  const [links, setLinks] = useState<Link[]>([]);\n  const simulationRef = useRef<d3.Simulation<Node, Link> | null>(null);\n  const navigate = useNavigate();\n\n  useEffect(() => {\n    const newNodes: Node[] = products.map((p, i) => ({\n      id: p.id,\n      group: i,\n      image: p.image,\n      name: p.name,\n      r: 30,\n      x: Math.random() * 800,\n      y: Math.random() * 600\n    }));\n\n    const newLinks: Link[] = [];\n    products.forEach(p => {\n      p.relatedIds.forEach(targetId => {\n        if (products.find(prod => prod.id === targetId)) {\n          newLinks.push({ source: p.id, target: targetId, value: 1 });\n        }\n      });\n    });\n\n    setNodes(newNodes);\n    setLinks(newLinks);\n  }, [products]);\n\n  useEffect(() => {\n    const canvas = canvasRef.current;\n    if (!canvas || nodes.length === 0) return;\n\n    const context = canvas.getContext('2d');\n    if (!context) return;\n\n    const width = canvas.width;\n    const height = canvas.height;\n\n    simulationRef.current = d3.forceSimulation<Node, Link>(nodes)\n      .force(\"link\", d3.forceLink<Node, Link>(links).id((d: Node) => d.id).distance(150))\n      .force(\"charge\", d3.forceManyBody().strength(-300))\n      .force(\"center\", d3.forceCenter(width / 2, height / 2))\n      .force(\"collide\", d3.forceCollide<Node>().radius((d) => (d as Node).r + 10))\n      .on(\"tick\", ticked);\n\n    function ticked() {\n      if (!context) return;\n      context.clearRect(0, 0, width, height);\n\n      context.strokeStyle = \"rgba(255, 255, 255, 0.2)\";\n      context.lineWidth = 1;\n      links.forEach(link => {\n        const source = link.source as Node;\n        const target = link.target as Node;\n        if (source.x != null && source.y != null && target.x != null && target.y != null) {\n          context.beginPath();\n          context.moveTo(source.x, source.y);\n          context.lineTo(target.x, target.y);\n          context.stroke();\n        }\n      });\n\n      nodes.forEach(node => {\n        if (node.x == null || node.y == null) return;\n        context.beginPath();\n        context.arc(node.x, node.y, node.r, 0, 2 * Math.PI);\n        context.fillStyle = selectedNode === node.id ? \"#F97316\" : \"#3B82F6\";\n        context.fill();\n        context.strokeStyle = \"#fff\";\n        context.lineWidth = 2;\n        context.stroke();\n        context.font = \"12px Inter\";\n        context.fillStyle = \"#fff\";\n        context.textAlign = \"center\";\n        context.fillText(node.name, node.x, node.y + node.r + 15);\n      });\n    }\n\n    const handleClick = (event: MouseEvent) => {\n      const rect = canvas.getBoundingClientRect();\n      const scaleX = canvas.width / rect.width;\n      const scaleY = canvas.height / rect.height;\n      const x = (event.clientX - rect.left) * scaleX;\n      const y = (event.clientY - rect.top) * scaleY;\n\n      let clickedNode: Node | null = null;\n      for (const node of nodes) {\n        if (node.x == null || node.y == null) continue;\n        const dx = x - node.x;\n        const dy = y - node.y;\n        if (dx * dx + dy * dy < node.r * node.r) {\n          clickedNode = node;\n          break;\n        }\n      }\n\n      if (clickedNode) {\n        setSelectedNode(clickedNode.id);\n        simulationRef.current?.alpha(1).restart();\n      } else {\n        setSelectedNode(null);\n      }\n    };\n\n    canvas.addEventListener('click', handleClick);\n\n    return () => {\n      simulationRef.current?.stop();\n      canvas.removeEventListener('click', handleClick);\n    };\n  }, [nodes, links, selectedNode, setSelectedNode]);\n\n  return (\n    <div className=\"relative w-full h-[600px] glass-panel overflow-hidden\">\n      <canvas\n        ref={canvasRef}\n        width={800}\n        height={600}\n        className=\"w-full h-full cursor-grab active:cursor-grabbing\"\n      />\n\n      <div className=\"absolute top-4 left-4 pointer-events-none\">\n        <h3 className=\"text-white font-semibold\">Knowledge Graph</h3>\n        <p className=\"text-white/50 text-xs\">Tap nodes to explore related products</p>\n      </div>\n\n      <AnimatePresence>\n        {selectedNode && (\n          <motion.div\n            initial={{ y: 100, opacity: 0 }}\n            animate={{ y: 0, opacity: 1 }}\n            exit={{ y: 100, opacity: 0 }}\n            className=\"absolute bottom-4 left-4 right-4 glass-panel p-4 flex items-center justify-between\"\n          >\n            <div>\n              <h4 className=\"text-white font-bold\">{products.find(p => p.id === selectedNode)?.name}</h4>\n              <p className=\"text-accent text-sm\">${products.find(p => p.id === selectedNode)?.price}</p>\n            </div>\n            <button\n              onClick={() => selectedNode && navigate(`/product/${selectedNode}`)}\n              className=\"bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-full text-sm transition-colors\"\n            >\n              View Details\n            </button>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n};\n",
+      "src/components/GlassProductCard.tsx": "import React from 'react';\nimport { motion } from 'framer-motion';\nimport { Product } from '../store/useStore';\nimport { clsx } from 'clsx';\n\ninterface GlassProductCardProps {\n  product: Product;\n  onClick: () => void;\n  variant?: 'grid' | 'list' | 'hero';\n}\n\nexport const GlassProductCard: React.FC<GlassProductCardProps> = ({ product, onClick, variant = 'grid' }) => {\n  return (\n    <motion.div\n      layoutId={`card-${product.id}`}\n      className={clsx(\n        \"glass-panel relative overflow-hidden cursor-pointer group\",\n        variant === 'grid' && \"aspect-[3/4]\",\n        variant === 'list' && \"flex h-32 w-full\",\n        variant === 'hero' && \"aspect-video w-full\"\n      )}\n      onClick={onClick}\n      whileHover={{ scale: 1.02 }}\n      whileTap={{ scale: 0.98 }}\n    >\n      <div className={clsx(\n        \"absolute inset-0 z-0 transition-transform duration-700 group-hover:scale-110\",\n        variant === 'list' ? \"w-32 h-full\" : \"w-full h-full\"\n      )}>\n        <img \n          src={product.image} \n          alt={product.name} \n          className=\"w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500\" \n        />\n        <div className=\"absolute inset-0 bg-gradient-to-t from-backgroundDark/90 via-backgroundDark/20 to-transparent\" />\n      </div>\n\n      <div className={clsx(\n        \"relative z-10 flex flex-col justify-end h-full p-4\",\n        variant === 'list' && \"ml-32 justify-center items-start\"\n      )}>\n        <motion.h3 \n          layoutId={`title-${product.id}`}\n          className=\"text-lg font-semibold text-white drop-shadow-md\"\n        >\n          {product.name}\n        </motion.h3>\n        <p className=\"text-sm text-textSecondary\">{product.category}</p>\n        <motion.div \n          layoutId={`price-${product.id}`}\n          className=\"mt-2 text-accent font-medium\"\n        >\n          ${product.price}\n        </motion.div>\n        \n        {variant !== 'list' && (\n          <div className=\"absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300\">\n             <div className=\"bg-white/20 backdrop-blur-md p-2 rounded-full\">\n               <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg>\n             </div>\n          </div>\n        )}\n      </div>\n      \n      <div className=\"absolute inset-0 border-2 border-primary/0 group-hover:border-primary/50 rounded-2xl transition-colors duration-300 pointer-events-none\" />\n    </motion.div>\n  );\n};\n",
+      "src/components/SemanticSearchBar.tsx": "import React, { useState, useRef, useEffect } from 'react';\nimport { motion, AnimatePresence } from 'framer-motion';\nimport { useStore } from '../store/useStore';\nimport { Search, X, Sparkles } from 'lucide-react';\nimport { clsx } from 'clsx';\n\nexport const SemanticSearchBar: React.FC = () => {\n  const [isActive, setIsActive] = useState(false);\n  const [inputValue, setInputValue] = useState('');\n  const { setSearchQuery, setIsGraphView } = useStore();\n  const inputRef = useRef<HTMLInputElement>(null);\n\n  useEffect(() => {\n    if (isActive && inputRef.current) {\n      inputRef.current.focus();\n    }\n  }, [isActive]);\n\n  const handleSubmit = (e: React.FormEvent) => {\n    e.preventDefault();\n    setSearchQuery(inputValue);\n    setIsGraphView(true);\n    setIsActive(false);\n  };\n\n  const clearSearch = () => {\n    setInputValue('');\n    setSearchQuery('');\n    setIsGraphView(false);\n  };\n\n  return (\n    <>\n      <AnimatePresence>\n        {isActive && (\n          <motion.div\n            initial={{ opacity: 0 }}\n            animate={{ opacity: 1 }}\n            exit={{ opacity: 0 }}\n            className=\"fixed inset-0 bg-backgroundDark/80 backdrop-blur-md z-40\"\n            onClick={() => setIsActive(false)}\n          />\n        )}\n      </AnimatePresence>\n\n      <motion.div\n        layoutId=\"search-bar\"\n        className={clsx(\n          \"relative z-50 flex items-center transition-all duration-500 glass-panel\",\n          isActive ? \"w-full max-w-2xl mx-auto top-20\" : \"w-12 h-12 rounded-full cursor-pointer hover:w-64\"\n        )}\n        onClick={() => !isActive && setIsActive(true)}\n      >\n        <form onSubmit={handleSubmit} className=\"flex items-center w-full h-full px-4\">\n          <Search className=\"text-white/70 w-5 h-5 flex-shrink-0\" />\n          \n          <AnimatePresence mode='wait'>\n            {isActive ? (\n              <motion.input\n                key=\"input\"\n                initial={{ opacity: 0, width: 0 }}\n                animate={{ opacity: 1, width: '100%' }}\n                exit={{ opacity: 0, width: 0 }}\n                ref={inputRef}\n                type=\"text\"\n                value={inputValue}\n                onChange={(e) => setInputValue(e.target.value)}\n                placeholder=\"Ask for something specific...\"\n                className=\"bg-transparent border-none outline-none text-white ml-3 w-full h-full placeholder-white/30\"\n              />\n            ) : (\n              inputValue && (\n                 <span className=\"ml-3 text-white truncate max-w-[150px]\">{inputValue}</span>\n              )\n            )}\n          </AnimatePresence>\n\n          {inputValue && isActive && (\n            <button \n              type=\"button\" \n              onClick={(e) => { e.stopPropagation(); clearSearch(); }}\n              className=\"ml-2 text-white/50 hover:text-white\"\n            >\n              <X className=\"w-4 h-4\" />\n            </button>\n          )}\n\n          {!isActive && !inputValue && (\n            <span className=\"ml-3 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity\">Search...</span>\n          )}\n        </form>\n\n        {isActive && (\n           <motion.div \n             initial={{ opacity: 0, y: 10 }}\n             animate={{ opacity: 1, y: 0 }}\n             className=\"absolute top-full left-0 right-0 mt-4 p-4 glass-panel\"\n           >\n             <div className=\"flex items-center text-accent text-sm mb-2\">\n               <Sparkles className=\"w-4 h-4 mr-2\" />\n               <span>Try asking:</span>\n             </div>\n             <div className=\"flex flex-wrap gap-2\">\n               {['Minimalist desk setup', 'Ergonomic workspace', 'Gifts for tech lovers'].map(tag => (\n                 <button\n                   key={tag}\n                   className=\"px-3 py-1 bg-white/5 hover:bg-white/10 rounded-full text-xs text-white/80 transition-colors\"\n                   onClick={() => setInputValue(tag)}\n                 >\n                   {tag}\n                 </button>\n               ))}\n             </div>\n           </motion.div>\n        )}\n      </motion.div>\n    </>\n  );\n};\n",
+      "src/components/ProductViewer3D.tsx": "import React, { Suspense, useRef } from 'react';\nimport { Canvas, useFrame } from '@react-three/fiber';\nimport { Stage, OrbitControls, useGLTF } from '@react-three/drei';\nimport { Product } from '../store/useStore';\n\ninterface ProductViewer3DProps {\n  product?: Product;\n}\n\nconst PlaceholderModel = () => {\n  const meshRef = useRef<THREE.Mesh>(null);\n  useFrame((state) => {\n    if (meshRef.current) {\n      meshRef.current.rotation.y += 0.01;\n      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime) * 0.2;\n    }\n  });\n\n  return (\n    <mesh ref={meshRef}>\n      <torusKnotGeometry args={[1, 0.3, 100, 16]} />\n      <meshPhysicalMaterial \n        color=\"#3B82F6\" \n        roughness={0.2} \n        metalness={0.8} \n        clearcoat={1} \n        clearcoatRoughness={0.1}\n      />\n    </mesh>\n  );\n};\n\nexport const ProductViewer3D: React.FC<ProductViewer3DProps> = ({ product }) => {\n  return (\n    <div className=\"w-full h-full min-h-[400px] relative\">\n      <Canvas dpr={[1, 2]} camera={{ fov: 50 }}>\n        <Suspense fallback={null}>\n          <Stage environment=\"city\" intensity={0.5}>\n            {product?.modelUrl ? (\n              <PlaceholderModel /> \n            ) : (\n              <PlaceholderModel />\n            )}\n          </Stage>\n        </Suspense>\n        <OrbitControls autoRotate autoRotateSpeed={4} enableZoom={false} />\n      </Canvas>\n      \n      <div className=\"absolute inset-0 pointer-events-none flex items-center justify-center\">\n        <div className=\"animate-spin-slow w-32 h-32 border-t-2 border-primary rounded-full opacity-20\" />\n      </div>\n    </div>\n  );\n};\n",
+      "src/components/FloatingTabBar.tsx": "import React, { useState } from 'react';\nimport { motion } from 'framer-motion';\nimport { Home, Search, ShoppingBag, User } from 'lucide-react';\nimport { useStore } from '../store/useStore';\nimport { clsx } from 'clsx';\n\nexport const FloatingTabBar: React.FC = () => {\n  const [activeTab, setActiveTab] = useState('home');\n  const { cart } = useStore();\n\n  const tabs = [\n    { id: 'home', icon: Home, label: 'Home' },\n    { id: 'search', icon: Search, label: 'Search' },\n    { id: 'cart', icon: ShoppingBag, label: 'Cart', badge: cart.length },\n    { id: 'profile', icon: User, label: 'Profile' },\n  ];\n\n  return (\n    <div className=\"fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50\">\n      <div className=\"bg-backgroundDark/60 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center shadow-glass\">\n        {tabs.map((tab) => {\n          const isActive = activeTab === tab.id;\n          const Icon = tab.icon;\n\n          return (\n            <button\n              key={tab.id}\n              onClick={() => setActiveTab(tab.id)}\n              className=\"relative px-6 py-3 rounded-full transition-colors group\"\n            >\n              {isActive && (\n                <motion.div\n                  layoutId=\"active-tab-indicator\"\n                  className=\"absolute inset-0 bg-white/10 rounded-full\"\n                  transition={{ type: \"spring\", bounce: 0.2, duration: 0.6 }}\n                />\n              )}\n              \n              <div className=\"relative z-10 flex flex-col items-center justify-center\">\n                <Icon \n                  className={clsx(\n                    \"w-6 h-6 transition-colors duration-300\",\n                    isActive ? \"text-primary\" : \"text-white/50 group-hover:text-white/80\"\n                  )} \n                />\n                {tab.badge ? (\n                  <span className=\"absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[10px] flex items-center justify-center rounded-full font-bold\">\n                    {tab.badge}\n                  </span>\n                ) : null}\n              </div>\n            </button>\n          );\n        })}\n      </div>\n    </div>\n  );\n};\n",
+      "src/components/CheckoutFormGroup.tsx": "import React, { useState } from 'react';\nimport { motion, AnimatePresence } from 'framer-motion';\nimport { Check, AlertCircle } from 'lucide-react';\nimport { clsx } from 'clsx';\n\ninterface CheckoutFormGroupProps {\n  label: string;\n  name: string;\n  type?: 'text' | 'number' | 'email';\n  required?: boolean;\n  value: string;\n  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;\n  error?: string;\n  placeholder?: string;\n}\n\nexport const CheckoutFormGroup: React.FC<CheckoutFormGroupProps> = ({\n  label,\n  name,\n  type = 'text',\n  required,\n  value,\n  onChange,\n  error,\n  placeholder\n}) => {\n  const [isFocused, setIsFocused] = useState(false);\n\n  return (\n    <div className=\"relative mb-6\">\n      <motion.label\n        layout\n        htmlFor={name}\n        className={clsx(\n          \"absolute left-4 top-4 text-white/50 pointer-events-none transition-all duration-300 origin-[0_0]\",\n          (isFocused || value) ? \"-translate-y-8 scale-75 text-primary\" : \"\"\n        )}\n      >\n        {label} {required && <span className=\"text-accent\">*</span>}\n      </motion.label>\n      \n      <div className=\"relative\">\n        <input\n          id={name}\n          name={name}\n          type={type}\n          value={value}\n          onChange={onChange}\n          onFocus={() => setIsFocused(true)}\n          onBlur={() => setIsFocused(false)}\n          placeholder={isFocused ? placeholder : ''}\n          aria-invalid={!!error}\n          aria-describedby={error ? `${name}-error` : undefined}\n          className={clsx(\n            \"w-full glass-input text-lg\",\n            error ? \"border-accent focus:ring-accent/50\" : \"border-glassBorder focus:ring-primary/50\"\n          )}\n        />\n        \n        <div className=\"absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2\">\n          <AnimatePresence>\n            {value && !error && (\n              <motion.div\n                initial={{ opacity: 0, scale: 0.5 }}\n                animate={{ opacity: 1, scale: 1 }}\n                exit={{ opacity: 0, scale: 0.5 }}\n              >\n                <Check className=\"text-green-400 w-5 h-5\" />\n              </motion.div>\n            )}\n            {error && (\n              <motion.div\n                initial={{ opacity: 0, scale: 0.5 }}\n                animate={{ opacity: 1, scale: 1 }}\n                exit={{ opacity: 0, scale: 0.5 }}\n              >\n                <AlertCircle className=\"text-accent w-5 h-5\" />\n              </motion.div>\n            )}\n          </AnimatePresence>\n        </div>\n      </div>\n\n      <AnimatePresence>\n        {error && (\n          <motion.div\n            id={`${name}-error`}\n            role=\"alert\"\n            initial={{ height: 0, opacity: 0 }}\n            animate={{ height: 'auto', opacity: 1 }}\n            exit={{ height: 0, opacity: 0 }}\n            className=\"text-accent text-sm mt-1 flex items-center\"\n          >\n            <span className=\"ml-1\">{error}</span>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n};\n",
+      "src/pages/Home.tsx": "import React from 'react';\nimport { motion, AnimatePresence } from 'framer-motion';\nimport { useNavigate } from 'react-router-dom';\nimport { useStore } from '../store/useStore';\nimport { GlassProductCard } from '../components/GlassProductCard';\nimport { KnowledgeGraphCanvas } from '../components/KnowledgeGraphCanvas';\nimport { ProductViewer3D } from '../components/ProductViewer3D';\n\nexport const Home: React.FC = () => {\n  const { isGraphView, products, searchQuery, selectedNode } = useStore();\n  const navigate = useNavigate();\n\n  return (\n    <motion.div\n      initial={{ opacity: 0 }}\n      animate={{ opacity: 1 }}\n      exit={{ opacity: 0 }}\n      className=\"relative\"\n    >\n      <AnimatePresence mode=\"wait\">\n        {isGraphView ? (\n          <motion.div\n            key=\"graph\"\n            initial={{ opacity: 0, scale: 0.95 }}\n            animate={{ opacity: 1, scale: 1 }}\n            exit={{ opacity: 0, scale: 0.95 }}\n            className=\"w-full h-screen fixed inset-0 z-30 pt-24 pb-24 px-4 bg-backgroundDark/90 backdrop-blur-sm\"\n          >\n            <KnowledgeGraphCanvas />\n            \n            <div className=\"absolute top-32 left-8 glass-panel p-4 max-w-xs\">\n              <h2 className=\"text-xl font-bold text-white mb-2\">Exploring \\\"{searchQuery}\\\"</h2>\n              <p className=\"text-sm text-textSecondary\">\n                Visualizing relationships between products based on semantic similarity.\n              </p>\n            </div>\n          </motion.div>\n        ) : (\n          <motion.div\n            key=\"grid\"\n            initial={{ opacity: 0, y: 20 }}\n            animate={{ opacity: 1, y: 0 }}\n            exit={{ opacity: 0, y: -20 }}\n            className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\"\n          >\n            <div className=\"col-span-full mb-8\">\n              <h1 className=\"text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent mb-4 text-glow\">\n                Explore the Future.\n              </h1>\n              <p className=\"text-xl text-textSecondary max-w-2xl\">\n                Discover curated items through our immersive liquid interface.\n              </p>\n            </div>\n\n            <div className=\"col-span-full lg:col-span-2 glass-panel p-8 relative overflow-hidden group min-h-[400px]\">\n              <div className=\"absolute inset-0 z-0\">\n                 <ProductViewer3D product={products[0]} />\n              </div>\n              <div className=\"relative z-10 pointer-events-none\">\n                <span className=\"bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block backdrop-blur-sm\">\n                  Featured\n                </span>\n                <h2 className=\"text-3xl font-bold text-white mb-2 drop-shadow-lg\">{products[0].name}</h2>\n                <p className=\"text-white/80 max-w-md drop-shadow-md\">{products[0].description}</p>\n                <button \n                  onClick={() => navigate(`/product/${products[0].id}`)}\n                  className=\"mt-6 pointer-events-auto bg-white text-backgroundDark px-6 py-3 rounded-full font-semibold hover:bg-white/90 transition-colors shadow-lg hover:shadow-glow\"\n                >\n                  Shop Now\n                </button>\n              </div>\n            </div>\n\n            {products.slice(1).map((product) => (\n              <GlassProductCard\n                key={product.id}\n                product={product}\n                onClick={() => navigate(`/product/${product.id}`)}\n                variant=\"grid\"\n              />\n            ))}\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </motion.div>\n  );\n};\n",
+      "src/pages/ProductDetail.tsx": "import React, { useEffect } from 'react';\nimport { useParams, useNavigate } from 'react-router-dom';\nimport { motion } from 'framer-motion';\nimport { useStore } from '../store/useStore';\nimport { ChevronLeft, ShoppingCart, Heart, Share2 } from 'lucide-react';\nimport { ProductViewer3D } from '../components/ProductViewer3D';\n\nexport const ProductDetail: React.FC = () => {\n  const { id } = useParams<{ id: string }>();\n  const navigate = useNavigate();\n  const { products, addToCart } = useStore();\n  \n  const product = products.find(p => p.id === id);\n\n  if (!product) return <div>Product not found</div>;\n\n  return (\n    <motion.div\n      initial={{ opacity: 0, x: 20 }}\n      animate={{ opacity: 1, x: 0 }}\n      exit={{ opacity: 0, x: -20 }}\n      className=\"relative min-h-screen pb-24\"\n    >\n      <button \n        onClick={() => navigate(-1)}\n        className=\"fixed top-24 left-4 z-50 glass-panel p-2 hover:bg-white/10 transition-colors rounded-full\"\n      >\n        <ChevronLeft className=\"w-6 h-6 text-white\" />\n      </button>\n\n      <div className=\"h-[60vh] -mx-4 relative bg-gradient-to-b from-transparent to-backgroundDark\">\n        <ProductViewer3D product={product} />\n        <div className=\"absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-backgroundDark to-transparent\" />\n      </div>\n\n      <div className=\"px-4 -mt-12 relative z-10 space-y-8\">\n        <div className=\"glass-panel p-6\">\n          <div className=\"flex justify-between items-start mb-4\">\n            <div>\n              <h1 className=\"text-3xl font-bold text-white mb-2\">{product.name}</h1>\n              <p className=\"text-accent text-xl font-medium\">${product.price}</p>\n            </div>\n            <div className=\"flex gap-2\">\n              <button className=\"p-3 glass-panel hover:bg-white/10 rounded-full transition-colors\">\n                <Heart className=\"w-5 h-5 text-white/70 hover:text-red-500 transition-colors\" />\n              </button>\n              <button className=\"p-3 glass-panel hover:bg-white/10 rounded-full transition-colors\">\n                <Share2 className=\"w-5 h-5 text-white/70\" />\n              </button>\n            </div>\n          </div>\n          \n          <p className=\"text-white/70 leading-relaxed mb-6\">\n            {product.description}\n          </p>\n\n          <div className=\"flex gap-4 mb-6\">\n            <div className=\"flex-1\">\n              <label className=\"text-sm text-white/50 block mb-2\">Color</label>\n              <div className=\"flex gap-2\">\n                {['#3B82F6', '#10B981', '#F59E0B'].map(color => (\n                  <button \n                    key={color}\n                    className=\"w-8 h-8 rounded-full border-2 border-white/20 focus:border-white focus:ring-2 ring-offset-2 ring-offset-backgroundDark transition-all\"\n                    style={{ backgroundColor: color }}\n                  />\n                ))}\n              </div>\n            </div>\n            <div className=\"flex-1\">\n              <label className=\"text-sm text-white/50 block mb-2\">Quantity</label>\n              <div className=\"flex items-center glass-panel w-fit px-2 py-1\">\n                <button className=\"w-8 h-8 text-white/70 hover:text-white\">-</button>\n                <span className=\"w-8 text-center text-white\">1</span>\n                <button className=\"w-8 h-8 text-white/70 hover:text-white\">+</button>\n              </div>\n            </div>\n          </div>\n\n          <button \n            onClick={() => addToCart(product)}\n            className=\"w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-glow transition-all active:scale-95 flex items-center justify-center gap-2\"\n          >\n            <ShoppingCart className=\"w-5 h-5\" />\n            Add to Cart\n          </button>\n        </div>\n\n        <div className=\"glass-panel p-6\">\n          <h3 className=\"text-lg font-semibold text-white mb-4\">Specifications</h3>\n          <dl className=\"grid grid-cols-2 gap-4 text-sm\">\n            <dt className=\"text-white/50\">Material</dt>\n            <dd className=\"text-white text-right\">Premium Alloy</dd>\n            <dt className=\"text-white/50\">Weight</dt>\n            <dd className=\"text-white text-right\">1.2 kg</dd>\n            <dt className=\"text-white/50\">Warranty</dt>\n            <dd className=\"text-white text-right\">2 Years</dd>\n            <dt className=\"text-white/50\">Shipping</dt>\n            <dd className=\"text-white text-right\">Free Express</dd>\n          </dl>\n        </div>\n      </div>\n    </motion.div>\n  );\n};\n",
+      "src/pages/Checkout.tsx": "import React, { useState } from 'react';\nimport { motion } from 'framer-motion';\nimport { useNavigate } from 'react-router-dom';\nimport { useStore } from '../store/useStore';\nimport { CheckoutFormGroup } from '../components/CheckoutFormGroup';\nimport { ChevronLeft, CreditCard, ShoppingBag } from 'lucide-react';\n\nexport const Checkout: React.FC = () => {\n  const navigate = useNavigate();\n  const { cart } = useStore();\n  const [formData, setFormData] = useState({\n    name: '',\n    email: '',\n    address: '',\n    card: '',\n    expiry: '',\n    cvc: ''\n  });\n\n  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));\n  };\n\n  const handleSubmit = (e: React.FormEvent) => {\n    e.preventDefault();\n    alert('Order placed successfully!');\n    navigate('/');\n  };\n\n  const total = cart.reduce((acc, item) => acc + item.price, 0);\n\n  return (\n    <motion.div\n      initial={{ opacity: 0, y: 20 }}\n      animate={{ opacity: 1, y: 0 }}\n      exit={{ opacity: 0, y: -20 }}\n      className=\"max-w-2xl mx-auto pb-24\"\n    >\n      <div className=\"flex items-center mb-8\">\n        <button \n          onClick={() => navigate(-1)}\n          className=\"mr-4 glass-panel p-2 hover:bg-white/10 rounded-full transition-colors\"\n        >\n          <ChevronLeft className=\"w-6 h-6 text-white\" />\n        </button>\n        <h1 className=\"text-3xl font-bold text-white\">Checkout</h1>\n      </div>\n\n      <div className=\"grid grid-cols-1 md:grid-cols-2 gap-8\">\n        <div className=\"glass-panel p-6 h-fit order-2 md:order-1\">\n          <div className=\"flex items-center gap-2 mb-6 text-accent\">\n            <ShoppingBag className=\"w-5 h-5\" />\n            <h2 className=\"font-semibold uppercase tracking-wider text-sm\">Order Summary</h2>\n          </div>\n          \n          <div className=\"space-y-4 mb-6\">\n            {cart.length === 0 ? (\n              <p className=\"text-white/50 text-center py-4\">Your cart is empty.</p>\n            ) : (\n              cart.map((item, idx) => (\n                <div key={idx} className=\"flex justify-between items-center text-sm\">\n                  <span className=\"text-white/80\">{item.name}</span>\n                  <span className=\"text-white font-medium\">${item.price}</span>\n                </div>\n              ))\n            )}\n          </div>\n          \n          <div className=\"border-t border-white/10 pt-4 flex justify-between items-center text-lg font-bold text-white\">\n            <span>Total</span>\n            <span>${total.toFixed(2)}</span>\n          </div>\n        </div>\n\n        <form onSubmit={handleSubmit} className=\"glass-panel p-6 order-1 md:order-2\">\n          <div className=\"flex items-center gap-2 mb-6 text-primary\">\n            <CreditCard className=\"w-5 h-5\" />\n            <h2 className=\"font-semibold uppercase tracking-wider text-sm\">Payment Details</h2>\n          </div>\n\n          <CheckoutFormGroup\n            label=\"Full Name\"\n            name=\"name\"\n            value={formData.name}\n            onChange={handleChange}\n            required\n            placeholder=\"John Doe\"\n          />\n\n          <CheckoutFormGroup\n            label=\"Email Address\"\n            name=\"email\"\n            type=\"email\"\n            value={formData.email}\n            onChange={handleChange}\n            required\n            placeholder=\"john@example.com\"\n          />\n\n          <CheckoutFormGroup\n            label=\"Shipping Address\"\n            name=\"address\"\n            value={formData.address}\n            onChange={handleChange}\n            required\n            placeholder=\"123 Nebula St\"\n          />\n\n          <div className=\"space-y-4\">\n            <CheckoutFormGroup\n              label=\"Card Number\"\n              name=\"card\"\n              value={formData.card}\n              onChange={handleChange}\n              required\n              placeholder=\"0000 0000 0000 0000\"\n            />\n            \n            <div className=\"grid grid-cols-2 gap-4\">\n              <CheckoutFormGroup\n                label=\"Expiry\"\n                name=\"expiry\"\n                value={formData.expiry}\n                onChange={handleChange}\n                required\n                placeholder=\"MM/YY\"\n              />\n              <CheckoutFormGroup\n                label=\"CVC\"\n                name=\"cvc\"\n                value={formData.cvc}\n                onChange={handleChange}\n                required\n                placeholder=\"123\"\n              />\n            </div>\n          </div>\n\n          <button \n            type=\"submit\"\n            className=\"w-full mt-6 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-bold py-4 rounded-xl shadow-glow transition-all active:scale-95\"\n          >\n            Pay ${total.toFixed(2)}\n          </button>\n        </form>\n      </div>\n    </motion.div>\n  );\n};\n"
+    }
+  },
+  "metadata": {
+    "source_case": "outputs/v3-pipeline/004_ecommerce",
+    "synth_method": "causal-chain-v1",
+    "stage_files_used": [
+      "meta.json",
+      "01_pm/prd.md",
+      "01_pm/requirement_breakdown.json",
+      "01_pm/ia_structure.json",
+      "02_designer/design_brief.md",
+      "02_designer/design_system.json",
+      "02_designer/visual_effects.json",
+      "02_designer/component_specs.json",
+      "02_designer/style_research.md",
+      "03_frontend/tech_decision.json",
+      "03_frontend/self_review.json",
+      "03_frontend/package.json",
+      "03_frontend/tailwind.config.js",
+      "03_frontend/index.html",
+      "03_frontend/src/main.tsx",
+      "03_frontend/src/App.tsx",
+      "03_frontend/src/index.css",
+      "03_frontend/src/store/useStore.ts",
+      "03_frontend/src/components/LiquidBackground.tsx",
+      "03_frontend/src/components/KnowledgeGraphCanvas.tsx",
+      "03_frontend/src/components/GlassProductCard.tsx",
+      "03_frontend/src/components/SemanticSearchBar.tsx",
+      "03_frontend/src/components/ProductViewer3D.tsx",
+      "03_frontend/src/components/FloatingTabBar.tsx",
+      "03_frontend/src/components/CheckoutFormGroup.tsx",
+      "03_frontend/src/pages/Home.tsx",
+      "03_frontend/src/pages/ProductDetail.tsx",
+      "03_frontend/src/pages/Checkout.tsx"
+    ]
+  }
+}

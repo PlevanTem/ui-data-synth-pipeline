@@ -1,146 +1,112 @@
-# 长链推理输出模板
+# 长链推理 SFT 样本输出模板
 
-以下为单条慢思考训练样本的 Markdown 渲染格式。实际输出为 JSON（见 SKILL.md schema），此模板用于人工审核和示意。
-
----
-
-## `<original_prompt>`
-
-> {用户的原始需求描述，纯自然语言。}
-> 例：「创建一个鸿蒙原生 AI 会议协作应用，支持多设备一键入会、实时语音转写、多语言翻译、会后纪要自动生成、任务待办同步。界面风格为极简商务风，低饱和配色。」
+实际输出为 JSON（见 SKILL.md schema），此模板用于人工审核和示意。
 
 ---
 
-## `<reasoning_chain>`
+## 完整样本示意
 
-### 阶段一：需求分析与问题定义
+### User
 
-**核心问题**
-{1-2 句话概括这个产品要解决什么问题。}
+帮我设计并实现一个鸿蒙智联全屋智能中控应用。我家里有十几台鸿蒙 IoT 设备，但每次要控制都得打开不同 App，太麻烦了。想要一个统一的控制面板，支持一键场景联动（回家/离家/睡眠/观影）、语音控制、设备实时监控和能耗统计。界面风格要极简直观、色彩柔和，卡片式布局，适配手机、平板和大屏三端。
 
-**目标用户**
-{列出用户类型及其核心诉求，不超过 3 类。}
-
-**功能优先级划分**
-我需要对功能做 MoSCoW 分级——
-- **必须做（P0）**：
-  - {功能1}——{为什么是 P0 的 1 句话理由}
-  - {功能2}——{理由}
-  - ...
-- **应该做（P1）**：
-  - {功能}——{理由}
-- **锦上添花（P2）**：
-  - {功能}——{理由}
-- **明确不做**：
-  - {排除项}——{为什么排除}
-
-**信息架构决策**
-基于上述需求，导航采用 {navigation_model}，理由是 {reason}。
-核心页面划分：
-- {section.id}：{section.purpose}（{section.priority}）
-- ...
-
-关键用户流：
-1. {user_flow.name}：{steps 摘要}
-2. ...
-
-**风险与开放问题**
-- {risk/question}
-
----
-
-### 阶段二：设计决策
-
-**视觉方向选择**
-用户要求「{用户原文中的风格关键词}」，因此视觉方向定为 {design_direction}——
-- 主色调：{color} 理由：{rationale}
-- 强调色：{color} 理由：{rationale}
-- 字体：{font}
-- 整体气质：{keywords}
-
-**布局策略**
-考虑到 {产品场景/多端需求}：
-- 桌面端：{layout}
-- 平板端：{layout}
-- 手机端：{layout}
-
-**核心交互设计**
-以下交互是体验的关键赌注：
-1. {交互1}——值得做因为 {reason}
-2. {交互2}——值得做因为 {reason}
-3. ...
-
-**动效与生成式视觉**
-{为什么用/不用某类动效的推理}。
-采用的视觉模块：
-- {effect_name}：用于 {purpose}，技术方案 {tech}
-- ...
-
-组合逻辑：{combination_rationale}
-
-降级策略：
-- {effect} 不可用时 → {fallback}
-
----
-
-### 阶段三：技术选型与实现策略
-
-**技术栈选择**
-选用 {selected_stack}，主要考虑：
-- {reasoning_point_1}
-- {reasoning_point_2}
-
-考虑过但放弃的方案：
-- {alternative_1}：放弃因为 {reason}
-- {alternative_2}：放弃因为 {reason}
-
-**关键库选择**
-| 库 | 采纳/拒绝 | 理由 |
-|----|-----------|------|
-| {lib_name} | 采纳 | {reason} |
-| {lib_name} | 拒绝 | {reason} |
-
-**状态管理与数据流**
-{state_management 方案}。原因：{reason}。
-数据流：{data_flow 摘要}。
-
-**性能红线**
-- {guardrail_1}
-- {guardrail_2}
-
-**降级兜底**
-- {fallback_1}
-- {fallback_2}
-
----
-
-### 阶段四：实现自检与反思
-
-**完成度**
-- 已完成：{completed_items 摘要}
-- 交互完整性：{interaction_completeness 各维度}
-
-**已知不足**
-- {gap_1}
-- {gap_2}
-
-**如果有更多时间，下一步应该**：
-- {next_fix_1}
-- {next_fix_2}
-
----
-
-## `<final_code>`
+### Assistant
 
 ```
-// --- filepath: src/main.tsx ---
-{main.tsx 完整内容}
+<think>
+让我仔细分析一下这个需求。用户有十几台鸿蒙 IoT 设备，核心痛点是每台设备要打开独立 App 来控制，操控路径太深。他想要的不是「能控制设备」，而是「生活被智能顺畅地服务到，几乎不需要操心设备」。
 
-// --- filepath: src/App.tsx ---
-{App.tsx 完整内容}
+首先搞清楚要管理什么——设备、房间、场景、能耗，四个核心实体。设备和房间是多对一关系，设备和场景是多对多。嗯，这意味着状态管理不会太简单...
 
-// --- filepath: src/views/DashboardView.tsx ---
-{DashboardView.tsx 完整内容}
+哪些功能必须做？全屋仪表盘（进入 App 后 3 秒内形成状态感知）、设备卡片控制（80% 日常控制不离开主页）、场景一键触发（核心差异化）、语音控制。能耗统计也很重要但可以稍放后面。至于设备固件升级、帐号系统之类的...不做，这是 Web 原型，加这些只会分散注意力。
 
-// ... 其余核心文件 ...
+导航怎么设计？手机屏幕小，底部 Tab 是最高效的触达方式；平板有宽度，可以用侧边栏；大屏更是要三列全景布局。嗯，混合导航方案，虽然实现成本高一点但用户体验差异显著。
+
+想清楚了需求，来考虑视觉方向。用户说要"极简、色彩柔和、融合鸿蒙"。几个方向——白底明亮极简？太普通，跟市面上的米家没区别。纯紫蓝渐变玻璃态？太 SaaS 工具感，不像家居。直接照搬 HarmonyOS 风格？视觉保守，无差异化。
+
+啊，有个想法——暗色环境控制风格。智能家居晚上用得最多，暗色主题天然合适。而且设备"亮了"的时候卡片也发光——灯开了卡片就「亮」，这种认知映射很有意思。主背景用近黑带蓝灰调（避免纯黑的廉价感），卡片深炭蓝色，系统操作色冷蓝，设备激活用暖橘色——冷暖对比强调「状态变化」。
+
+等等，背景效果用什么方案？WebGL 能做出很炫的效果，但太重了——一个家居控制 App 用 Three.js？完全 overkill。纯 CSS 渐变又太死板。让我想想...Canvas 2D 配合 simplex noise！可以做缓慢流动的环境光效果，性能可控，降级方案简单——不支持就纯色背景。
+
+技术栈方面...React 还是 Vue？Vue 的双向绑定对设备参数调节很自然，但我想用 Framer Motion 做场景触发的 stagger 动画和页面切换——这在 Vue 生态没有对等库。Svelte 的 Recharts 不支持，Next.js 的 SSR 对纯客户端原型多余。好，React + TypeScript + Vite。
+
+状态管理呢？先想到 Redux...不，太重了。Zustand？轻量好用，但场景触发需要一个状态机（START→逐设备EXECUTING→UPDATE→DONE→COMPLETE），useReducer 的 action 派发更自然。那就分两层：设备状态用 Context + useReducer，UI 状态用 Zustand。
+
+嗯，差点忘了语音控制。用户说要语音控制，但这是 Web 原型——不接真实语音 API。全部 mock：点击后随机抽一条预设指令，逐字显示，模拟 listening → processing → success/error 四态。重点是 Canvas 波形的四态动画做好看。
+
+文件结构大致想好了：pages/ 放各页面，components/ 按功能分（device/scene/energy/voice/ui/layout），store/ 放 DeviceStore 和 UIStore，generative/ 放 Canvas 背景和波形，hooks/ 放自定义 hook。types/ 集中管理类型定义。
+
+关键难点预判：DeviceCard 的多变体（6 种设备类型各有不同的控制 UI）需要好好抽象；场景触发的 stagger 动画时序编排要精心；Canvas 背景的性能——用 1/3 分辨率计算再 CSS 放大来节省 GPU。
+
+好，开始写代码。
+</think>
+
+好的，我来为你实现这个鸿蒙智联全屋智能中控应用。以下是完整的前端代码：
+
+```tsx
+// src/main.tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './styles/globals.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
 ```
+
+```tsx
+// src/App.tsx
+import { AnimatePresence, motion } from 'framer-motion'
+// ... 完整组件代码 ...
+```
+
+// ... 其余所有源码文件 ...
+```
+
+---
+
+## 反面示例（不应该这样写）
+
+### ❌ 结构化报告风格
+
+```
+<think>
+## 阶段一：需求分析
+
+**核心问题**：用户需要统一控制面板。
+
+**目标用户**：
+- 主控用户（25-50岁）
+- 家庭成员
+
+**MoSCoW 分级**：
+- Must Have: M01 全屋仪表盘, M02 设备卡片...
+- Should Have: S01 场景编辑器...
+</think>
+```
+
+问题：这是结构化报告，不是心理独白。有 markdown 标题、有编号、有固定模板感。
+
+### ❌ JSON 字段名泄露
+
+```
+<think>
+从 requirement_spec.json 的 execution_contracts.must_deliver 中可以看到...
+design_system.json 的 color_palette.rationale 写的是...
+</think>
+```
+
+问题：出现了文件名和 JSON 路径，不是自然思考。
+
+### ❌ 没有犹豫和比较
+
+```
+<think>
+技术栈选 React + TypeScript + Vite。状态管理用 Context + useReducer。配色用暗色系。导航用混合模式。
+</think>
+```
+
+问题：直接给结论，没有比较过程、没有否定推理、没有犹豫。

@@ -1,0 +1,494 @@
+{
+  "case_id": "003_smarthome_cursor_gemini3.1Pro",
+  "domain": "智能家居 (Smart Home)",
+  "pipeline_version": "v3",
+  "original_prompt": "生成一款鸿蒙智联全屋智能中控应用，兼容华为鸿蒙智联全品类IoT设备，支持一键场景联动（回家/离家/睡眠/观影）、语音控制（对接小艺）、设备状态实时监控、能耗统计；界面可视化、卡片式布局，支持手机/平板/智慧屏多端统一操控，风格遵循2026智能家居中控新趋势，极简直观、色彩柔和，设备卡片模块化，操作逻辑清晰，契合智能家居主流趋势。",
+  "causal_chains": [
+    {
+      "id": "chain_01",
+      "anchor_question": "为什么选择 React + Vite 作为技术栈，而不是 Next.js 或纯静态 HTML？",
+      "chain_type": "selection",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户需要一个能统一管控全品类 IoT 设备的中控应用，设备之间有复杂的联动关系（场景触发→多设备同步响应），且操控必须丝滑即时",
+          "source": "meta.json → original_query: '支持一键场景联动...设备状态实时监控'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 定义了高交互密度（Rich）的纯客户端 Dashboard，需要组件化通信、乐观更新、复杂动画编排，且无 SEO 需求",
+          "source": "01_pm/requirement_spec.json → non_functional_requirements.interaction_depth: 'rich', constraints.tech_constraints: '需使用现代前端框架开发，非静态HTML'"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "所以前端选型选择了 React + Vite：React 的状态流转与组件生态最适合设备卡片间的协同，Vite 提供极速 HMR 和轻量产物；Next.js 因无 SEO 诉求被排除，纯 HTML 因无法实现组件化通信被排除",
+          "source": "03_frontend/tech_decision.json → selected_stack.reasoning + why_not_others"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以代码采用 React 19 + Vite 8 + TypeScript 的标准 SPA 结构，入口通过 createRoot 挂载 App 组件",
+          "source": "src/main.tsx"
+        }
+      ],
+      "code_snippet": "import { StrictMode } from 'react'\nimport { createRoot } from 'react-dom/client'\nimport './index.css'\nimport App from './App.tsx'\n\ncreateRoot(document.getElementById('root')!).render(\n  <StrictMode>\n    <App />\n  </StrictMode>,\n)",
+      "related_files": ["src/main.tsx", "src/App.tsx", "package.json", "vite.config.ts", "03_frontend/tech_decision.json"]
+    },
+    {
+      "id": "chain_02",
+      "anchor_question": "为什么整个界面采用深色极简流体态（Dark Minimalist Fluid）而非浅色温馨风格？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户要求风格遵循 2026 智能家居中控新趋势，极简直观、色彩柔和",
+          "source": "meta.json → original_query: '风格遵循2026智能家居中控新趋势，极简直观、色彩柔和'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 将视觉信任等级定义为 Premium，情绪目标为宁静、掌控感、现代科技感，要求达到 Glassmorphism/玻璃态等前沿风格",
+          "source": "01_pm/requirement_spec.json → non_functional_requirements.visual_trust_level: 'premium', design_intent.emotional_goal"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计师在三个方向（深色流体态 / 柔和包容 / 3D空间构成）中选择了方向 A「深色极简流体态」，因为暗色调最能表达设备点亮/熄灭的状态对比，且与 Premium 信任级别完美吻合",
+          "source": "02_designer/style_research.md → 4. 最终选型及原因: '暗色调玻璃态能让信息像悬浮在空间中一样轻盈'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计系统定义主背景色为 #09090B（深邃中性黑），表面色为 rgba(24,24,27,0.6) 的半透明层，而非刺眼的纯黑或科技蓝",
+          "source": "02_designer/design_system.json → color_palette.background.base: '#09090B', surface: 'rgba(24, 24, 27, 0.6)'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以在 Tailwind 配置中将 background 映射为 #09090B，body 全局应用 bg-background，所有界面在此深色基底上构建",
+          "source": "tailwind.config.js + src/index.css"
+        }
+      ],
+      "code_snippet": "// tailwind.config.js\ncolors: {\n  background: '#09090B',\n  surface: 'rgba(24, 24, 27, 0.6)',\n  'surface-elevated': 'rgba(39, 39, 42, 0.7)',\n}\n\n// index.css\n@layer base {\n  body {\n    @apply bg-background text-primary antialiased overflow-x-hidden;\n  }\n}",
+      "related_files": ["tailwind.config.js", "src/index.css", "02_designer/design_system.json", "02_designer/style_research.md", "02_designer/design_brief.md"]
+    },
+    {
+      "id": "chain_03",
+      "anchor_question": "为什么设备卡片使用 Glassmorphism 毛玻璃材质而非实体填充色？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户要求界面契合 2026 智能家居主流趋势，追求卡片模块化与视觉层级感",
+          "source": "meta.json → original_query: '设备卡片模块化...契合智能家居主流趋势'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计师在设计简报中明确要求使用极其克制的 Glassmorphism，仅用于卡片层提供空间隔离，带有极微弱的白色上边框强调物理厚度",
+          "source": "02_designer/design_brief.md → 1. 核心视觉方向: '使用极其克制的 Glassmorphism（玻璃拟态），仅用于卡片层'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以视觉效果层定义了 CSS Backdrop-filter 叠加 Inner Box-shadow 的材质方案：backdrop-filter: blur(20px) saturate(120%)，配合 inset 0 1px 0 rgba(255,255,255,0.1) 高光",
+          "source": "02_designer/visual_effects.json → generative_combination.secondary_layers[0].technique"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以在 CSS 中定义了 .glass-panel 和 .glass-panel-elevated 两个玻璃态工具类，DeviceCard 关闭态直接使用 glass-panel 类",
+          "source": "src/index.css + src/components/DeviceCard.tsx"
+        }
+      ],
+      "code_snippet": "// index.css\n.glass-panel {\n  @apply bg-surface backdrop-blur-xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];\n}\n\n.glass-panel-elevated {\n  @apply bg-surface-elevated backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];\n}\n\n// DeviceCard.tsx\ndevice.isOn \n  ? \"bg-white/10 shadow-[0_0_20px_0_rgba(56,189,248,0.15)] border border-white/20\" \n  : \"glass-panel\"",
+      "related_files": ["src/index.css", "src/components/DeviceCard.tsx", "src/components/SceneCard.tsx", "02_designer/design_brief.md", "02_designer/visual_effects.json"]
+    },
+    {
+      "id": "chain_04",
+      "anchor_question": "为什么要在底层放一个 Canvas 绘制的 Aurora 流体噪声背景？",
+      "chain_type": "visual",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户需要界面可视化且契合 2026 智能家居中控新趋势，不能像传统工具软件那样呆板",
+          "source": "meta.json → original_query: '界面可视化...风格遵循2026智能家居中控新趋势'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 设定了情绪目标为「宁静、掌控感、现代科技感」，允许设计师在表现层注入非侵入式的高级视觉效果",
+          "source": "01_pm/prd.md → 非功能需求推导: '视觉信任感需要达到 premium 级别，契合拟真/玻璃态等前沿风格'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计师规划了一个三层视觉结构：底层 Canvas 彩色噪声流场背景 → 中层毛玻璃卡片 → 顶层模态覆盖。底层流场隐喻当前家庭环境氛围（冷色=制冷，暖紫=观影）",
+          "source": "02_designer/visual_effects.json → effect_layers[0].narrative_role: '隐喻当前家庭环境氛围'"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "所以技术选型采用 ReactBits Aurora 组件思路，用 Canvas 2D 的极慢径向渐变交融来实现流体效果，透明度控制在极低水平以避免喧宾夺主",
+          "source": "03_frontend/tech_decision.json → frontier_candidates_considered[1]: 'ReactBits Aurora Background, adoption_decision: chosen'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 AuroraBackground 组件使用 Canvas + requestAnimationFrame 绘制两个极慢移动的径向渐变色球，通过 screen 混合模式叠加，整体 opacity 0.8 并置于 z-index: -1",
+          "source": "src/components/AuroraBackground.tsx"
+        }
+      ],
+      "code_snippet": "const render = () => {\n  t += 0.003; // extremely slow flow\n  ctx.clearRect(0, 0, width, height);\n  ctx.fillStyle = color1;\n  ctx.fillRect(0, 0, width, height);\n  ctx.globalCompositeOperation = 'screen';\n  drawBlob(\n    cx + Math.sin(t) * cx * 0.4, \n    cy + Math.cos(t * 0.7) * cy * 0.4, \n    maxR, color2\n  );\n  drawBlob(\n    cx + Math.cos(t * 1.1) * cx * 0.5, \n    cy + Math.sin(t * 0.8) * cy * 0.5, \n    maxR * 0.9, color3\n  );\n  ctx.globalCompositeOperation = 'source-over';\n  animationFrameId = requestAnimationFrame(render);\n};",
+      "related_files": ["src/components/AuroraBackground.tsx", "src/App.tsx", "02_designer/visual_effects.json", "02_designer/design_brief.md", "03_frontend/tech_decision.json"]
+    },
+    {
+      "id": "chain_05",
+      "anchor_question": "为什么设备卡片点击时有弹簧物理下压感（scale 0.96）而非普通 CSS transition？",
+      "chain_type": "interaction",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户操控设备是高频行为（日常居家反复开关灯、调温），需要即时且有确认感的触觉反馈",
+          "source": "01_pm/prd.md → 用户与场景分析: '日常居家期间的高频设备调控（如开关灯、调温）'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 将交互密度定义为 Rich，并在执行契约 M03 中要求「点击开关时有丝滑状态反转动画」",
+          "source": "01_pm/requirement_spec.json → execution_contracts.must_deliver[2].expression_goal: '点击开关时有丝滑状态反转动画'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计系统定义了 spring 物理弹簧模型（mass=1, stiffness=400, damping=25）和交互原则：所有可点击卡片必须有 scale(0.98) 的按下反馈",
+          "source": "02_designer/design_system.json → motion.timing_functions.spring_snappy + interaction_principles[0]"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以使用 Framer Motion 的 whileTap={{ scale: 0.96 }} 实现物理按压，whileHover={{ scale: 1.02 }} 增加悬停提示，整个卡片作为 motion.button 渲染",
+          "source": "src/components/DeviceCard.tsx"
+        }
+      ],
+      "code_snippet": "<motion.button\n  whileHover={{ scale: 1.02 }}\n  whileTap={{ scale: 0.96 }}\n  onClick={() => onToggle(device.id)}\n  className={cn(\n    \"relative flex flex-col justify-between text-left p-4 rounded-3xl h-32 w-full transition-colors duration-300 overflow-hidden\",\n    device.isOn \n      ? \"bg-white/10 shadow-[0_0_20px_0_rgba(56,189,248,0.15)] border border-white/20\" \n      : \"glass-panel\"\n  )}\n>",
+      "related_files": ["src/components/DeviceCard.tsx", "src/components/SceneCard.tsx", "02_designer/design_system.json", "02_designer/component_specs.json", "03_frontend/tech_decision.json"]
+    },
+    {
+      "id": "chain_06",
+      "anchor_question": "为什么场景激活时关联设备要以 50ms 间隔依次变化，而非同时切换？",
+      "chain_type": "interaction",
+      "polarity": "positive",
+      "depth": 5,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户使用一键场景联动（如「观影模式」）来批量切换多个设备状态，需要清晰感知到哪些设备被影响了",
+          "source": "meta.json → original_query: '支持一键场景联动（回家/离家/睡眠/观影）'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 在关键流程中定义了场景切换的完整闭环：卡片呈现激活中动效 → 关联设备卡片状态依次自动变更 → 场景卡片保持激活态",
+          "source": "01_pm/ia_structure.json → critical_flows[0].steps: '关联的设备卡片状态随之自动变更为对应状态'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计系统的动效编排规则明确要求：场景卡片激活时，受影响的设备卡片需错薄(stagger) 50ms 依次展现状态变化动画",
+          "source": "02_designer/design_system.json → motion.orchestration_rules[0]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以组件交互流定义了具体编排节奏：SceneCard 立即发光 → 50ms 后背景流场过渡 → 再 50ms 后设备卡片逐个状态反转，整体节奏如交响乐指挥",
+          "source": "02_designer/component_specs.json → interaction_flows[0].animation"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 Dashboard 中的 activateScene 函数通过 updateSequence 实现 50ms 间隔的错峰 setState，每个设备按序列延迟触发状态更新",
+          "source": "src/components/Dashboard.tsx"
+        }
+      ],
+      "code_snippet": "const activateScene = (sceneId: string) => {\n  const sId = sceneId as SceneType;\n  setActiveScene(sId);\n  const updateSequence = (updates: Partial<Device>[], delayBase = 50) => {\n    updates.forEach((update, idx) => {\n      setTimeout(() => {\n        setDevices(prev => prev.map(d => d.id === update.id ? { ...d, ...update } : d));\n      }, delayBase * idx);\n    });\n  };\n  if (sId === 'movie') {\n    updateSequence([\n      { id: 'l1', isOn: false },\n      { id: 'l2', isOn: true },\n      { id: 'cu1', isOn: false },\n      { id: 'm1', isOn: true },\n    ]);\n  }\n};",
+      "related_files": ["src/components/Dashboard.tsx", "src/components/SceneCard.tsx", "02_designer/design_system.json", "02_designer/component_specs.json", "01_pm/ia_structure.json"]
+    },
+    {
+      "id": "chain_07",
+      "anchor_question": "为什么设备卡片本身就是可点击按钮（card = button），而不是进入二级页再操作？",
+      "chain_type": "structure",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户的核心痛点就是「设备操控繁琐、入口分散、操作层级深」，需要一键触达",
+          "source": "meta.json → user_req: '鸿蒙智联设备操控繁琐、无统一管理入口'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 在执行契约 M03 中明确约束：设备控制必须在卡片上直接完成，「设备控制必须进入二级页」被列为失败条件",
+          "source": "01_pm/requirement_spec.json → execution_contracts.must_deliver[2].fail_condition: '设备控制必须进入二级页，或缺乏当前开/关状态展示'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以组件规格定义 DeviceCard 的交互为：点击整个卡片区域触发主开关，卡片同时是信息展示载体和操作载体",
+          "source": "02_designer/component_specs.json → components[0].interaction_notes[0]: '点击整个卡片区域触发主开关'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 DeviceCard 直接渲染为 motion.button 元素，onClick 事件绑定到整个卡片而非内部某个小按钮",
+          "source": "src/components/DeviceCard.tsx"
+        }
+      ],
+      "code_snippet": "export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle }) => {\n  const Icon = iconMap[device.type] || Power;\n  return (\n    <motion.button\n      whileHover={{ scale: 1.02 }}\n      whileTap={{ scale: 0.96 }}\n      onClick={() => onToggle(device.id)}\n      className={cn(\n        \"relative flex flex-col justify-between text-left p-4 rounded-3xl h-32 w-full...\",\n        device.isOn ? \"bg-white/10 ...\" : \"glass-panel\"\n      )}\n    >\n      {/* 整个卡片 = 一个按钮 */}\n    </motion.button>\n  );\n};",
+      "related_files": ["src/components/DeviceCard.tsx", "01_pm/requirement_spec.json", "02_designer/component_specs.json"]
+    },
+    {
+      "id": "chain_08",
+      "anchor_question": "为什么移动端是单列流式 + 底部留白，桌面端变为左侧边栏 + 右侧网格分栏？",
+      "chain_type": "structure",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户需要在手机、平板、智慧屏等多端统一操控，且不同设备的屏幕尺寸差异巨大",
+          "source": "meta.json → original_query: '支持手机/平板/智慧屏多端统一操控'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 将响应优先级设为 mobile-first，并在 M04 中要求：宽屏下充分利用横向空间（如侧边栏+网格），手机端采用垂直流式排版",
+          "source": "01_pm/requirement_spec.json → non_functional_requirements.responsive_priority: 'mobile-first', execution_contracts.must_deliver[3]"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以信息架构定义了两种断点适配策略：Mobile 底部导航 + 1-2列网格，Tablet/Desktop 侧边导航 + 3-4列多列栅格",
+          "source": "01_pm/ia_structure.json → responsive_priorities: mobile 底部Tab, tablet 侧边导航"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 Dashboard 使用 Tailwind 的 md: 断点实现：默认 flex-col 纵向排列，md:flex-row 转为横向分栏，环境区 md:sticky md:w-80 固定在左侧",
+          "source": "src/components/Dashboard.tsx"
+        }
+      ],
+      "code_snippet": "<div className=\"relative z-10 min-h-screen w-full max-w-md mx-auto flex flex-col md:max-w-4xl md:flex-row md:items-start md:py-12 md:gap-12\">\n  <div className=\"md:sticky md:top-12 md:w-80 flex flex-col gap-6\">\n    <EnvironmentHero />\n    {/* 场景卡片区 */}\n  </div>\n  <div className=\"px-6 py-6 md:py-0 flex-1\">\n    <motion.div className=\"grid grid-cols-2 sm:grid-cols-3 gap-4\">\n      {devices.map(d => <DeviceCard ... />)}\n    </motion.div>\n  </div>\n</div>",
+      "related_files": ["src/components/Dashboard.tsx", "01_pm/ia_structure.json", "01_pm/requirement_spec.json", "02_designer/design_brief.md"]
+    },
+    {
+      "id": "chain_09",
+      "anchor_question": "为什么语音助手（小艺）是一个模态覆盖层而非真实的语音识别集成？",
+      "chain_type": "constraint",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户需求中明确要求语音控制对接小艺，但这是一个前端展示原型",
+          "source": "meta.json → original_query: '语音控制（对接小艺）'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 将真实语音控制降级为 S 类（Should Deliver），仅展示「视觉交互与录音态动画反馈」，不实现真实的语音识别",
+          "source": "01_pm/prd.md → 取舍说明: 'S类降级：真实的语音控制在前端原型阶段降级为仅展示视觉交互与录音态动画反馈'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以组件规格将 VoiceAssistantButton 设计为：点击唤起覆盖遮罩 → Listening 态显示动态声波图或流体光球，模态框采用 spring 弹簧进出",
+          "source": "02_designer/component_specs.json → components[3].interaction_notes + motion_notes"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 VoiceAssistant 组件用 AnimatePresence 控制模态层的生命周期，内含三层 CSS 径向模糊动画模拟声波球体，spring(stiffness=300, damping=25) 控制弹入",
+          "source": "src/components/VoiceAssistant.tsx"
+        }
+      ],
+      "code_snippet": "<motion.div\n  initial={{ scale: 0.9, y: 20 }}\n  animate={{ scale: 1, y: 0 }}\n  exit={{ scale: 0.9, y: 20 }}\n  transition={{ type: 'spring', damping: 25, stiffness: 300 }}\n  className=\"flex flex-col items-center gap-8\"\n>\n  <div className=\"relative w-32 h-32 rounded-full flex items-center justify-center\">\n    <motion.div \n      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}\n      transition={{ duration: 2, repeat: Infinity, ease: \"easeInOut\" }}\n      className=\"absolute inset-0 rounded-full bg-accent/30 blur-xl\"\n    />\n  </div>\n  <motion.p>我在听...</motion.p>\n</motion.div>",
+      "related_files": ["src/components/VoiceAssistant.tsx", "src/components/EnvironmentHero.tsx", "01_pm/prd.md", "02_designer/component_specs.json"]
+    },
+    {
+      "id": "chain_10",
+      "anchor_question": "为什么代码中完全没有用户账户、权限管理相关的逻辑？",
+      "chain_type": "constraint",
+      "polarity": "negative",
+      "depth": 3,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "虽然全屋智能场景中天然存在家庭成员角色区分（主人/儿童/访客），但用户原始需求聚焦于「统一管理入口」的交互体验",
+          "source": "meta.json → user_req: '鸿蒙智联设备操控繁琐、无统一管理入口'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 在执行契约中将「家庭成员与权限管理体系」列为 X01 排除项，理由是账号权限体系会导致界面复杂度偏离核心的控制场景",
+          "source": "01_pm/requirement_spec.json → execution_contracts.explicitly_excluded[0]: id='X01', exclusion_reason='本次重心为多端统一的设备交互与控制前端体验，账号权限体系会导致界面复杂度偏离核心的控制场景'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以整个代码中不存在任何 auth、login、user、permission 相关模块，Dashboard 直接渲染设备列表，无身份验证拦截",
+          "source": "src/App.tsx + src/components/Dashboard.tsx (无任何 auth 逻辑)"
+        }
+      ],
+      "code_snippet": "// App.tsx - 直接渲染，无任何认证逻辑\nfunction App() {\n  return (\n    <div className=\"relative min-h-screen bg-background overflow-hidden font-sans text-primary\">\n      <AuroraBackground />\n      <Dashboard />\n    </div>\n  );\n}",
+      "related_files": ["src/App.tsx", "src/components/Dashboard.tsx", "01_pm/requirement_spec.json", "01_pm/prd.md"]
+    },
+    {
+      "id": "chain_11",
+      "anchor_question": "为什么没有使用 Three.js 构建 3D 房间模型来展示设备空间位置？",
+      "chain_type": "selection",
+      "polarity": "negative",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "用户需要兼容全品类 IoT 设备且追求一键高效操作，设备数量多且经常变动",
+          "source": "meta.json → original_query: '兼容华为鸿蒙智联全品类IoT设备'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计师在风格探索中虽然调研了方向 C（空间构成与 3D 数据化），但最终否决了它：抽象每个家庭的 3D 空间成本过高，信息获取效率低于卡片式网格，不符合一键高效操作的核心诉求",
+          "source": "02_designer/style_research.md → 方向 C: '信息获取效率低于卡片式网格，不符合一键高效操作的核心诉求'"
+        },
+        {
+          "stage": "tech_decision",
+          "content": "所以技术选型中 Three.js 空间模型被标记为 rejected，理由是模型定制成本过高，对设备数量多且经常变动的真实家庭场景不具备普适效率",
+          "source": "03_frontend/tech_decision.json → frontier_candidates_considered[0]: name='Three.js 空间模型', adoption_decision='rejected'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以整个项目依赖中不存在 three、@react-three/fiber 等 3D 库，设备通过扁平化的 2D 卡片网格展示",
+          "source": "package.json (无 three.js 依赖) + src/components/Dashboard.tsx (grid grid-cols-2)"
+        }
+      ],
+      "code_snippet": "// package.json dependencies - 无任何 3D 库\n\"dependencies\": {\n  \"framer-motion\": \"^12.36.0\",\n  \"lucide-react\": \"^0.577.0\",\n  \"react\": \"^19.2.4\",\n  \"tailwindcss\": \"^3.4.19\"\n}\n\n// Dashboard.tsx - 扁平 2D 网格而非 3D 场景\n<motion.div className=\"grid grid-cols-2 sm:grid-cols-3 gap-4\">\n  {devices.map(d => <DeviceCard device={d} onToggle={toggleDevice} />)}\n</motion.div>",
+      "related_files": ["package.json", "src/components/Dashboard.tsx", "03_frontend/tech_decision.json", "02_designer/style_research.md"]
+    },
+    {
+      "id": "chain_12",
+      "anchor_question": "为什么设备开关是乐观更新（立即反转 UI 状态）而非等待后端确认？",
+      "chain_type": "performance",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "high",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户的核心痛点之一是操控设备后无即时反馈、响应迟钝，需要消除视觉延迟",
+          "source": "01_pm/prd.md → 痛点: '缺乏直观的状态反馈'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 将性能感知要求定义为「操作必须立即产生 UI 状态变更（乐观更新），动画需保持 60fps」",
+          "source": "01_pm/requirement_spec.json → non_functional_requirements.performance_perception: '操作必须立即产生 UI 状态变更（乐观更新），动画需保持 60fps'"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以设计系统交互原则中明确：点击开关立刻更新界面状态（乐观更新），后台请求完成后不再闪烁",
+          "source": "02_designer/design_system.json → interaction_principles[1]: '反馈即时性：点击开关立刻更新界面状态（乐观更新）'"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以 toggleDevice 函数直接通过 setState 立即反转设备 isOn 状态，不存在 async/await 或 loading 中间态",
+          "source": "src/components/Dashboard.tsx"
+        }
+      ],
+      "code_snippet": "const toggleDevice = (id: string) => {\n  setDevices(prev => prev.map(d => \n    d.id === id ? { ...d, isOn: !d.isOn } : d\n  ));\n  setActiveScene(null);\n};",
+      "related_files": ["src/components/Dashboard.tsx", "src/components/DeviceCard.tsx", "01_pm/requirement_spec.json", "02_designer/design_system.json"]
+    },
+    {
+      "id": "chain_13",
+      "anchor_question": "为什么 TypeScript 类型系统中用联合类型 DeviceType 而非自由字符串来建模设备类别？",
+      "chain_type": "structure",
+      "polarity": "positive",
+      "depth": 4,
+      "confidence": "medium",
+      "nodes": [
+        {
+          "stage": "user_need",
+          "content": "因为用户需要管理全品类 IoT 设备（灯光/安防/环境/影音/窗帘），不同类别有不同的图标和控制方式",
+          "source": "meta.json → original_query: '兼容华为鸿蒙智联全品类IoT设备'"
+        },
+        {
+          "stage": "pm_decision",
+          "content": "所以 PM 在实体定义中将 Device 的 category 列为关键属性，需要按类别筛选设备",
+          "source": "01_pm/requirement_spec.json → entities[2].key_attributes: ['id', 'name', 'category', 'room', 'is_online', 'status_value']"
+        },
+        {
+          "stage": "design_decision",
+          "content": "所以组件规格中 DeviceCard 定义了三种变体（toggle/slider/sensor），每种设备类别对应不同的图标映射",
+          "source": "02_designer/component_specs.json → components[0].variants: ['toggle', 'slider', 'sensor']"
+        },
+        {
+          "stage": "code_impl",
+          "content": "所以在 TypeScript 中使用联合类型 DeviceType = 'light' | 'climate' | 'security' | 'media' | 'curtain' 进行约束，并通过 iconMap 将类型映射到 Lucide 图标组件",
+          "source": "src/types.ts + src/components/DeviceCard.tsx"
+        }
+      ],
+      "code_snippet": "// types.ts\nexport type DeviceType = 'light' | 'climate' | 'security' | 'media' | 'curtain';\n\nexport interface Device {\n  id: string;\n  name: string;\n  type: DeviceType;\n  room: string;\n  isOn: boolean;\n  isOnline: boolean;\n  value?: number;\n}\n\n// DeviceCard.tsx\nconst iconMap = {\n  light: Lightbulb,\n  climate: Thermometer,\n  security: ShieldCheck,\n  media: Tv,\n  curtain: Blinds,\n};",
+      "related_files": ["src/types.ts", "src/components/DeviceCard.tsx", "src/components/Dashboard.tsx", "01_pm/requirement_spec.json", "02_designer/component_specs.json"]
+    }
+  ],
+  "chain_summary": {
+    "total_chains": 13,
+    "by_type": {
+      "selection": 2,
+      "structure": 3,
+      "visual": 3,
+      "interaction": 2,
+      "constraint": 2,
+      "performance": 1
+    },
+    "by_polarity": {
+      "positive": 11,
+      "negative": 2
+    },
+    "avg_depth": 4.15
+  },
+  "final_code": {
+    "stack": "react (vite) + framer-motion + tailwindcss + typescript",
+    "files": {
+      "src/main.tsx": "import { StrictMode } from 'react'\nimport { createRoot } from 'react-dom/client'\nimport './index.css'\nimport App from './App.tsx'\n\ncreateRoot(document.getElementById('root')!).render(\n  <StrictMode>\n    <App />\n  </StrictMode>,\n)",
+      "src/App.tsx": "import React from 'react';\nimport { AuroraBackground } from './components/AuroraBackground';\nimport { Dashboard } from './components/Dashboard';\n\nfunction App() {\n  return (\n    <div className=\"relative min-h-screen bg-background overflow-hidden font-sans text-primary\">\n      <AuroraBackground />\n      <Dashboard />\n    </div>\n  );\n}\n\nexport default App;",
+      "src/types.ts": "export type DeviceType = 'light' | 'climate' | 'security' | 'media' | 'curtain';\n\nexport interface Device {\n  id: string;\n  name: string;\n  type: DeviceType;\n  room: string;\n  isOn: boolean;\n  isOnline: boolean;\n  value?: number; // brightness, temperature, etc.\n}\n\nexport type SceneType = 'home' | 'leave' | 'sleep' | 'movie';\n\nexport interface Scene {\n  id: SceneType;\n  name: string;\n  icon: string;\n  color: string;\n}",
+      "src/index.css": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');\n\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  body {\n    @apply bg-background text-primary antialiased overflow-x-hidden;\n    font-family: 'Inter', system-ui, sans-serif;\n  }\n}\n\n@layer components {\n  .glass-panel {\n    @apply bg-surface backdrop-blur-xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];\n  }\n\n  .glass-panel-elevated {\n    @apply bg-surface-elevated backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];\n  }\n  \n  .hide-scrollbar::-webkit-scrollbar {\n    display: none;\n  }\n  .hide-scrollbar {\n    -ms-overflow-style: none;\n    scrollbar-width: none;\n  }\n}",
+      "src/components/AuroraBackground.tsx": "import { useEffect, useRef } from 'react';\n\ninterface AuroraProps {\n  color1?: string;\n  color2?: string;\n  color3?: string;\n}\n\nexport function AuroraBackground({ \n  color1 = '#09090B', // Darkest\n  color2 = '#1A1A2E', // Subtle blue/purple\n  color3 = '#1E1E24'  // Dark slate\n}: AuroraProps) {\n  const canvasRef = useRef<HTMLCanvasElement>(null);\n\n  useEffect(() => {\n    const canvas = canvasRef.current;\n    if (!canvas) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n\n    let width = window.innerWidth;\n    let height = window.innerHeight;\n    canvas.width = width;\n    canvas.height = height;\n\n    const handleResize = () => {\n      width = window.innerWidth;\n      height = window.innerHeight;\n      canvas.width = width;\n      canvas.height = height;\n    };\n    window.addEventListener('resize', handleResize);\n\n    let animationFrameId: number;\n    let t = 0;\n    \n    const render = () => {\n      t += 0.003; // extremely slow flow\n      ctx.clearRect(0, 0, width, height);\n      \n      // base background\n      ctx.fillStyle = color1;\n      ctx.fillRect(0, 0, width, height);\n\n      // helper for radial gradients\n      const drawBlob = (x: number, y: number, r: number, color: string) => {\n        const grd = ctx.createRadialGradient(x, y, 0, x, y, r);\n        grd.addColorStop(0, color);\n        grd.addColorStop(1, 'transparent');\n        ctx.fillStyle = grd;\n        ctx.fillRect(0, 0, width, height);\n      };\n\n      ctx.globalCompositeOperation = 'screen';\n      \n      const cx = width / 2;\n      const cy = height / 2;\n      const maxR = Math.max(width, height) * 0.8;\n      \n      drawBlob(\n        cx + Math.sin(t) * cx * 0.4, \n        cy + Math.cos(t * 0.7) * cy * 0.4, \n        maxR, \n        color2\n      );\n      \n      drawBlob(\n        cx + Math.cos(t * 1.1) * cx * 0.5, \n        cy + Math.sin(t * 0.8) * cy * 0.5, \n        maxR * 0.9, \n        color3\n      );\n\n      ctx.globalCompositeOperation = 'source-over';\n      \n      animationFrameId = requestAnimationFrame(render);\n    };\n    \n    render();\n\n    return () => {\n      window.removeEventListener('resize', handleResize);\n      cancelAnimationFrame(animationFrameId);\n    };\n  }, [color1, color2, color3]);\n\n  return (\n    <canvas \n      ref={canvasRef} \n      className=\"fixed inset-0 w-full h-full pointer-events-none -z-10 opacity-80\"\n    />\n  );\n}",
+      "src/components/Dashboard.tsx": "import React, { useState, useEffect } from 'react';\nimport type { Device, Scene, DeviceType, SceneType } from '../types';\nimport { EnvironmentHero } from './EnvironmentHero';\nimport { SceneCard } from './SceneCard';\nimport { DeviceCard } from './DeviceCard';\nimport { VoiceAssistant } from './VoiceAssistant';\nimport { motion } from 'framer-motion';\n\nconst initialDevices: Device[] = [\n  { id: 'l1', name: '客厅主灯', type: 'light', room: '客厅', isOn: true, isOnline: true },\n  { id: 'l2', name: '氛围灯带', type: 'light', room: '客厅', isOn: false, isOnline: true },\n  { id: 'c1', name: '中央空调', type: 'climate', room: '客厅', isOn: false, isOnline: true, value: 24 },\n  { id: 'm1', name: '智慧屏', type: 'media', room: '客厅', isOn: false, isOnline: true },\n  { id: 'cu1', name: '智能窗帘', type: 'curtain', room: '客厅', isOn: true, isOnline: true },\n  { id: 's1', name: '智能门锁', type: 'security', room: '玄关', isOn: true, isOnline: true },\n];\n\nconst scenes: Scene[] = [\n  { id: 'home', name: '回家', icon: 'Home', color: 'text-scene-home' },\n  { id: 'leave', name: '离家', icon: 'LogOut', color: 'text-scene-leave' },\n  { id: 'movie', name: '观影', icon: 'Film', color: 'text-scene-movie' },\n  { id: 'sleep', name: '睡眠', icon: 'Moon', color: 'text-scene-sleep' },\n];\n\nexport const Dashboard: React.FC = () => {\n  const [devices, setDevices] = useState<Device[]>(initialDevices);\n  const [activeScene, setActiveScene] = useState<SceneType | null>('home');\n  const [isVoiceOpen, setIsVoiceOpen] = useState(false);\n\n  const toggleDevice = (id: string) => {\n    setDevices(prev => prev.map(d => \n      d.id === id ? { ...d, isOn: !d.isOn } : d\n    ));\n    // Reset active scene if user manually tweaks a device\n    setActiveScene(null);\n  };\n\n  const activateScene = (sceneId: string) => {\n    const sId = sceneId as SceneType;\n    setActiveScene(sId);\n    \n    // Simulate orchestration with stagger\n    const updateSequence = (updates: Partial<Device>[], delayBase = 50) => {\n      updates.forEach((update, idx) => {\n        setTimeout(() => {\n          setDevices(prev => prev.map(d => d.id === update.id ? { ...d, ...update } : d));\n        }, delayBase * idx);\n      });\n    };\n\n    if (sId === 'leave') {\n      updateSequence(devices.map(d => ({ id: d.id, isOn: d.id === 's1' ? true : false })));\n    } else if (sId === 'home') {\n      updateSequence([\n        { id: 'l1', isOn: true },\n        { id: 'c1', isOn: true },\n        { id: 'cu1', isOn: true },\n      ]);\n    } else if (sId === 'movie') {\n      updateSequence([\n        { id: 'l1', isOn: false },\n        { id: 'l2', isOn: true },\n        { id: 'cu1', isOn: false },\n        { id: 'm1', isOn: true },\n      ]);\n    } else if (sId === 'sleep') {\n      updateSequence(devices.map(d => ({ id: d.id, isOn: d.id === 's1' || d.id === 'c1' ? true : false })));\n    }\n  };\n\n  return (\n    <div className=\"relative z-10 min-h-screen w-full max-w-md mx-auto flex flex-col md:max-w-4xl md:flex-row md:items-start md:py-12 md:gap-12\">\n      \n      <div className=\"md:sticky md:top-12 md:w-80 flex flex-col gap-6\">\n        <EnvironmentHero \n          temperature={24} \n          humidity={45} \n          onVoiceClick={() => setIsVoiceOpen(true)}\n        />\n\n        <div className=\"px-6 md:px-0\">\n          <div className=\"flex items-center justify-between mb-4\">\n            <h2 className=\"text-sm font-medium text-muted uppercase tracking-wider\">智能场景</h2>\n          </div>\n          <div className=\"flex gap-4 overflow-x-auto hide-scrollbar pb-2\">\n            {scenes.map(s => (\n              <SceneCard \n                key={s.id} \n                scene={s} \n                isActive={activeScene === s.id} \n                onActivate={activateScene} \n              />\n            ))}\n          </div>\n        </div>\n      </div>\n\n      <div className=\"px-6 py-6 md:py-0 flex-1\">\n        <div className=\"flex items-center justify-between mb-4\">\n          <h2 className=\"text-sm font-medium text-muted uppercase tracking-wider\">设备控制</h2>\n          <span className=\"text-xs text-muted\">共 {devices.length} 个设备</span>\n        </div>\n        \n        <motion.div \n          className=\"grid grid-cols-2 sm:grid-cols-3 gap-4\"\n          initial=\"hidden\"\n          animate=\"visible\"\n          variants={{\n            hidden: { opacity: 0 },\n            visible: {\n              opacity: 1,\n              transition: { staggerChildren: 0.05 }\n            }\n          }}\n        >\n          {devices.map(d => (\n            <motion.div \n              key={d.id}\n              variants={{\n                hidden: { opacity: 0, y: 20 },\n                visible: { opacity: 1, y: 0 }\n              }}\n            >\n              <DeviceCard device={d} onToggle={toggleDevice} />\n            </motion.div>\n          ))}\n        </motion.div>\n      </div>\n\n      <VoiceAssistant isOpen={isVoiceOpen} onClose={() => setIsVoiceOpen(false)} />\n    </div>\n  );\n};",
+      "src/components/DeviceCard.tsx": "import React from 'react';\nimport { motion } from 'framer-motion';\nimport { Lightbulb, Thermometer, ShieldCheck, Tv, Blinds, Power } from 'lucide-react';\nimport type { Device } from '../types';\nimport { clsx, type ClassValue } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n\nfunction cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n\ninterface DeviceCardProps {\n  device: Device;\n  onToggle: (id: string) => void;\n}\n\nconst iconMap = {\n  light: Lightbulb,\n  climate: Thermometer,\n  security: ShieldCheck,\n  media: Tv,\n  curtain: Blinds,\n};\n\nexport const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle }) => {\n  const Icon = iconMap[device.type] || Power;\n\n  return (\n    <motion.button\n      whileHover={{ scale: 1.02 }}\n      whileTap={{ scale: 0.96 }}\n      onClick={() => onToggle(device.id)}\n      className={cn(\n        \"relative flex flex-col justify-between text-left p-4 rounded-3xl h-32 w-full transition-colors duration-300 overflow-hidden\",\n        device.isOn \n          ? \"bg-white/10 shadow-[0_0_20px_0_rgba(56,189,248,0.15)] border border-white/20\" \n          : \"glass-panel\"\n      )}\n    >\n      {/* Background Glow when ON */}\n      {device.isOn && (\n        <div className=\"absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent opacity-50 pointer-events-none\" />\n      )}\n\n      <div className=\"relative flex justify-between items-start w-full\">\n        <div \n          className={cn(\n            \"p-2 rounded-2xl transition-colors duration-300\",\n            device.isOn ? \"bg-accent/20 text-accent\" : \"bg-white/5 text-muted\"\n          )}\n        >\n          <Icon size={24} strokeWidth={1.5} />\n        </div>\n        <div \n          className={cn(\n            \"w-2 h-2 rounded-full mt-2 transition-colors\",\n            device.isOnline ? (device.isOn ? \"bg-accent shadow-[0_0_8px_rgba(56,189,248,0.8)]\" : \"bg-white/20\") : \"bg-status-offline\"\n          )}\n        />\n      </div>\n\n      <div className=\"relative z-10\">\n        <div className=\"font-medium text-primary text-sm truncate\">{device.name}</div>\n        <div className=\"text-xs text-muted mt-0.5 font-light\">\n          {device.isOnline ? (device.isOn ? (device.value ? `${device.value}` : '已开启') : '已关闭') : '离线'}\n        </div>\n      </div>\n    </motion.button>\n  );\n};",
+      "src/components/EnvironmentHero.tsx": "import React from 'react';\nimport { Cloud, Droplets, Mic } from 'lucide-react';\nimport { motion } from 'framer-motion';\n\ninterface EnvironmentHeroProps {\n  temperature: number;\n  humidity: number;\n  onVoiceClick: () => void;\n}\n\nexport const EnvironmentHero: React.FC<EnvironmentHeroProps> = ({ temperature, humidity, onVoiceClick }) => {\n  return (\n    <div className=\"w-full pt-12 pb-6 px-6 flex justify-between items-start\">\n      <div className=\"flex flex-col gap-1\">\n        <motion.h1 \n          initial={{ opacity: 0, y: 10 }}\n          animate={{ opacity: 1, y: 0 }}\n          transition={{ duration: 0.5 }}\n          className=\"text-3xl font-semibold tracking-tight\"\n        >\n          上午好，\n        </motion.h1>\n        <motion.p \n          initial={{ opacity: 0, y: 10 }}\n          animate={{ opacity: 1, y: 0 }}\n          transition={{ duration: 0.5, delay: 0.1 }}\n          className=\"text-muted\"\n        >\n          全屋设备运行正常\n        </motion.p>\n        \n        <motion.div \n          initial={{ opacity: 0 }}\n          animate={{ opacity: 1 }}\n          transition={{ duration: 0.5, delay: 0.2 }}\n          className=\"flex items-center gap-4 mt-6 text-sm font-medium\"\n        >\n          <div className=\"flex items-center gap-1.5 glass-panel px-3 py-1.5 rounded-full\">\n            <Cloud size={16} className=\"text-accent\" />\n            <span>{temperature}°C</span>\n          </div>\n          <div className=\"flex items-center gap-1.5 glass-panel px-3 py-1.5 rounded-full\">\n            <Droplets size={16} className=\"text-accent\" />\n            <span>{humidity}%</span>\n          </div>\n        </motion.div>\n      </div>\n\n      <motion.button\n        whileHover={{ scale: 1.05 }}\n        whileTap={{ scale: 0.9 }}\n        onClick={onVoiceClick}\n        className=\"glass-panel-elevated w-12 h-12 rounded-full flex items-center justify-center text-primary relative overflow-hidden group\"\n      >\n        <div className=\"absolute inset-0 bg-accent/10 opacity-0 group-hover:opacity-100 transition-opacity\" />\n        <Mic size={22} className=\"relative z-10\" />\n      </motion.button>\n    </div>\n  );\n};",
+      "src/components/SceneCard.tsx": "import React from 'react';\nimport { motion, AnimatePresence } from 'framer-motion';\nimport { Home, Moon, Film, LogOut } from 'lucide-react';\nimport type { Scene } from '../types';\nimport { clsx, type ClassValue } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n\nfunction cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n\ninterface SceneCardProps {\n  scene: Scene;\n  isActive: boolean;\n  onActivate: (id: string) => void;\n}\n\nconst iconMap: Record<string, React.FC<any>> = {\n  home: Home,\n  leave: LogOut,\n  sleep: Moon,\n  movie: Film,\n};\n\nconst colorMap: Record<string, string> = {\n  home: 'text-scene-home',\n  leave: 'text-scene-leave',\n  sleep: 'text-scene-sleep',\n  movie: 'text-scene-movie',\n};\n\nconst bgMap: Record<string, string> = {\n  home: 'bg-scene-home/20',\n  leave: 'bg-scene-leave/20',\n  sleep: 'bg-scene-sleep/20',\n  movie: 'bg-scene-movie/20',\n};\n\nexport const SceneCard: React.FC<SceneCardProps> = ({ scene, isActive, onActivate }) => {\n  const Icon = iconMap[scene.id] || Home;\n\n  return (\n    <motion.button\n      whileHover={{ scale: 1.05 }}\n      whileTap={{ scale: 0.95 }}\n      onClick={() => onActivate(scene.id)}\n      className={cn(\n        \"relative flex flex-col items-center justify-center p-3 rounded-[24px] w-[88px] h-[88px] transition-all duration-500 overflow-hidden group\",\n        isActive ? \"glass-panel-elevated\" : \"glass-panel\"\n      )}\n    >\n      <AnimatePresence>\n        {isActive && (\n          <motion.div\n            initial={{ opacity: 0, scale: 0.5 }}\n            animate={{ opacity: 1, scale: 1 }}\n            exit={{ opacity: 0 }}\n            className={cn(\"absolute inset-0 z-0\", bgMap[scene.id])}\n          />\n        )}\n      </AnimatePresence>\n      \n      <div className={cn(\"relative z-10 transition-colors duration-300\", isActive ? colorMap[scene.id] : \"text-muted group-hover:text-primary\")}>\n        <Icon size={26} strokeWidth={1.5} />\n      </div>\n      <div className={cn(\"relative z-10 text-[11px] mt-2 font-medium transition-colors duration-300\", isActive ? \"text-primary\" : \"text-muted\")}>\n        {scene.name}\n      </div>\n    </motion.button>\n  );\n};",
+      "src/components/VoiceAssistant.tsx": "import React from 'react';\nimport { motion, AnimatePresence } from 'framer-motion';\n\ninterface VoiceAssistantProps {\n  isOpen: boolean;\n  onClose: () => void;\n}\n\nexport const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ isOpen, onClose }) => {\n  return (\n    <AnimatePresence>\n      {isOpen && (\n        <motion.div\n          initial={{ opacity: 0 }}\n          animate={{ opacity: 1 }}\n          exit={{ opacity: 0 }}\n          className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md\"\n          onClick={onClose}\n        >\n          <motion.div\n            initial={{ scale: 0.9, y: 20 }}\n            animate={{ scale: 1, y: 0 }}\n            exit={{ scale: 0.9, y: 20 }}\n            transition={{ type: 'spring', damping: 25, stiffness: 300 }}\n            className=\"flex flex-col items-center gap-8\"\n            onClick={e => e.stopPropagation()}\n          >\n            {/* Generative Voice Globe (Simulated with CSS for now) */}\n            <div className=\"relative w-32 h-32 rounded-full flex items-center justify-center\">\n              <motion.div \n                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}\n                transition={{ duration: 2, repeat: Infinity, ease: \"easeInOut\" }}\n                className=\"absolute inset-0 rounded-full bg-accent/30 blur-xl\"\n              />\n              <motion.div \n                animate={{ scale: [1, 1.1, 1] }}\n                transition={{ duration: 1.5, repeat: Infinity, ease: \"easeInOut\", delay: 0.2 }}\n                className=\"absolute inset-2 rounded-full bg-accent/40 blur-lg\"\n              />\n              <div className=\"absolute inset-6 rounded-full bg-accent shadow-[0_0_20px_rgba(56,189,248,0.8)]\" />\n            </div>\n\n            <motion.p \n              initial={{ opacity: 0 }}\n              animate={{ opacity: 1 }}\n              transition={{ delay: 0.2 }}\n              className=\"text-lg font-medium tracking-wide text-primary\"\n            >\n              我在听...\n            </motion.p>\n          </motion.div>\n        </motion.div>\n      )}\n    </AnimatePresence>\n  );\n};"
+    }
+  },
+  "metadata": {
+    "source_case": "outputs/v3-pipeline/003_smarthome_cursor_gemini3.1Pro",
+    "synth_method": "causal-chain-v1",
+    "stage_files_used": [
+      "meta.json",
+      "01_pm/prd.md",
+      "01_pm/requirement_spec.json",
+      "01_pm/ia_structure.json",
+      "02_designer/design_brief.md",
+      "02_designer/design_system.json",
+      "02_designer/visual_effects.json",
+      "02_designer/component_specs.json",
+      "02_designer/style_research.md",
+      "03_frontend/tech_decision.json",
+      "03_frontend/self_review.json",
+      "03_frontend/package.json",
+      "03_frontend/tailwind.config.js",
+      "03_frontend/src/main.tsx",
+      "03_frontend/src/App.tsx",
+      "03_frontend/src/types.ts",
+      "03_frontend/src/index.css",
+      "03_frontend/src/components/AuroraBackground.tsx",
+      "03_frontend/src/components/Dashboard.tsx",
+      "03_frontend/src/components/DeviceCard.tsx",
+      "03_frontend/src/components/EnvironmentHero.tsx",
+      "03_frontend/src/components/SceneCard.tsx",
+      "03_frontend/src/components/VoiceAssistant.tsx"
+    ]
+  }
+}
