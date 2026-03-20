@@ -1,0 +1,52 @@
+{
+  "use_visual_effects": true,
+  "effect_summary": "以 Canvas 路径流场为背景主层，叠加状态脉冲与组件微动效，强调高科技但不牺牲可读性。",
+  "effect_layers": [
+    {
+      "layer_id": "primary",
+      "type": "Canvas flow-field",
+      "placement": "全局背景",
+      "narrative_role": "提供路线感与探索氛围",
+      "interaction_model": "任务完成率影响流场强度"
+    },
+    {
+      "layer_id": "secondary",
+      "type": "waypoint pulse",
+      "placement": "AR 区块",
+      "narrative_role": "强调导航焦点",
+      "interaction_model": "切换 waypoint 触发脉冲"
+    }
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "canvas particle flow",
+      "purpose": "atmosphere",
+      "algorithm_family": "flow-field + noise-field",
+      "aesthetic_reference": "OpenProcessing flow-field patterns",
+      "implementation_notes": "根据 reduced-motion 降级速度和粒子数"
+    },
+    "secondary_layers": [
+      {
+        "type": "css micro-feedback",
+        "purpose": "feedback",
+        "technique": "button/number transition",
+        "interaction_with_primary": "业务反馈优先，背景层只做辅助"
+      }
+    ],
+    "component_library_layer": {
+      "selections": []
+    },
+    "interaction_hooks": [
+      "task completion",
+      "reward redemption",
+      "waypoint switching",
+      "reduced-motion toggle"
+    ],
+    "inspiration_sources": [
+      "interactive travel web experience 2026",
+      "creative coding canvas flow-field 2026"
+    ],
+    "combination_rationale": "保证叙事一致与性能可控，避免装饰层干扰核心交互。",
+    "layering_strategy": "z0 背景流场，z20 内容卡片，z40 交互叠层"
+  }
+}

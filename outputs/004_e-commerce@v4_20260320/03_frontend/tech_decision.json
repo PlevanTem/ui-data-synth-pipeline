@@ -1,0 +1,99 @@
+{
+  "experience_priority": "visual-first",
+  "wow_goals": [
+    "让用户在移动端感知到图谱驱动的决策能力，而非普通商品列表",
+    "在高信息密度下保持 premium 磨砂材质与可读性平衡",
+    "让筛选、图谱、结果、结账形成真实状态流转"
+  ],
+  "north_star_experience": "Graph Frost Navigator: 关系图谱与交易流程深度联动的跨境电商体验。",
+  "selected_stack": {
+    "framework": "react",
+    "language": "typescript",
+    "reasoning": [
+      "需要高密度状态联动与组件通信，React + TS 更易组织",
+      "便于融合 Canvas/WebGL 模块与 Framer Motion 动效编排",
+      "满足 pipeline 强制的多文件、可维护交付"
+    ],
+    "why_not_others": [
+      "nextjs: 本案为单页交互原型，SSR 价值低于开发速度",
+      "vue/svelte: 可行，但当前产线在 React 生态有更成熟交互封装",
+      "html-tailwind: 无法满足复杂状态管理与交互完整性硬约束"
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "React Three Fiber",
+      "category": "3d",
+      "why_considered": ["适合图谱/3D 关系场景"],
+      "adoption_decision": "partial",
+      "decision_reason": ["当前实现先用可控轻量交互节点，预留升级位"]
+    },
+    {
+      "name": "ReactBits",
+      "category": "component-library",
+      "why_considered": ["提供高质量动效组件和生成式背景"],
+      "adoption_decision": "partial",
+      "decision_reason": ["本版先保留原生 Canvas，后续可替换文本动效组件"]
+    },
+    {
+      "name": "GSAP ScrollTrigger",
+      "category": "animation",
+      "why_considered": ["适合复杂章节叙事与滚动编排"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["本版重点在交易流联动，避免引入过重滚动编排复杂度"]
+    }
+  ],
+  "interaction_bets": [
+    "语义查询与筛选实时联动图谱和结果列表",
+    "节点选择驱动商品收敛与信任提示",
+    "表单校验与提交反馈贯穿下单流程"
+  ],
+  "generative_art_strategy": {
+    "modes_used": ["Mode A background layer", "Mode B interactive exploration"],
+    "combination_approach": "Canvas flow-field 背景 + 关系节点交互主层 + 微动效反馈层",
+    "inspiration_sources": [
+      "https://www.awwwards.com/annual-awards-2025",
+      "https://observablehq.com/@d3/temporal-force-directed-graph",
+      "https://openprocessing.org/sketch/815894"
+    ],
+    "integration_method": "generative 模块独立在 src/generative，业务状态通过 props 驱动"
+  },
+  "visual_system_modules": [
+    { "name": "FlowFieldCanvas", "role": "generative-layer", "tech": ["Canvas 2D"], "must_keep": true },
+    { "name": "GraphPanel", "role": "data-module", "tech": ["React state"], "must_keep": true },
+    { "name": "CheckoutWizard", "role": "section", "tech": ["Zod validation"], "must_keep": true }
+  ],
+  "rendering_strategy": {
+    "use_webgl": true,
+    "use_canvas": true,
+    "use_svg_motion": false,
+    "use_3d": false,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": ["flow-field", "interactive-node-grid"]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": ["便于分层维护", "满足 pipeline 输出规范"],
+    "entry_points": ["src/main.tsx", "src/App.tsx"]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "top-nav anchors",
+    "state_management": "React state orchestration",
+    "component_communication": "props and shared state in App",
+    "data_flow": "search/filters -> graph/results -> checkout",
+    "animation_orchestration": "framer-motion for toasts and transitions"
+  },
+  "performance_guardrails": [
+    "背景粒子数量按 reduced-motion 与设备性能降级",
+    "交互 loading 使用短延迟模拟，避免主线程长阻塞"
+  ],
+  "fallback_plan": [
+    "低性能设备下减少背景粒子与动画强度",
+    "保持核心交互可用，即使视觉层降级"
+  ],
+  "brand_experience_notes": [
+    "通过玻璃层级和高对比文本保持 premium 信任感",
+    "避免模板化紫蓝霓虹科技风"
+  ]
+}

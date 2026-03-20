@@ -1,0 +1,340 @@
+{
+  "components": [
+    {
+      "name": "WorkspaceHeader",
+      "purpose": "展示全局上下文与协作态",
+      "variants": [
+        "default",
+        "compact"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "切换时间范围触发全局刷新",
+        "在线成员hover显示明细"
+      ],
+      "linkage": {
+        "affects": [
+          "FocusConsole",
+          "GeoHeatmapPanel",
+          "ReportScheduler"
+        ],
+        "affected_by": [
+          "GlobalFilterBar"
+        ],
+        "shared_state": [
+          "timeRange",
+          "riskLevel"
+        ]
+      },
+      "motion_notes": [
+        "状态徽标淡入120ms"
+      ],
+      "responsive_notes": [
+        "mobile折叠为两行"
+      ]
+    },
+    {
+      "name": "GlobalFilterBar",
+      "purpose": "时间/区域/风险筛选与搜索",
+      "variants": [
+        "desktop-inline",
+        "mobile-sheet"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "筛选变化防抖200ms后广播",
+        "搜索支持关键词高亮"
+      ],
+      "linkage": {
+        "affects": [
+          "TaskQueue",
+          "GeoHeatmapPanel",
+          "ReportInsights"
+        ],
+        "affected_by": [],
+        "shared_state": [
+          "query",
+          "region",
+          "severity",
+          "sort"
+        ]
+      },
+      "motion_notes": [
+        "chip选择有scale+shadow反馈"
+      ],
+      "responsive_notes": [
+        "mobile进入抽屉"
+      ]
+    },
+    {
+      "name": "WhiteboardCanvas",
+      "purpose": "实时协作画布",
+      "variants": [
+        "split-view",
+        "focus-mode"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "便签/连线增删改",
+        "撤销重做",
+        "点击节点联动聊天线程"
+      ],
+      "linkage": {
+        "affects": [
+          "SecureChatPanel",
+          "DecisionSnapshotModal"
+        ],
+        "affected_by": [
+          "GlobalFilterBar"
+        ],
+        "shared_state": [
+          "selectedNode",
+          "presenceMap"
+        ]
+      },
+      "motion_notes": [
+        "remote cursor 200ms ease-out 插值"
+      ],
+      "responsive_notes": [
+        "mobile默认focus-mode"
+      ]
+    },
+    {
+      "name": "SecureChatPanel",
+      "purpose": "端到端加密消息与线程",
+      "variants": [
+        "channel-list",
+        "thread-focus"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "发送前校验内容",
+        "失败重试",
+        "点击消息跳转白板/地图"
+      ],
+      "linkage": {
+        "affects": [
+          "WhiteboardCanvas",
+          "GeoHeatmapPanel",
+          "ToastCenter"
+        ],
+        "affected_by": [
+          "WorkspaceHeader"
+        ],
+        "shared_state": [
+          "activeChannel",
+          "messageStatus"
+        ]
+      },
+      "motion_notes": [
+        "消息入场stagger 35ms"
+      ],
+      "responsive_notes": [
+        "mobile采用全屏抽屉线程"
+      ]
+    },
+    {
+      "name": "GeoHeatmapPanel",
+      "purpose": "地理追踪与热力展示",
+      "variants": [
+        "map+list",
+        "map-only"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "时间窗口滑杆",
+        "图层开关",
+        "点击热点反向筛选任务"
+      ],
+      "linkage": {
+        "affects": [
+          "TaskQueue",
+          "SecureChatPanel"
+        ],
+        "affected_by": [
+          "GlobalFilterBar"
+        ],
+        "shared_state": [
+          "heatWindow",
+          "selectedRegion"
+        ]
+      },
+      "motion_notes": [
+        "热点pulse按严重度调节"
+      ],
+      "responsive_notes": [
+        "tablet默认map-only"
+      ]
+    },
+    {
+      "name": "ReportSchedulerForm",
+      "purpose": "报表计划配置与提交流程",
+      "variants": [
+        "inline",
+        "modal"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "字段校验",
+        "提交loading",
+        "成功/失败toast"
+      ],
+      "linkage": {
+        "affects": [
+          "ReportRunTimeline",
+          "ToastCenter"
+        ],
+        "affected_by": [
+          "WorkspaceHeader"
+        ],
+        "shared_state": [
+          "templateId",
+          "cadence",
+          "recipients"
+        ]
+      },
+      "motion_notes": [
+        "提交成功icon spring弹性"
+      ],
+      "responsive_notes": [
+        "mobile使用step form"
+      ]
+    },
+    {
+      "name": "GenerativeFlowBackdrop",
+      "purpose": "背景生成式视觉层",
+      "variants": [
+        "low-motion",
+        "standard",
+        "high-alert"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading",
+        "error",
+        "empty"
+      ],
+      "interaction_notes": [
+        "读取全局风险与筛选参数更新流场"
+      ],
+      "linkage": {
+        "affects": [],
+        "affected_by": [
+          "GlobalFilterBar",
+          "TaskQueue"
+        ],
+        "shared_state": [
+          "riskLevel",
+          "activityScore"
+        ]
+      },
+      "motion_notes": [
+        "状态切换时1200ms缓动过渡参数"
+      ],
+      "responsive_notes": [
+        "移动端粒子数减半"
+      ]
+    }
+  ],
+  "interaction_flows": [
+    {
+      "trigger": "选择高风险筛选",
+      "source_component": "GlobalFilterBar",
+      "target_components": [
+        "TaskQueue",
+        "GeoHeatmapPanel",
+        "GenerativeFlowBackdrop"
+      ],
+      "state_changes": [
+        "severity=high",
+        "heat-intensity++",
+        "flow-speed++"
+      ],
+      "animation": "filter chip pulse + cards reorder"
+    },
+    {
+      "trigger": "点击白板节点",
+      "source_component": "WhiteboardCanvas",
+      "target_components": [
+        "SecureChatPanel",
+        "DecisionSnapshotModal"
+      ],
+      "state_changes": [
+        "activeThread=linked",
+        "snapshotSource=selectedNode"
+      ],
+      "animation": "thread panel slide-in"
+    },
+    {
+      "trigger": "提交报表计划",
+      "source_component": "ReportSchedulerForm",
+      "target_components": [
+        "ReportRunTimeline",
+        "ToastCenter"
+      ],
+      "state_changes": [
+        "form=loading->success",
+        "timeline.append(run)"
+      ],
+      "animation": "button morph + success toast"
+    }
+  ]
+}

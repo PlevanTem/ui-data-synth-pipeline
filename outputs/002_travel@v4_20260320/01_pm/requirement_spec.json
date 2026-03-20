@@ -1,0 +1,386 @@
+{
+  "project_name": "Travel Quest AR",
+  "domain": "travel",
+  "core_problem": "一句话：这个产品帮助旅行者在旅行前规划与旅行中探索的场景下解决“流程繁琐、状态丢失与无障碍落地不清”的问题，让他们能更省心地完成行程并获得沉浸式 AR 导览体验。",
+  "design_intent": {
+    "target_users": [
+      {
+        "type": "短途/轻旅行规划者",
+        "tech_maturity": "medium",
+        "aesthetic_maturity": "medium",
+        "primary_goal": "用最少步骤把行程变成可执行的下一步"
+      },
+      {
+        "type": "需要无障碍支持的旅行者",
+        "tech_maturity": "medium",
+        "aesthetic_maturity": "high",
+        "primary_goal": "在关键场景下获得清晰、可验证、可控的无障碍体验"
+      }
+    ],
+    "emotional_goal": "第一屏冷静专业 + 在任务完成与进入 AR 时获得探索兴奋感",
+    "trust_signals_needed": true,
+    "information_density": "high",
+    "interaction_depth": "rich",
+    "brand_personality": [
+      "high-tech",
+      "calm",
+      "playful",
+      "helpful"
+    ]
+  },
+  "entities": [
+    {
+      "name": "User",
+      "key_attributes": [
+        "id",
+        "displayName",
+        "pointsBalance",
+        "accessibilityProfile"
+      ],
+      "relations": [
+        "User 1 - N Task",
+        "User 1 - N PointsLedgerEntry",
+        "User 1 - 1 AccessibilityProfile"
+      ]
+    },
+    {
+      "name": "TripPlan",
+      "key_attributes": [
+        "tripId",
+        "destination",
+        "startDate",
+        "endDate",
+        "stops"
+      ],
+      "relations": [
+        "TripPlan 1 - N ARWaypoint",
+        "TripPlan 1 - N Task (任务与行程绑定)"
+      ]
+    },
+    {
+      "name": "Task",
+      "key_attributes": [
+        "taskId",
+        "category",
+        "title",
+        "description",
+        "progress",
+        "state"
+      ],
+      "relations": [
+        "Task N - 1 TripPlan",
+        "Task 1 - N PointsLedgerEntry (完成可触发积分)"
+      ]
+    },
+    {
+      "name": "RewardItem",
+      "key_attributes": [
+        "rewardId",
+        "name",
+        "price",
+        "stock",
+        "ownedCount"
+      ],
+      "relations": [
+        "RewardItem N - 1 Shop",
+        "RewardItem 1 - N PointsLedgerEntry (兑换产生账本记录)"
+      ]
+    },
+    {
+      "name": "PointsLedgerEntry",
+      "key_attributes": [
+        "entryId",
+        "type",
+        "amount",
+        "reason",
+        "timestamp"
+      ],
+      "relations": [
+        "PointsLedgerEntry N - 1 User"
+      ]
+    },
+    {
+      "name": "AccessibilityProfile",
+      "key_attributes": [
+        "reducedMotion",
+        "fontScale",
+        "captions",
+        "contrastMode",
+        "mobilitySupport"
+      ],
+      "relations": [
+        "AccessibilityProfile 1 - 1 User"
+      ]
+    },
+    {
+      "name": "ARWaypoint",
+      "key_attributes": [
+        "waypointId",
+        "label",
+        "hintText",
+        "estimatedDistance",
+        "arCategory"
+      ],
+      "relations": [
+        "ARWaypoint N - 1 TripPlan"
+      ]
+    }
+  ],
+  "functional_architecture": [
+    {
+      "module": "AppShell & Navigation",
+      "capabilities": [
+        "多视图导航（任务/商城/表单/AR）",
+        "全局主题与可访问性偏好注入"
+      ],
+      "depends_on": [
+        "Persistence Layer"
+      ]
+    },
+    {
+      "module": "Gamification Engine",
+      "capabilities": [
+        "任务进度模型（todo/active/completed）",
+        "完成任务->积分发放",
+        "任务列表的筛选/分类展示"
+      ],
+      "depends_on": [
+        "Persistence Layer"
+      ]
+    },
+    {
+      "module": "Points Shop",
+      "capabilities": [
+        "商品列表与可兑换校验",
+        "兑换行为的账本记录与库存/拥有数量更新",
+        "兑换后的反馈（toast + 动效）"
+      ],
+      "depends_on": [
+        "Gamification Engine",
+        "Persistence Layer"
+      ]
+    },
+    {
+      "module": "A11y Trip Form",
+      "capabilities": [
+        "无障碍适配的多步表单",
+        "实时验证与错误提示",
+        "提交后将偏好应用到页面状态"
+      ],
+      "depends_on": [
+        "Persistence Layer"
+      ]
+    },
+    {
+      "module": "AR Guide Module",
+      "capabilities": [
+        "相机权限请求与状态机",
+        "AR overlay（相机画面 + waypoints 标注）",
+        "waypoint 选择联动 overlay 与提示文案"
+      ],
+      "depends_on": [
+        "TripPlan",
+        "Persistence Layer"
+      ]
+    },
+    {
+      "module": "Persistence Layer",
+      "capabilities": [
+        "localStorage 读写与版本兼容",
+        "页面刷新保持：积分、任务进度、表单提交结果、AR 选择项"
+      ],
+      "depends_on": []
+    }
+  ],
+  "data_interactions": [
+    {
+      "action": "completeTask",
+      "trigger": "user",
+      "type": "write",
+      "depends_on": []
+    },
+    {
+      "action": "redeemReward",
+      "trigger": "user",
+      "type": "write",
+      "depends_on": [
+        "Gamification Engine"
+      ]
+    },
+    {
+      "action": "submitA11yForm",
+      "trigger": "user",
+      "type": "write",
+      "depends_on": []
+    },
+    {
+      "action": "persistState",
+      "trigger": "system",
+      "type": "async",
+      "depends_on": []
+    },
+    {
+      "action": "loadState",
+      "trigger": "system",
+      "type": "read",
+      "depends_on": []
+    },
+    {
+      "action": "cameraPermissionState",
+      "trigger": "user",
+      "type": "realtime",
+      "depends_on": []
+    },
+    {
+      "action": "arOverlayRender",
+      "trigger": "system",
+      "type": "realtime",
+      "depends_on": [
+        "AR Guide Module"
+      ]
+    }
+  ],
+  "execution_contracts": {
+    "must_deliver": [
+      {
+        "id": "M01",
+        "feature": "任务完成与积分发放闭环",
+        "feature_type": "explicit",
+        "user_value": "完成任务后立刻获得进度更新与积分回馈",
+        "acceptance_criteria": "在任务卡片上点击“完成”后：任务状态从 todo->completed，进度条/完成标识刷新；积分余额 pointsBalance 立即增加；账本中新增一条 ledger entry（type=earn，amount为固定值）；且在页面刷新后上述变化仍保留。",
+        "fail_condition": "点击“完成”后积分未变化、任务状态未更新、或刷新后状态丢失。",
+        "expression_goal": "表现力追求即时反馈与轻量成就动效（progress/points 都有可感知变化），而不是仅改文字。"
+      },
+      {
+        "id": "M02",
+        "feature": "积分商城兑换与校验",
+        "feature_type": "explicit",
+        "user_value": "用积分兑换奖励，并清晰看到扣除与拥有数量变化",
+        "acceptance_criteria": "在商城选择商品并点击“兑换”：当 pointsBalance >= price 时可完成兑换；pointsBalance 扣减，ownedCount 增加，账本新增（type=spend）；当 pointsBalance < price 时按钮不可用且有明确提示（error message）；刷新后状态仍保留。",
+        "fail_condition": "允许无积分兑换、扣减/拥有数量未更新、或缺失明确的不可用提示。",
+        "expression_goal": "追求兑换前后的可视化反馈（扣分动画/按钮状态变化）与明确可理解的错误反馈。"
+      },
+      {
+        "id": "M03",
+        "feature": "无障碍多步表单：验证、错误提示与提交反馈",
+        "feature_type": "explicit",
+        "user_value": "用可理解的方式配置无障碍偏好，降低表单出错成本",
+        "acceptance_criteria": "表单至少 3 步：每步都有 required 字段；输入不合法时有实时错误提示（near field）并将焦点移动到错误字段；提交时出现 loading 态并在成功后 toast 提示；页面存在 aria-label/aria-live 与可见 focus ring；提交后偏好应用到页面（至少减少动效开关或字号缩放生效）。",
+        "fail_condition": "无实时验证/错误提示、提交无 loading/无反馈、或提交后偏好未生效；并且键盘无法正确定位到可操作控件。",
+        "expression_goal": "追求“高信任的表单体验”：错误信息具体可执行，且不会用炫技破坏可读性。"
+      },
+      {
+        "id": "M04",
+        "feature": "AR 导览模式：权限状态机与可用降级",
+        "feature_type": "implicit",
+        "user_value": "在现场快速获得下一站的叠加指引，即使无法访问相机仍可继续使用",
+        "acceptance_criteria": "点击“开始 AR”：若允许相机，则展示 camera 画面并叠加 waypoint 标注层（label/hint/方向指示）；若拒绝权限或设备不支持，则显示 mock overlay（不为空白）并给出可理解指引（例如开启权限后重试）；并且 waypoint 选择可联动 overlay 内容；AR 有关闭按钮并释放媒体流。",
+        "fail_condition": "权限拒绝时出现空白/无法交互；或 overlay 不响应 waypoint 选择；或关闭 AR 后相机会继续占用。",
+        "expression_goal": "追求沉浸感 + 可用性安全：沉浸层要有，但失败路径仍然可用且不会让用户卡住。"
+      },
+      {
+        "id": "M05",
+        "feature": "导航切换与状态持久化",
+        "feature_type": "implicit",
+        "user_value": "在任务、商城、表单、AR之间切换时不会丢失关键进度",
+        "acceptance_criteria": "通过顶部导航/标签页切换到不同视图时：关键状态（积分、任务进度、拥有数量、已提交的表单偏好、AR 选择的目的地/waypoint）可在返回后保持；并可在页面刷新后恢复。",
+        "fail_condition": "切换视图后状态被重置或部分状态丢失，导致用户无法完成任务。",
+        "expression_goal": "追求“流程感”：用户不会觉得自己在不同模块里反复重来。"
+      },
+      {
+        "id": "M06",
+        "feature": "加载态/空态/错误态完整性",
+        "feature_type": "implicit",
+        "user_value": "在数据加载、为空、或失败时仍可理解并继续前进",
+        "acceptance_criteria": "至少覆盖：任务列表 loading + 空状态 + error + retry；商城 inventory loading/empty；AR 权限/设备不支持状态提示；每个状态都有明确视觉提示与可操作按钮（例如重试/切换到表单/返回）。",
+        "fail_condition": "某些状态为空白或只有文字无引导；或缺少 retry/恢复路径。",
+        "expression_goal": "追求“系统感”：状态切换像产品而不是脚本。"
+      },
+      {
+        "id": "M07",
+        "feature": "prefers-reduced-motion 兼容（生成式背景与动效降级）",
+        "feature_type": "implicit",
+        "user_value": "减少不适感，保证可访问性与舒适度",
+        "acceptance_criteria": "当用户系统设置 prefers-reduced-motion=reduce：生成式背景停/降速；重度动画减少到 opacity/transform 级别并缩短持续时间；页面仍保持可读性和交互可用。",
+        "fail_condition": "reduce motion 时仍持续高频动画或背景抢占注意力，造成可用性问题。",
+        "expression_goal": "追求“克制但不廉价”的降级：同样高科技质感但更安静。"
+      }
+    ],
+    "should_deliver": [
+      {
+        "id": "S01",
+        "feature": "任务与商城支持搜索/筛选/排序的联动",
+        "feature_type": "explicit",
+        "user_value": "快速找到下一步与目标兑换品",
+        "ideal_form": "任务支持按分类筛选（check-in/museum/ar/food），并与商城联动展示“建议奖励”；商城支持按价格区间排序与库存过滤；联动过程有轻量动画反馈。",
+        "acceptable_fallback": "提供至少一种筛选（分类或价格），并保持可用且无明显布局抖动。"
+      },
+      {
+        "id": "S02",
+        "feature": "积分账本可视化（小型数据面板）",
+        "feature_type": "implicit",
+        "user_value": "理解积分来源与去向，形成信任",
+        "ideal_form": "账本按类型折叠展开，并提供“本次行程累计”汇总；点击条目可显示 reason 详情。",
+        "acceptable_fallback": "展示最近 5 条账本记录，支持只读查看。"
+      },
+      {
+        "id": "S03",
+        "feature": "AR waypoint 距离估算（基于模拟或参数）",
+        "feature_type": "implicit",
+        "user_value": "更直观地判断下一站的相对远近",
+        "ideal_form": "根据已选 destination 与 waypoint index 计算估算距离并实时更新（可随滚动/方向指示变化）。",
+        "acceptable_fallback": "展示静态距离区间文案并支持切换 waypoint。"
+      }
+    ],
+    "explicitly_excluded": [
+      {
+        "id": "X01",
+        "feature": "真正的 WebXR 空间锚点与真实世界 3D 地图匹配",
+        "exclusion_reason": "本案目标强调可用性与交互闭环；WebXR 的设备兼容性与开发成本过高，会影响按期可运行交付。"
+      },
+      {
+        "id": "X02",
+        "feature": "真实 GPS 导航与地图 API 接入",
+        "exclusion_reason": "需要额外服务依赖与复杂权限处理；本案可使用模拟停靠点与 AR overlay 提供同等体验闭环。"
+      }
+    ]
+  },
+  "non_functional_requirements": {
+    "performance_perception": "前端操作（完成任务/兑换/提交）需在 500ms 内完成可感知反馈；生成式背景限制 particle/帧开销并支持暂停。",
+    "visual_trust_level": "premium",
+    "accessibility_baseline": "WCAG AA",
+    "responsive_priority": "mobile-first"
+  },
+  "constraints": {
+    "design_constraints": [
+      "High-tech 蓝黑冷色调",
+      "强调层级与可读性；避免过度玻璃拟态遮挡内容",
+      "生成式视觉层不得压制主信息"
+    ],
+    "tech_constraints": [
+      "TypeScript + 组件化前端工程",
+      "Tailwind CSS V4 原生架构（禁止 tailwind.config.js）"
+    ],
+    "brand_constraints": [
+      "以“任务->积分->兑换->现场AR”作为叙事主线"
+    ]
+  },
+  "open_risks": [
+    {
+      "risk": "移动端相机权限与浏览器兼容差异（iOS Safari 限制）",
+      "impact": "high",
+      "mitigation": "提供权限拒绝/不支持时的 mock overlay 与继续可用的 AR 交互路径。"
+    },
+    {
+      "risk": "生成式背景在低性能设备造成掉帧",
+      "impact": "medium",
+      "mitigation": "限制粒子数量、降低更新频率并实现 reduced-motion 静态降级。"
+    },
+    {
+      "risk": "多步表单的可访问性与键盘流影响用户体验",
+      "impact": "medium",
+      "mitigation": "统一 focus 管理、aria-live 错误提示与显式 focus ring。"
+    }
+  ]
+}
+

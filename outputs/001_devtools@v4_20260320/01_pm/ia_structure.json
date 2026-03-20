@@ -1,0 +1,124 @@
+{
+  "page_type": "web-app",
+  "navigation_model": "hybrid",
+  "content_zones": [
+    {
+      "id": "zone_global_header",
+      "label": "全局控制与模式切换",
+      "content_intent": "让用户快速切换分析视图与全局条件，建立当前工作上下文。",
+      "priority": "P0",
+      "must_contain": ["当前 workspace 与时间窗", "主导航入口", "全局搜索/查询入口", "主题切换与状态提示"],
+      "user_goal": "在进入分析前完成上下文设置并确认当前模式。",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M03", "M05"]
+    },
+    {
+      "id": "zone_hero_insight",
+      "label": "性能总览与关键告警",
+      "content_intent": "在首屏建立系统健康认知并暴露最紧急瓶颈。",
+      "priority": "P0",
+      "must_contain": ["核心 KPI 指标", "异常波动提示", "瓶颈严重度摘要", "下一步推荐动作"],
+      "user_goal": "在 10 秒内判断是否需要立即下钻排查。",
+      "designer_latitude": "fully-open",
+      "linked_contracts": ["M02", "M05"]
+    },
+    {
+      "id": "zone_topology_explorer",
+      "label": "拓扑渲染探索区",
+      "content_intent": "让用户通过空间化视图定位高影响依赖链与异常节点。",
+      "priority": "P0",
+      "must_contain": ["可交互渲染画布", "节点状态信息", "筛选影响提示", "详情触发入口"],
+      "user_goal": "锁定问题节点并理解上下游影响范围。",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M01", "M05", "M06"]
+    },
+    {
+      "id": "zone_trend_analytics",
+      "label": "趋势图与时序对比",
+      "content_intent": "通过时间维度识别瓶颈触发窗口并验证变化趋势。",
+      "priority": "P0",
+      "must_contain": ["延迟/吞吐/错误率趋势", "可切换指标维度", "图表交互反馈", "联动说明"],
+      "user_goal": "确认异常何时开始、持续多久、影响哪些指标。",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M02", "M05"]
+    },
+    {
+      "id": "zone_data_grid",
+      "label": "高性能数据表格",
+      "content_intent": "提供可检索、可排序、可筛选的明细层用于证据验证。",
+      "priority": "P0",
+      "must_contain": ["可搜索列", "排序与筛选控件", "行级详情入口", "空态/错误态提示"],
+      "user_goal": "从明细数据中验证推断并导出下一步动作。",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M04", "M05", "M06"]
+    },
+    {
+      "id": "zone_query_voice",
+      "label": "语音与自然语言查询工作台",
+      "content_intent": "降低查询门槛并将自然语言快速转化为可执行过滤条件。",
+      "priority": "P1",
+      "must_contain": ["语音输入状态", "查询文本预览", "查询执行反馈", "结果映射说明"],
+      "user_goal": "以最小输入成本触发有效查询。",
+      "designer_latitude": "fully-open",
+      "linked_contracts": ["M03", "M05", "M06"]
+    },
+    {
+      "id": "zone_feedback_states",
+      "label": "系统反馈与恢复引导",
+      "content_intent": "在加载、空数据、异常等边界条件下维持任务连续性。",
+      "priority": "P1",
+      "must_contain": ["加载反馈", "空态行动建议", "错误恢复按钮", "操作通知机制"],
+      "user_goal": "在非理想状态下仍可继续排障流程。",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": ["M06"]
+    }
+  ],
+  "critical_flows": [
+    {
+      "flow_name": "从异常告警到根因定位",
+      "steps": [
+        "进入总览查看关键异常",
+        "切换时间范围并确认趋势异常窗口",
+        "在拓扑视图定位高耗时节点",
+        "打开详情并在表格中验证证据"
+      ],
+      "success_condition": "用户在单次会话中完成异常定位并获得可执行修复建议。"
+    },
+    {
+      "flow_name": "语音驱动的快速查询",
+      "steps": [
+        "触发语音输入",
+        "确认转写文本",
+        "执行查询并自动应用筛选",
+        "在图表和表格中查看同步结果"
+      ],
+      "success_condition": "无需手动复杂筛选即可得到与意图一致的分析结果。"
+    }
+  ],
+  "responsive_priorities": [
+    {
+      "breakpoint": "mobile",
+      "key_adaptations": [
+        "拓扑视图与趋势图采用分段折叠浏览",
+        "表格切换为关键字段卡片化",
+        "语音入口与全局查询固定在底部快捷区"
+      ]
+    },
+    {
+      "breakpoint": "tablet",
+      "key_adaptations": [
+        "保留双栏分析布局",
+        "图表与明细使用可切换面板",
+        "侧边详情改为抽屉"
+      ]
+    },
+    {
+      "breakpoint": "desktop",
+      "key_adaptations": [
+        "展示全量多区块协同视图",
+        "保持拓扑、图表、表格并行可见",
+        "保留高密度操作控件与快捷键提示"
+      ]
+    }
+  ]
+}

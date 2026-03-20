@@ -1,0 +1,269 @@
+{
+  "project_name": "PulseForge Dev Performance Studio",
+  "domain": "devtools",
+  "core_problem": "这个产品帮助全栈开发与性能工程团队在高并发排障与性能优化场景下解决数据规模过大导致定位缓慢和决策不确定的问题，让他们能快速锁定瓶颈并形成可执行优化动作。",
+  "design_intent": {
+    "target_users": [
+      {
+        "type": "性能工程师",
+        "tech_maturity": "high",
+        "aesthetic_maturity": "high",
+        "primary_goal": "在分钟级定位性能瓶颈并验证优化收益"
+      },
+      {
+        "type": "资深前端与可观测性开发者",
+        "tech_maturity": "high",
+        "aesthetic_maturity": "medium",
+        "primary_goal": "通过可视化与查询联动快速理解系统退化路径"
+      },
+      {
+        "type": "技术负责人/架构师",
+        "tech_maturity": "high",
+        "aesthetic_maturity": "medium",
+        "primary_goal": "评估性能风险优先级并驱动团队协作修复"
+      }
+    ],
+    "emotional_goal": "打开产品第一感受是专业、稳健、低延迟；使用过程中维持可控感与探索掌控感，避免高压排障时的信息焦虑。",
+    "trust_signals_needed": true,
+    "information_density": "high",
+    "interaction_depth": "immersive",
+    "brand_personality": [
+      "precision-engineering",
+      "calm-dark-tech",
+      "soft-neumorphic-depth",
+      "data-first-confidence"
+    ]
+  },
+  "entities": [
+    {
+      "name": "Workspace",
+      "key_attributes": ["workspace_id", "name", "environments", "owners", "default_time_range"],
+      "relations": ["Workspace has many PerformanceRuns", "Workspace has many QuerySessions"]
+    },
+    {
+      "name": "PerformanceRun",
+      "key_attributes": ["run_id", "timestamp", "service", "latency_p95", "throughput", "error_rate", "resource_snapshot"],
+      "relations": ["PerformanceRun has many TraceNodes", "PerformanceRun has many MetricsSeries"]
+    },
+    {
+      "name": "TraceNode",
+      "key_attributes": ["node_id", "span_name", "duration_ms", "parent_id", "service", "status"],
+      "relations": ["TraceNode belongs to PerformanceRun", "TraceNode links to BottleneckInsights"]
+    },
+    {
+      "name": "BottleneckInsight",
+      "key_attributes": ["insight_id", "severity", "suspected_cause", "confidence", "suggested_fix", "impact_estimation"],
+      "relations": ["BottleneckInsight generated from TraceNode and MetricsSeries"]
+    },
+    {
+      "name": "QuerySession",
+      "key_attributes": ["session_id", "input_mode", "query_text", "voice_transcript", "filters", "result_set"],
+      "relations": ["QuerySession reads PerformanceRun and BottleneckInsight"]
+    }
+  ],
+  "functional_architecture": [
+    {
+      "module": "Realtime Rendering Core",
+      "capabilities": ["WebGL massive node rendering", "zoom/pan/lasso", "GPU culling and level-of-detail"],
+      "depends_on": ["Telemetry Aggregation", "Interaction State Hub"]
+    },
+    {
+      "module": "Query & Voice Intelligence",
+      "capabilities": ["natural language query parser", "voice command capture and intent mapping", "result highlighting"],
+      "depends_on": ["Interaction State Hub", "Bottleneck Analysis Engine"]
+    },
+    {
+      "module": "Insight & Visualization",
+      "capabilities": ["dynamic SVG trend charts", "comparative timeline", "micro-interaction based drill-down"],
+      "depends_on": ["Telemetry Aggregation", "Interaction State Hub"]
+    },
+    {
+      "module": "Dark Neumorphic Data Grid",
+      "capabilities": ["high-density table", "sort/filter/pin columns", "virtualized rendering and keyboard nav"],
+      "depends_on": ["Telemetry Aggregation", "Interaction State Hub"]
+    },
+    {
+      "module": "Interaction State Hub",
+      "capabilities": ["global filters", "cross-module state sync", "toast/modal workflow"],
+      "depends_on": []
+    },
+    {
+      "module": "Experience Reliability Layer",
+      "capabilities": ["loading skeletons", "error recovery", "empty states", "reduced motion mode"],
+      "depends_on": ["Interaction State Hub"]
+    }
+  ],
+  "data_interactions": [
+    {
+      "action": "加载选定 workspace 的性能运行数据",
+      "trigger": "user",
+      "type": "read",
+      "depends_on": []
+    },
+    {
+      "action": "切换时间范围并重算可视化与表格结果",
+      "trigger": "user",
+      "type": "async",
+      "depends_on": ["加载选定 workspace 的性能运行数据"]
+    },
+    {
+      "action": "实时更新关键指标卡与趋势图",
+      "trigger": "system",
+      "type": "realtime",
+      "depends_on": ["切换时间范围并重算可视化与表格结果"]
+    },
+    {
+      "action": "语音输入转文本并触发查询",
+      "trigger": "user",
+      "type": "async",
+      "depends_on": []
+    },
+    {
+      "action": "查询条件联动筛选图表、渲染视图和数据表",
+      "trigger": "system",
+      "type": "read",
+      "depends_on": ["语音输入转文本并触发查询"]
+    },
+    {
+      "action": "点击瓶颈节点展开详情并展示修复建议",
+      "trigger": "user",
+      "type": "read",
+      "depends_on": ["查询条件联动筛选图表、渲染视图和数据表"]
+    }
+  ],
+  "execution_contracts": {
+    "must_deliver": [
+      {
+        "id": "M01",
+        "feature": "WebGL 大规模拓扑渲染与交互探索",
+        "feature_type": "explicit",
+        "user_value": "快速在高节点量下识别异常热点与依赖链路",
+        "acceptance_criteria": "用户可在主视图中执行缩放、拖拽、悬浮高亮、点击节点查看详情，且过滤条件变化后视图结果同步更新。",
+        "fail_condition": "渲染视图仅静态展示、无节点交互，或过滤后视图不刷新。",
+        "expression_goal": "形成前中后景分层与流畅动效，强调性能数据空间感而非平面堆叠。"
+      },
+      {
+        "id": "M02",
+        "feature": "动态 SVG 图表与微交互联动",
+        "feature_type": "explicit",
+        "user_value": "通过趋势变化快速判断异常时间窗与指标关系",
+        "acceptance_criteria": "趋势图支持 hover tooltip、图例切换、时间窗切换，并可驱动下方表格与洞察卡数据变化。",
+        "fail_condition": "图表为静态图或与其他区块无联动。",
+        "expression_goal": "图表过渡与点线反馈细腻，数据变化可感知且不干扰阅读。"
+      },
+      {
+        "id": "M03",
+        "feature": "语音控制与自然语言查询入口",
+        "feature_type": "explicit",
+        "user_value": "在高压排障场景中以更低操作成本发起查询",
+        "acceptance_criteria": "用户可触发语音按钮模拟录入并生成查询文本，提交后更新筛选状态与结果面板。",
+        "fail_condition": "语音入口仅装饰不可触发，或查询不影响结果。",
+        "expression_goal": "语音态有清晰状态反馈（listening/processing/success/error）并与整体动效节奏一致。"
+      },
+      {
+        "id": "M04",
+        "feature": "暗黑模式新拟态高性能数据表格",
+        "feature_type": "explicit",
+        "user_value": "在高密度数据下保持可读性与扫描效率",
+        "acceptance_criteria": "表格支持搜索、排序、筛选、空状态、加载状态和错误恢复，且可在暗色主题下保持可读对比。",
+        "fail_condition": "表格只展示静态行，缺失排序筛选或状态反馈。",
+        "expression_goal": "软 UI 层次通过阴影与内凹/外凸关系体现，不牺牲信息密度。"
+      },
+      {
+        "id": "M05",
+        "feature": "跨区块状态联动与导航切换",
+        "feature_type": "implicit",
+        "user_value": "避免在多模块间重复设置条件，保持连续分析流",
+        "acceptance_criteria": "导航切换、筛选器和标签页会真实切换视图并维持共享状态；任意模块操作可触发 toast 或详情面板。",
+        "fail_condition": "导航不可用、状态不同步、组件间无通信。",
+        "expression_goal": "视图切换具备平滑转场和清晰状态边界。"
+      },
+      {
+        "id": "M06",
+        "feature": "完整边界状态体系（loading/empty/error/retry）",
+        "feature_type": "implicit",
+        "user_value": "在异常与弱网下仍能完成任务，不产生操作中断",
+        "acceptance_criteria": "关键模块均具备加载骨架、空数据提示、错误提示和重试路径。",
+        "fail_condition": "出现空白区块或错误后无恢复指引。",
+        "expression_goal": "状态反馈具有可读文案与柔和动效，不造成视觉惊跳。"
+      }
+    ],
+    "should_deliver": [
+      {
+        "id": "S01",
+        "feature": "可切换的性能洞察叙事模式（Overview / Root Cause / Optimization）",
+        "feature_type": "explicit",
+        "user_value": "按任务阶段组织信息，降低理解负担",
+        "ideal_form": "三种分析模式具备差异化布局、动画转场与重点信息重排。",
+        "acceptable_fallback": "保留单一布局，但通过 tabs 切换数据重点并更新关键文案。"
+      },
+      {
+        "id": "S02",
+        "feature": "键盘快捷操作与命令面板",
+        "feature_type": "implicit",
+        "user_value": "提升高频用户操作效率",
+        "ideal_form": "支持命令面板唤起、快速筛选与跳转常用视图。",
+        "acceptable_fallback": "提供基础快捷键（切换主题、聚焦搜索、打开帮助）。"
+      },
+      {
+        "id": "S03",
+        "feature": "可参数化生成式背景层",
+        "feature_type": "implicit",
+        "user_value": "强化品牌识别并映射系统活性",
+        "ideal_form": "背景流场/粒子根据数据状态改变密度与流速。",
+        "acceptable_fallback": "保持轻量粒子层，仅响应主题切换和鼠标移动。"
+      }
+    ],
+    "explicitly_excluded": [
+      {
+        "id": "X01",
+        "feature": "多租户权限管理后台",
+        "exclusion_reason": "本次目标是性能分析交互体验验证，不涉及组织级治理配置。"
+      },
+      {
+        "id": "X02",
+        "feature": "真实后端接入与生产级鉴权",
+        "exclusion_reason": "本次聚焦前端体验与交互契约，数据层采用可控 mock 流程。"
+      }
+    ]
+  },
+  "non_functional_requirements": {
+    "performance_perception": "关键交互反馈应在 100-200ms 内可感知；高负载可视化仍需保持平滑感。",
+    "visual_trust_level": "premium",
+    "accessibility_baseline": "WCAG AA",
+    "responsive_priority": "balanced"
+  },
+  "constraints": {
+    "design_constraints": [
+      "暗色主题优先",
+      "新拟态软 UI 语言保持一致",
+      "高信息密度下必须控制视觉噪音"
+    ],
+    "tech_constraints": [
+      "前端必须使用 TypeScript 组件化工程",
+      "需支持 WebGL/Canvas 视觉层与 SVG 图表共存",
+      "必须实现区块间状态联动与边界状态"
+    ],
+    "brand_constraints": [
+      "专业、冷静、可信",
+      "避免娱乐化夸张视觉符号"
+    ]
+  },
+  "open_risks": [
+    {
+      "risk": "新拟态风格在高密度表格中可能导致对比不足",
+      "impact": "high",
+      "mitigation": "采用分层阴影与对比增强文本颜色，优先保障可读性。"
+    },
+    {
+      "risk": "WebGL + 多模块动画叠加带来低端设备性能下降",
+      "impact": "medium",
+      "mitigation": "提供 reduced motion 与低性能模式，动态降采样。"
+    },
+    {
+      "risk": "语音查询语义不稳定导致结果偏差",
+      "impact": "medium",
+      "mitigation": "增加 query preview 与可编辑确认步骤。"
+    }
+  ]
+}

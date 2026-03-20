@@ -1,0 +1,162 @@
+{
+  "page_type": "hybrid",
+  "navigation_model": "hybrid",
+  "content_zones": [
+    {
+      "id": "zone_hero",
+      "label": "价值主张与全局态势引导",
+      "content_intent": "让访问者在首屏理解资源调度不均问题与产品解决路径",
+      "priority": "P0",
+      "must_contain": [
+        "核心价值主张",
+        "关键量化收益指标",
+        "主 CTA 与次 CTA",
+        "产品核心能力预览"
+      ],
+      "user_goal": "快速判断该产品是否能解决其调度痛点并愿意继续探索",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": [
+        "M04"
+      ]
+    },
+    {
+      "id": "zone_command",
+      "label": "调度指挥总览区",
+      "content_intent": "帮助用户识别当前资源失衡分布并定位优先干预区域",
+      "priority": "P0",
+      "must_contain": [
+        "资源负载趋势信息",
+        "区域对比指标",
+        "筛选维度（时间、区域、资源类型）",
+        "异常告警摘要"
+      ],
+      "user_goal": "基于可视化数据快速形成调度决策",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": [
+        "M01",
+        "M05",
+        "M06"
+      ]
+    },
+    {
+      "id": "zone_workflow",
+      "label": "流程编排与发布区",
+      "content_intent": "让用户编辑、验证并发布调度工作流",
+      "priority": "P0",
+      "must_contain": [
+        "可编辑流程节点与连线关系",
+        "节点属性配置入口",
+        "流程校验反馈",
+        "发布或回滚动作反馈"
+      ],
+      "user_goal": "最小学习成本完成调度流程调整并确认生效",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": [
+        "M02",
+        "M05"
+      ]
+    },
+    {
+      "id": "zone_geo",
+      "label": "地理追踪与热力洞察区",
+      "content_intent": "通过空间视角展示资源位置、热区和轨迹，辅助临场调度",
+      "priority": "P0",
+      "must_contain": [
+        "实时位置点",
+        "热力强度表达",
+        "轨迹或路径信息",
+        "选中对象详情"
+      ],
+      "user_goal": "从地图快速定位堵点并联动到可执行调度动作",
+      "designer_latitude": "content-fixed-layout-free",
+      "linked_contracts": [
+        "M03",
+        "M05"
+      ]
+    },
+    {
+      "id": "zone_proof",
+      "label": "信任证明与方案说明区",
+      "content_intent": "建立产品可信度并降低采购决策风险",
+      "priority": "P1",
+      "must_contain": [
+        "客户或项目成果证据",
+        "可量化改善数据",
+        "实施流程简述"
+      ],
+      "user_goal": "确认产品可落地且可复制",
+      "designer_latitude": "fully-open",
+      "linked_contracts": [
+        "M04"
+      ]
+    },
+    {
+      "id": "zone_cta_form",
+      "label": "转化表单与联系区",
+      "content_intent": "推动目标用户完成留资并触发后续销售跟进",
+      "priority": "P0",
+      "must_contain": [
+        "表单关键字段",
+        "提交反馈状态",
+        "隐私与响应承诺",
+        "替代联系方式"
+      ],
+      "user_goal": "低阻力提交咨询请求并获得明确预期",
+      "designer_latitude": "structure-fixed",
+      "linked_contracts": [
+        "M04",
+        "M06"
+      ]
+    }
+  ],
+  "critical_flows": [
+    {
+      "flow_name": "调度优化主流程",
+      "steps": [
+        "进入总览并设置筛选",
+        "读取图表与告警判断问题区域",
+        "切换到工作流编辑区调整节点",
+        "在地图区验证资源移动与热区变化",
+        "发布流程并收到状态确认"
+      ],
+      "success_condition": "用户可在一次连续操作中完成发现问题、制定流程、验证结果与确认发布闭环"
+    },
+    {
+      "flow_name": "营销转化流程",
+      "steps": [
+        "首屏理解产品价值",
+        "浏览能力与证据区建立信任",
+        "点击 CTA 进入表单",
+        "完成校验并提交",
+        "收到成功反馈与后续联系预期"
+      ],
+      "success_condition": "用户在无中断体验下完成提交，并清楚下一步动作"
+    }
+  ],
+  "responsive_priorities": [
+    {
+      "breakpoint": "mobile",
+      "key_adaptations": [
+        "导航折叠为抽屉并保持关键 CTA 固定可见",
+        "图表与地图采用可切换单视图优先策略",
+        "工作流编辑器提供简化节点视图与侧滑配置面板"
+      ]
+    },
+    {
+      "breakpoint": "tablet",
+      "key_adaptations": [
+        "总览采用双栏布局，保持筛选器常驻",
+        "地图与详情面板可并行显示",
+        "CTA 表单简化字段间距与触控尺寸"
+      ]
+    },
+    {
+      "breakpoint": "desktop",
+      "key_adaptations": [
+        "指挥总览、工作流、地图三模块并行呈现",
+        "强化跨区块联动反馈（hover、选中、状态高亮）",
+        "保留完整动效编排与深色空间层次"
+      ]
+    }
+  ]
+}

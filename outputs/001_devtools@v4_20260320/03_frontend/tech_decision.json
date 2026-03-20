@@ -1,0 +1,129 @@
+{
+  "experience_priority": "visual-first",
+  "wow_goals": [
+    "让性能数据具备可感知流动性而非静态表格感",
+    "在高密度信息场景下保持清晰且连续的交互反馈",
+    "用软深度新拟态建立专业但有记忆点的 devtools 气质"
+  ],
+  "north_star_experience": "用户通过一个可联动的分析工作台在分钟级定位瓶颈，并从视觉反馈中理解系统活性变化。",
+  "selected_stack": {
+    "framework": "react + vite",
+    "language": "typescript",
+    "reasoning": [
+      "需要多模块共享状态（筛选、选中节点、语音查询结果）",
+      "需要独立封装 generative canvas 模块并与业务状态联动",
+      "TypeScript 能约束数据结构和交互事件，降低复杂交互错误"
+    ],
+    "why_not_others": [
+      "nextjs: 本案以单页高交互工作台为主，SSR/SEO 价值较低",
+      "svelte: 动效性能优秀，但团队常规维护栈以 React 为主",
+      "vue: 可行，但现有组件协作和类型基建在 React 更快落地"
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "React Three Fiber",
+      "category": "3d",
+      "why_considered": ["可做更强空间化拓扑叙事"],
+      "adoption_decision": "partial",
+      "decision_reason": ["本轮先用 Canvas flow-field 验证交互闭环，预留后续替换入口"]
+    },
+    {
+      "name": "ReactBits generative backgrounds",
+      "category": "component-library",
+      "why_considered": ["可快速接入 Aurora/Dither 并定制"],
+      "adoption_decision": "partial",
+      "decision_reason": ["当前先自写可控模块，后续可替换为组件增强层"]
+    },
+    {
+      "name": "D3 / SVG advanced charting",
+      "category": "rendering",
+      "why_considered": ["满足动态图表和联动需求"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["本次用原生 SVG 先实现联动骨架，后续可平滑升级到 D3"]
+    },
+    {
+      "name": "GSAP ScrollTrigger",
+      "category": "scroll",
+      "why_considered": ["用于叙事型滚动编排"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["本案核心是操作型工作台，不以长滚动叙事为主"]
+    }
+  ],
+  "interaction_bets": [
+    "全局筛选驱动图、表、拓扑三模块一致更新",
+    "语音查询结果直接写入筛选状态并触发结果刷新",
+    "节点点击触发详情抽屉与局部高亮"
+  ],
+  "generative_art_strategy": {
+    "modes_used": ["Mode A background layer", "Code-art micro feedback"],
+    "combination_approach": "Canvas flow-field 作为环境层，节点严重度脉冲作为强调层，SVG path 过渡作为信息层。",
+    "inspiration_sources": [
+      "WebSearch: webgl-operate / browser dashboard showcase",
+      "WebSearch: OpenProcessing noise/particle examples",
+      "WebSearch: SVG micro-interaction references"
+    ],
+    "integration_method": "在 src/generative 独立模块封装，主应用通过 props（intensity/paused）驱动参数。"
+  },
+  "visual_system_modules": [
+    {
+      "name": "FlowFieldCanvas",
+      "role": "generative-layer",
+      "tech": ["canvas"],
+      "must_keep": true
+    },
+    {
+      "name": "TopologyExplorer",
+      "role": "data-module",
+      "tech": ["react state", "interactive cards"],
+      "must_keep": true
+    },
+    {
+      "name": "TrendPanel",
+      "role": "section",
+      "tech": ["svg"],
+      "must_keep": true
+    },
+    {
+      "name": "InsightDrawer + Toast",
+      "role": "narrative-block",
+      "tech": ["overlay interactions"],
+      "must_keep": true
+    }
+  ],
+  "rendering_strategy": {
+    "use_webgl": false,
+    "use_canvas": true,
+    "use_svg_motion": true,
+    "use_3d": false,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": ["noise-field", "particle pulse light"]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": ["模块隔离提升可维护性", "满足 pipeline 输出规范", "便于后续替换图表或渲染引擎"],
+    "entry_points": ["src/main.tsx", "src/App.tsx", "src/generative/FlowFieldCanvas.tsx"]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "top segmented nav with mode switching",
+    "state_management": "React local state + derived memo data",
+    "component_communication": "props drilling within app shell + shared parent state",
+    "data_flow": "filters/search/sort -> derived rows -> topology/chart/table/drawer",
+    "animation_orchestration": "state transitions + canvas raf loop + SVG transitions"
+  },
+  "performance_guardrails": [
+    "prefers-reduced-motion 降低粒子数量与速度",
+    "流场 canvas 独立渲染，避免主组件重绘",
+    "筛选结果使用 memo 降低重复计算"
+  ],
+  "fallback_plan": [
+    "低性能设备关闭动态流场，仅保留静态纹理底色",
+    "错误状态提供 retry，保证任务可恢复",
+    "图表可降级为简化线图仍保留联动逻辑"
+  ],
+  "brand_experience_notes": [
+    "软深度新拟态用于专业感而非装饰",
+    "暗色基调下保证文字和数据对比度"
+  ]
+}

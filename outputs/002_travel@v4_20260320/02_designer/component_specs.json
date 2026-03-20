@@ -1,0 +1,104 @@
+{
+  "components": [
+    {
+      "name": "TopTabs",
+      "purpose": "切换任务/商城/表单/AR 四视图",
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled"
+      ],
+      "interaction_notes": [
+        "切换后保留全局状态"
+      ]
+    },
+    {
+      "name": "TaskCard",
+      "purpose": "展示任务与完成动作",
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "interaction_notes": [
+        "完成任务后联动积分和账本"
+      ]
+    },
+    {
+      "name": "RewardCard",
+      "purpose": "展示积分商品并兑换",
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "disabled",
+        "error"
+      ],
+      "interaction_notes": [
+        "积分不足时禁用并提示"
+      ]
+    },
+    {
+      "name": "A11yMultiStepForm",
+      "purpose": "三步无障碍配置与提交",
+      "states": [
+        "default",
+        "focus",
+        "error",
+        "loading",
+        "success"
+      ],
+      "interaction_notes": [
+        "字段错误时焦点回到错误字段"
+      ]
+    },
+    {
+      "name": "ARGuidancePanel",
+      "purpose": "AR 权限分支与 waypoint 联动",
+      "states": [
+        "idle",
+        "camera",
+        "fallback"
+      ],
+      "interaction_notes": [
+        "权限拒绝后仍可使用 fallback overlay"
+      ]
+    }
+  ],
+  "interaction_flows": [
+    {
+      "trigger": "completeTask",
+      "source_component": "TaskCard",
+      "target_components": [
+        "PointsSummary",
+        "LedgerList",
+        "RewardCard"
+      ],
+      "state_changes": [
+        "task.state",
+        "points",
+        "ledger"
+      ],
+      "animation": "pulse + counter update"
+    },
+    {
+      "trigger": "redeemReward",
+      "source_component": "RewardCard",
+      "target_components": [
+        "PointsSummary",
+        "LedgerList"
+      ],
+      "state_changes": [
+        "points",
+        "reward.ownedCount",
+        "ledger"
+      ],
+      "animation": "button feedback + toast"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "design_direction": "Neuro-Flow Command",
+  "color_palette": {
+    "bg_canvas": "#E8EEF5",
+    "bg_surface": "#EEF3F9",
+    "bg_surface_deep": "#DCE5F0",
+    "text_primary": "#172B42",
+    "text_secondary": "#4A617A",
+    "accent_info": "#4D7CFE",
+    "accent_secure": "#2E9E6F",
+    "accent_warn": "#E58A2D",
+    "accent_danger": "#D94A5A",
+    "heatmap_scale": [
+      "#BFD8FF",
+      "#7FA8FF",
+      "#4D7CFE",
+      "#2A4FB5"
+    ]
+  },
+  "typography": {
+    "font_heading": "Fira Sans",
+    "font_body": "Fira Sans",
+    "font_data": "Fira Code",
+    "scale": {
+      "display": "40/48",
+      "h1": "30/38",
+      "h2": "24/32",
+      "h3": "20/28",
+      "body": "16/24",
+      "caption": "13/18"
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 40
+  },
+  "radius": {
+    "sm": 10,
+    "md": 16,
+    "lg": 22,
+    "xl": 28,
+    "pill": 999
+  },
+  "shadow": {
+    "neu_raised": "8px 8px 18px rgba(148,163,184,0.35), -8px -8px 18px rgba(255,255,255,0.8)",
+    "neu_pressed": "inset 5px 5px 12px rgba(148,163,184,0.32), inset -5px -5px 12px rgba(255,255,255,0.78)",
+    "focus_glow": "0 0 0 3px rgba(77,124,254,0.28)"
+  },
+  "motion": {
+    "timing_functions": {
+      "standard": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "emphasis": "cubic-bezier(0.22, 1, 0.36, 1)"
+    },
+    "duration_scale": {
+      "fast": 150,
+      "base": 220,
+      "slow": 320,
+      "xl": 520
+    },
+    "orchestration_rules": [
+      "同一批进入动画采用 40-60ms stagger",
+      "状态变化先内容后背景，避免视觉抢占",
+      "错误反馈先震动/色变，再给出修复动作"
+    ],
+    "scroll_animation_strategy": "仅在区块首入视口时触发，避免持续滚动干扰"
+  },
+  "interaction_principles": [
+    "所有关键动作都有即时状态反馈",
+    "筛选必须跨模块联动",
+    "高风险事件优先抢占视觉注意力但不阻断流程",
+    "触控优先，不依赖 hover 才可达成功能"
+  ],
+  "visual_motifs": [
+    "soft-relief panels",
+    "signal pulse",
+    "flow trajectories",
+    "secure status badges"
+  ],
+  "generative_aesthetics": {
+    "color_mapping": {
+      "low": "#BFD8FF",
+      "medium": "#7FA8FF",
+      "high": "#4D7CFE",
+      "critical": "#2A4FB5"
+    },
+    "density_range": {
+      "min_particles": 80,
+      "max_particles": 180
+    },
+    "noise_parameters": {
+      "scale": [
+        0.002,
+        0.006
+      ],
+      "octaves": [
+        2,
+        4
+      ]
+    },
+    "motion_speed_range": {
+      "min": 0.12,
+      "max": 0.45
+    },
+    "blend_modes": [
+      "multiply",
+      "soft-light"
+    ],
+    "layer_opacity_strategy": "背景0.12-0.28，中景内容容器0.88+，前景文本1.0"
+  },
+  "illustration_strategy": {
+    "style": "line + soft gradient",
+    "usage": "空状态与引导卡",
+    "do_not": [
+      "卡通夸张表情",
+      "高饱和冲突色"
+    ]
+  },
+  "depth_strategy": {
+    "layers": [
+      "background flow",
+      "surface cards",
+      "interactive overlays"
+    ],
+    "rule": "同一层仅一种阴影语义，避免层级混乱"
+  },
+  "responsive_rules": [
+    "mobile优先保留聚焦控制台和告警摘要",
+    "地图与白板在小屏采用单主视图切换",
+    "桌面端保持三栏并允许面板折叠"
+  ],
+  "accessibility_rules": [
+    "正文对比度>=4.5:1",
+    "所有 icon-only 控件具备 aria-label",
+    "支持 prefers-reduced-motion",
+    "键盘可访问模态/抽屉/筛选器"
+  ]
+}

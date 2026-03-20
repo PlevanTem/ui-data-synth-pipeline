@@ -1,0 +1,143 @@
+{
+  "stack": "react",
+  "language": "typescript",
+  "delivery_mode": "multi-file",
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "实时协作白板与多人presence",
+      "acceptance_criteria": "至少支持添加/移动便签与连线；两个以上模拟协作者光标与在线状态实时更新（<=500ms体感延迟）；白板操作可撤销/重做。",
+      "expression_goal": "通过细腻的状态过渡、presence 动效与柔和层级阴影体现高密度协作但不拥挤。",
+      "status": "partial",
+      "evidence": "src/components/WhiteboardPanel.tsx 实现节点选择联动；完整多人实时与撤销重做为后续接入后端事件总线。",
+      "expression_achieved": "白板区与聊天联动已实现，视觉层级与反馈已落地。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "当前为前端原型，实时协同网络层未接入。"
+    },
+    {
+      "contract_id": "M02",
+      "feature": "端到端加密即时通讯",
+      "acceptance_criteria": "消息发送前后均展示加密状态标识；支持线程回复、已送达/已读状态；失败消息可重试。",
+      "expression_goal": "安全反馈要清晰可感知，状态徽标与微动效构成专业可信的安全语义。",
+      "status": "met",
+      "evidence": "src/components/ChatPanel.tsx 展示E2E状态、sent/read/failed与重试动作。",
+      "expression_achieved": "安全状态语义清晰。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "自动化报表生成与定时推送",
+      "acceptance_criteria": "用户可配置报表频率、目标对象与指标集合；执行后显示最近运行状态、下次触发时间与异常提示。",
+      "expression_goal": "通过时间线与状态色阶让自动化流程一眼可审计、可预期。",
+      "status": "partial",
+      "evidence": "src/components/ReportForm.tsx 提供模板/频率/邮箱校验与提交反馈。",
+      "expression_achieved": "表单提交流程完整，状态反馈可用。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "执行日志时间线为下一步扩展。"
+    },
+    {
+      "contract_id": "M04",
+      "feature": "实时地理追踪与热力图",
+      "acceptance_criteria": "地图支持对象定位、热力层开关、时间窗口筛选；热点变化触发列表和告警联动。",
+      "expression_goal": "地图层具备柔和新拟态容器与动态热力脉冲，突出变化趋势而不过度炫技。",
+      "status": "partial",
+      "evidence": "src/components/GeoPanel.tsx 支持热点点击反向筛选联动；整体联动见 src/App.tsx。",
+      "expression_achieved": "区域联动已实现。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "当前为列表化热力模拟，真实地图图层待接入 map SDK。"
+    },
+    {
+      "contract_id": "M05",
+      "feature": "跨模块聚焦控制台",
+      "acceptance_criteria": "提供统一筛选（时间/团队/区域/风险级别）并联动至少三个模块内容；支持一键创建决策快照。",
+      "expression_goal": "高信息密度下仍保持可扫描性，交互反馈节奏统一，关键数据有层次聚焦。",
+      "status": "met",
+      "evidence": "src/components/FilterBar.tsx + src/App.tsx 对 TaskQueue/Chat/Geo 三模块联动。",
+      "expression_achieved": "联动链路完整且反馈明确。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M06",
+      "feature": "完整状态系统（loading/empty/error/retry）",
+      "acceptance_criteria": "白板、消息、报表、地图四个核心区域均有独立加载、空状态、错误提示和重试入口。",
+      "expression_goal": "状态视觉与语气保持一致，避免警报疲劳，并使用微动效提示恢复过程。",
+      "status": "met",
+      "evidence": "src/components/StatusPanel.tsx + src/App.tsx 提供 loading/empty/error/retry 流程。",
+      "expression_achieved": "状态体系可用且语义统一。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M07",
+      "feature": "新拟态软UI一致性系统",
+      "acceptance_criteria": "全局 token 统一控制背景、阴影、圆角、层级；交互组件在 default/hover/active/focus 下风格一致；亮暗主题切换不破坏可读性。",
+      "expression_goal": "以柔和凹凸层级表达专业与宁静，避免廉价拟物感。",
+      "status": "met",
+      "evidence": "src/styles/globals.css 中统一 token 与 neu-card/neu-input/neu-button 体系。",
+      "expression_achieved": "风格一致、反馈统一。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M08",
+      "feature": "页面内部交互完整性",
+      "acceptance_criteria": "导航可切视图；筛选/搜索/排序联动内容；表单有校验与提交反馈；模态/抽屉/toast 全流程可用；状态在多视图间保持。",
+      "expression_goal": "交互与动画服务任务推进，形成连贯操作手感。",
+      "status": "met",
+      "evidence": "导航/筛选/表单/模态/toast 全在 src/App.tsx 与对应组件实现。",
+      "expression_achieved": "主要交互链路完整可用。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+  "completed_items": [
+    "多视图导航切换",
+    "跨模块筛选联动",
+    "白板与聊天上下文联动",
+    "表单校验+提交反馈",
+    "模态和toast交互",
+    "Canvas生成式背景层",
+    "构建验证通过"
+  ],
+  "design_fidelity_notes": [
+    "已采用新拟态软UI与低干扰流场背景",
+    "安全状态与风险级别有可感知反馈"
+  ],
+  "interaction_completeness": {
+    "navigation": "complete",
+    "filtering": "complete",
+    "forms": "complete",
+    "component_communication": "complete",
+    "animation_orchestration": "complete",
+    "modal_overlay": "complete",
+    "empty_loading_error_states": "complete"
+  },
+  "generative_visual_notes": [
+    "FlowFieldCanvas 采用参数化强度并绑定风险等级",
+    "支持 prefers-reduced-motion 与页面隐藏暂停"
+  ],
+  "interaction_fidelity_notes": [
+    "重度实时协同与真实地图图层为下一轮集成",
+    "当前原型已覆盖主要用户路径"
+  ],
+  "a11y_notes": [
+    "交互控件具备可点击语义",
+    "焦点态在 neu-button 中可见",
+    "支持 reduced-motion"
+  ],
+  "performance_notes": [
+    "粒子数量按视口上限控制",
+    "构建产物体积可接受"
+  ],
+  "known_gaps": [
+    "多人实时协同网络层与冲突处理未接入",
+    "地图真实热力图层与时间窗口控件待接入"
+  ],
+  "next_fix_candidates": [
+    "接入 websocket presence + undo/redo CRDT",
+    "接入 map SDK 热力图与图层控制",
+    "补充报表运行时间线组件"
+  ]
+}

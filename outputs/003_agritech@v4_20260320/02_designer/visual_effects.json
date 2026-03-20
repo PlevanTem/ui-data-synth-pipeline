@@ -1,0 +1,95 @@
+{
+  "use_visual_effects": true,
+  "effect_summary": "以低对比流场背景承载系统活性，用 SVG 数据形变和地图热点脉冲承接用户操作反馈，形成可解释的高科技交互层。",
+  "effect_layers": [
+    {
+      "layer_id": "primary",
+      "type": "Canvas flow-field atmosphere",
+      "placement": "global background, hero, command section",
+      "narrative_role": "持续运行的系统语义",
+      "interaction_model": "鼠标移动、筛选变化触发局部加速"
+    },
+    {
+      "layer_id": "secondary",
+      "type": "SVG chart morph transitions",
+      "placement": "KPI + trend chart",
+      "narrative_role": "把数据变化可视化为连续过渡",
+      "interaction_model": "筛选与点选触发路径重绘"
+    },
+    {
+      "layer_id": "accent",
+      "type": "map heat pulse overlay",
+      "placement": "geo map module",
+      "narrative_role": "高风险热点提示",
+      "interaction_model": "区域与资源切换触发脉冲频率变化"
+    }
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "Canvas noise-field + particle flow",
+      "purpose": "atmosphere",
+      "algorithm_family": "flow-field + particle-system",
+      "aesthetic_reference": "Shader flow-field sketches and OpenProcessing GPU particles",
+      "implementation_notes": "seeded random, requestAnimationFrame loop, page hidden 时暂停，移动端降粒子数"
+    },
+    "secondary_layers": [
+      {
+        "type": "SVG path interpolation",
+        "purpose": "data",
+        "technique": "polyline interpolation + eased value updates",
+        "interaction_with_primary": "筛选变化时短时抬升背景粒子速度"
+      },
+      {
+        "type": "heat diffusion pulse",
+        "purpose": "narrative",
+        "technique": "radial gradient alpha decay",
+        "interaction_with_primary": "热点提升时局部提高背景亮度并突出选中轨迹"
+      }
+    ],
+    "component_library_layer": {
+      "selections": [
+        {
+          "library": "animateui",
+          "component": "Button motion pattern",
+          "placement": "publish and CTA buttons",
+          "customization_intent": "降低弹性和振幅，保持企业工具稳重手感"
+        },
+        {
+          "library": "reactbits",
+          "component": "lightweight text reveal pattern",
+          "placement": "section headings",
+          "customization_intent": "仅在进入视区时触发，避免持续动画干扰"
+        }
+      ]
+    },
+    "interaction_hooks": [
+      "time range changes affect chart interpolation speed",
+      "region filter affects heat pulse radius",
+      "map selection affects detail panel and chart highlight",
+      "workflow publish triggers global success pulse"
+    ],
+    "inspiration_sources": [
+      "https://land-book.com/websites/77403-arva-regenerative-agriculture-solutions",
+      "http://www.awwwards.com/inspiration/intersection-of-conflict-fish-migration-climate-change-data-wwf-oceans-futures",
+      "https://shaderjoy.work/sketch/flow_field",
+      "https://openprocessing.org/sketch/1966464/",
+      "https://www.drought.gov/sectors/agriculture/interactive-map"
+    ],
+    "combination_rationale": "该组合把“流动-热点-决策”三层语义绑定到真实交互事件，既保留科技感也保障数据可读性。",
+    "layering_strategy": "z0 atmosphere, z10 content cards, z20 data overlays, z50 toasts/modals; background opacity kept below 0.3"
+  },
+  "performance_notes": [
+    "流场每帧粒子数按设备级别自适应",
+    "地图热点重算节流到 400-700ms",
+    "prefers-reduced-motion 下禁用持续漂移"
+  ],
+  "fallback_strategy": [
+    "低性能设备关闭流场，保留静态渐变背景与图表过渡",
+    "无 Canvas 支持时保留纯 SVG 图表与 CSS 状态反馈"
+  ],
+  "accessibility_notes": [
+    "所有颜色状态同时提供文本与图例提示",
+    "键盘 focus ring 不被视觉层遮挡",
+    "避免高频闪烁和快速亮灭"
+  ]
+}

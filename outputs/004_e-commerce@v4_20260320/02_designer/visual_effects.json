@@ -1,0 +1,96 @@
+{
+  "use_visual_effects": true,
+  "effect_summary": "以 WebGL 关系图谱为主叙事层，叠加低速 Canvas 流场和组件级微动效，构建可读、可交互、可降级的 premium 跨境电商体验。",
+  "effect_layers": [
+    {
+      "layer_id": "primary",
+      "type": "WebGL force-directed knowledge graph with LOD",
+      "placement": "graph explorer 主区域",
+      "narrative_role": "承载核心决策信息与关系理解",
+      "interaction_model": "zoom/pan/hover/click 聚焦并驱动其他区块"
+    },
+    {
+      "layer_id": "secondary",
+      "type": "Canvas flow-field particles",
+      "placement": "hero 与全局背景",
+      "narrative_role": "传达系统流动感并提供状态脉冲",
+      "interaction_model": "受搜索输入和滚动进度影响速度与密度"
+    },
+    {
+      "layer_id": "accent",
+      "type": "Framer Motion + SVG path highlights",
+      "placement": "结果卡片、信任提示、表单反馈",
+      "narrative_role": "加强关键交互反馈与风险提示可感知性",
+      "interaction_model": "hover/focus/submit/error 触发局部动画"
+    }
+  ],
+  "generative_combination": {
+    "primary_layer": {
+      "type": "WebGL 关系图谱 + force simulation",
+      "purpose": "data",
+      "algorithm_family": "force-directed + particle-system",
+      "aesthetic_reference": "Awwwards 2025 互动获奖站点中的 WebGL+微交互趋势，Observable d3-force 交互图模式",
+      "implementation_notes": "React + @react-three/fiber 渲染节点和连线；节点分级渲染，低端设备启用 reduced-node preset"
+    },
+    "secondary_layers": [
+      {
+        "type": "Canvas flow-field",
+        "purpose": "atmosphere",
+        "technique": "Perlin/simplex noise vector field with seeded particles",
+        "interaction_with_primary": "selectedNode 改变时在对应屏幕区域触发短时汇聚涟漪"
+      },
+      {
+        "type": "SVG path pulse",
+        "purpose": "transition",
+        "technique": "stroke-dashoffset + opacity ramp",
+        "interaction_with_primary": "图谱关系高亮时同步显示交易路径提示"
+      }
+    ],
+    "component_library_layer": {
+      "selections": [
+        {
+          "library": "reactbits",
+          "component": "FadeContent",
+          "placement": "section 标题与摘要",
+          "customization_intent": "缩短默认时长并降低位移，避免过度模板感"
+        },
+        {
+          "library": "animateui",
+          "component": "Button",
+          "placement": "搜索提交与结账 CTA",
+          "customization_intent": "使用更克制的弹性曲线，保证商务语境"
+        }
+      ]
+    },
+    "interaction_hooks": [
+      "searchQueryChanged",
+      "filtersApplied",
+      "graphNodeFocused",
+      "checkoutSubmitStateChanged",
+      "reducedMotionToggled"
+    ],
+    "inspiration_sources": [
+      "https://www.awwwards.com/annual-awards-2025",
+      "https://www.cssdesignawards.com/sites/interactive-3d-showroom/41585/",
+      "https://observablehq.com/@d3/temporal-force-directed-graph",
+      "https://openprocessing.org/sketch/815894"
+    ],
+    "combination_rationale": "主层负责业务可解释性，副层负责情绪氛围，组件层负责触点反馈，三层组合可同时满足 M01/M02/M05 的交互完整性与 premium 视觉目标。",
+    "layering_strategy": "z0 背景流场(0.28-0.4 opacity) -> z10 图谱(0.7-0.95) -> z20 内容卡(0.96) -> z40 overlay；危险提示使用正常混合，避免 screen 造成对比丢失"
+  },
+  "performance_notes": [
+    "图谱节点数 > 800 时自动降低阴影与粒子数量",
+    "空闲 8s 后背景流场降帧",
+    "移动端默认启用 medium preset"
+  ],
+  "fallback_strategy": [
+    "webgl 不可用时回退到 canvas 2D graph 摘要视图",
+    "reduced-motion 模式关闭持续位移动画，仅保留透明度过渡",
+    "低端设备关闭 secondary 粒子层"
+  ],
+  "accessibility_notes": [
+    "图谱区域提供文本替代摘要",
+    "关键状态不依赖颜色单独表达",
+    "动画可被系统设置统一降级"
+  ]
+}

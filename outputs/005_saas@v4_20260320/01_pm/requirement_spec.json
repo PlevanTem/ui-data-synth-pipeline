@@ -1,0 +1,424 @@
+{
+  "project_name": "ClarityMesh 协同工作台",
+  "domain": "enterprise-saas",
+  "core_problem": "这个产品帮助跨职能项目团队在高频多源信息协作场景下解决信息过载与上下文割裂问题，让他们能在同一事实底座上快速协同决策并持续推进执行。",
+  "design_intent": {
+    "target_users": [
+      {
+        "type": "项目经理与交付负责人",
+        "tech_maturity": "high",
+        "aesthetic_maturity": "medium",
+        "primary_goal": "把分散在白板、聊天、位置事件和报表中的信息压缩为可执行结论"
+      },
+      {
+        "type": "运营/现场协调与区域调度人员",
+        "tech_maturity": "medium",
+        "aesthetic_maturity": "medium",
+        "primary_goal": "基于实时地理状态快速判断风险并触发沟通或任务动作"
+      },
+      {
+        "type": "管理层与合规审计角色",
+        "tech_maturity": "medium",
+        "aesthetic_maturity": "high",
+        "primary_goal": "低认知负担地获得可信、可追溯、可定时推送的业务摘要"
+      }
+    ],
+    "emotional_goal": "首屏应传递可控、宁静、可靠；持续使用过程维持低焦虑和高掌控感。",
+    "trust_signals_needed": true,
+    "information_density": "high",
+    "interaction_depth": "immersive",
+    "brand_personality": [
+      "calm",
+      "precise",
+      "secure",
+      "collaborative",
+      "premium-tech"
+    ]
+  },
+  "entities": [
+    {
+      "name": "Workspace",
+      "key_attributes": [
+        "workspace_id",
+        "name",
+        "members",
+        "timezone",
+        "security_level"
+      ],
+      "relations": [
+        "1:N WhiteboardBoard",
+        "1:N ReportTemplate",
+        "1:N GeoFeed",
+        "1:N ChatChannel"
+      ]
+    },
+    {
+      "name": "WhiteboardBoard",
+      "key_attributes": [
+        "board_id",
+        "title",
+        "active_presence",
+        "elements",
+        "version"
+      ],
+      "relations": [
+        "N:1 Workspace",
+        "1:N DecisionSnapshot",
+        "1:N CommentThread"
+      ]
+    },
+    {
+      "name": "ChatChannel",
+      "key_attributes": [
+        "channel_id",
+        "participants",
+        "encryption_state",
+        "unread_count",
+        "last_message_at"
+      ],
+      "relations": [
+        "N:1 Workspace",
+        "1:N Message",
+        "N:1 DecisionSnapshot(optional)"
+      ]
+    },
+    {
+      "name": "Message",
+      "key_attributes": [
+        "message_id",
+        "sender",
+        "cipher_payload",
+        "created_at",
+        "delivery_state"
+      ],
+      "relations": [
+        "N:1 ChatChannel",
+        "N:1 WhiteboardBoard(optional)"
+      ]
+    },
+    {
+      "name": "ReportTemplate",
+      "key_attributes": [
+        "template_id",
+        "metrics",
+        "cadence",
+        "target_roles",
+        "format"
+      ],
+      "relations": [
+        "N:1 Workspace",
+        "1:N ScheduledReportJob",
+        "1:N ReportRun"
+      ]
+    },
+    {
+      "name": "GeoFeed",
+      "key_attributes": [
+        "feed_id",
+        "tracked_objects",
+        "heat_thresholds",
+        "refresh_rate"
+      ],
+      "relations": [
+        "N:1 Workspace",
+        "1:N GeoEvent",
+        "1:N HeatmapLayer"
+      ]
+    },
+    {
+      "name": "DecisionSnapshot",
+      "key_attributes": [
+        "snapshot_id",
+        "summary",
+        "source_refs",
+        "owner",
+        "created_at"
+      ],
+      "relations": [
+        "N:1 WhiteboardBoard",
+        "N:M Message",
+        "N:M ReportRun",
+        "N:M GeoEvent"
+      ]
+    }
+  ],
+  "functional_architecture": [
+    {
+      "module": "Live Collaboration Core",
+      "capabilities": [
+        "实时白板编辑",
+        "多人光标与presence",
+        "白板-消息互链",
+        "决策快照标注"
+      ],
+      "depends_on": [
+        "Security & Identity",
+        "State Sync Engine"
+      ]
+    },
+    {
+      "module": "Secure Messaging",
+      "capabilities": [
+        "端到端加密会话",
+        "线程回复",
+        "上下文跳转到白板/地图",
+        "离线重发"
+      ],
+      "depends_on": [
+        "Security & Identity",
+        "Notification Engine"
+      ]
+    },
+    {
+      "module": "Insight Automation",
+      "capabilities": [
+        "报表模板编排",
+        "定时任务",
+        "多渠道推送",
+        "失败重试与审计日志"
+      ],
+      "depends_on": [
+        "Data Aggregation",
+        "Notification Engine"
+      ]
+    },
+    {
+      "module": "Geo Intelligence",
+      "capabilities": [
+        "实时位置流",
+        "热力图渲染",
+        "阈值告警",
+        "区域筛选联动"
+      ],
+      "depends_on": [
+        "Realtime Event Bus",
+        "Data Aggregation"
+      ]
+    },
+    {
+      "module": "Attention Orchestration",
+      "capabilities": [
+        "跨模块优先级队列",
+        "聚焦模式",
+        "噪音抑制",
+        "信息摘要卡片"
+      ],
+      "depends_on": [
+        "Live Collaboration Core",
+        "Insight Automation",
+        "Geo Intelligence"
+      ]
+    }
+  ],
+  "data_interactions": [
+    {
+      "action": "同步白板元素与光标状态",
+      "trigger": "user",
+      "type": "realtime",
+      "depends_on": [
+        "鉴权成功",
+        "workspace订阅建立"
+      ]
+    },
+    {
+      "action": "发送加密消息并确认送达",
+      "trigger": "user",
+      "type": "write",
+      "depends_on": [
+        "会话密钥协商"
+      ]
+    },
+    {
+      "action": "读取频道历史并按上下文过滤",
+      "trigger": "user",
+      "type": "read",
+      "depends_on": [
+        "频道选择"
+      ]
+    },
+    {
+      "action": "生成报表并执行定时推送",
+      "trigger": "system",
+      "type": "async",
+      "depends_on": [
+        "模板启用",
+        "数据聚合完成"
+      ]
+    },
+    {
+      "action": "接收地理事件并更新热力图",
+      "trigger": "system",
+      "type": "realtime",
+      "depends_on": [
+        "GeoFeed激活"
+      ]
+    },
+    {
+      "action": "按筛选条件联动白板/消息/地图/报表摘要",
+      "trigger": "user",
+      "type": "read",
+      "depends_on": [
+        "筛选器变更"
+      ]
+    },
+    {
+      "action": "保存决策快照并回写到相关模块",
+      "trigger": "user",
+      "type": "write",
+      "depends_on": [
+        "选中来源证据"
+      ]
+    }
+  ],
+  "execution_contracts": {
+    "must_deliver": [
+      {
+        "id": "M01",
+        "feature": "实时协作白板与多人presence",
+        "feature_type": "explicit",
+        "user_value": "团队在同一上下文中即时共创并快速统一认知。",
+        "acceptance_criteria": "至少支持添加/移动便签与连线；两个以上模拟协作者光标与在线状态实时更新（<=500ms体感延迟）；白板操作可撤销/重做。",
+        "fail_condition": "白板变更非实时、多人状态不同步或缺失撤销/重做任一能力。",
+        "expression_goal": "通过细腻的状态过渡、presence 动效与柔和层级阴影体现高密度协作但不拥挤。"
+      },
+      {
+        "id": "M02",
+        "feature": "端到端加密即时通讯",
+        "feature_type": "explicit",
+        "user_value": "敏感协作信息可在内部快速沟通且具备安全信任。",
+        "acceptance_criteria": "消息发送前后均展示加密状态标识；支持线程回复、已送达/已读状态；失败消息可重试。",
+        "fail_condition": "缺少加密状态可见信号，或消息状态反馈不完整导致用户无法判断交付结果。",
+        "expression_goal": "安全反馈要清晰可感知，状态徽标与微动效构成专业可信的安全语义。"
+      },
+      {
+        "id": "M03",
+        "feature": "自动化报表生成与定时推送",
+        "feature_type": "explicit",
+        "user_value": "减少手工汇报成本，持续获得关键指标摘要。",
+        "acceptance_criteria": "用户可配置报表频率、目标对象与指标集合；执行后显示最近运行状态、下次触发时间与异常提示。",
+        "fail_condition": "无法配置计划任务或执行状态不可追踪。",
+        "expression_goal": "通过时间线与状态色阶让自动化流程一眼可审计、可预期。"
+      },
+      {
+        "id": "M04",
+        "feature": "实时地理追踪与热力图",
+        "feature_type": "explicit",
+        "user_value": "快速识别区域风险和资源热点，驱动即时调度。",
+        "acceptance_criteria": "地图支持对象定位、热力层开关、时间窗口筛选；热点变化触发列表和告警联动。",
+        "fail_condition": "热力图仅静态展示或筛选变化不影响地图与列表。",
+        "expression_goal": "地图层具备柔和新拟态容器与动态热力脉冲，突出变化趋势而不过度炫技。"
+      },
+      {
+        "id": "M05",
+        "feature": "跨模块聚焦控制台",
+        "feature_type": "explicit",
+        "user_value": "把白板、聊天、报表、地理事件压缩成可执行优先级列表。",
+        "acceptance_criteria": "提供统一筛选（时间/团队/区域/风险级别）并联动至少三个模块内容；支持一键创建决策快照。",
+        "fail_condition": "筛选只影响单一模块或无法形成跨模块聚合视图。",
+        "expression_goal": "高信息密度下仍保持可扫描性，交互反馈节奏统一，关键数据有层次聚焦。"
+      },
+      {
+        "id": "M06",
+        "feature": "完整状态系统（loading/empty/error/retry）",
+        "feature_type": "implicit",
+        "user_value": "在高频操作中始终知道系统当前状态并可恢复。",
+        "acceptance_criteria": "白板、消息、报表、地图四个核心区域均有独立加载、空状态、错误提示和重试入口。",
+        "fail_condition": "任一核心区域缺失边界状态处理或用户无恢复路径。",
+        "expression_goal": "状态视觉与语气保持一致，避免警报疲劳，并使用微动效提示恢复过程。"
+      },
+      {
+        "id": "M07",
+        "feature": "新拟态软UI一致性系统",
+        "feature_type": "implicit",
+        "user_value": "形成稳定品牌识别并降低复杂信息界面的认知摩擦。",
+        "acceptance_criteria": "全局 token 统一控制背景、阴影、圆角、层级；交互组件在 default/hover/active/focus 下风格一致；亮暗主题切换不破坏可读性。",
+        "fail_condition": "组件风格割裂、阴影逻辑不一致或切换主题后对比度不足。",
+        "expression_goal": "以柔和凹凸层级表达专业与宁静，避免廉价拟物感。"
+      },
+      {
+        "id": "M08",
+        "feature": "页面内部交互完整性",
+        "feature_type": "implicit",
+        "user_value": "每个操作都能触发正确反馈与数据流转，避免“好看但不能用”。",
+        "acceptance_criteria": "导航可切视图；筛选/搜索/排序联动内容；表单有校验与提交反馈；模态/抽屉/toast 全流程可用；状态在多视图间保持。",
+        "fail_condition": "存在任一断链交互（点击无效、状态不传递、仅静态展示）。",
+        "expression_goal": "交互与动画服务任务推进，形成连贯操作手感。"
+      }
+    ],
+    "should_deliver": [
+      {
+        "id": "S01",
+        "feature": "生成式背景层与数据节奏联动",
+        "feature_type": "implicit",
+        "user_value": "在不牺牲可读性的前提下提升空间感与品牌记忆。",
+        "ideal_form": "基于流场/噪声的轻量Canvas层随风险级别与时间窗口变化微调速度和亮度。",
+        "acceptable_fallback": "仅在Hero与地图区启用简化渐变+粒子层，并支持 reduced-motion 降级。"
+      },
+      {
+        "id": "S02",
+        "feature": "多端协作连续性提示",
+        "feature_type": "explicit",
+        "user_value": "跨设备切换时保持上下文连续，减少重定位成本。",
+        "ideal_form": "显示最近编辑位置、未读聚合和跨端续接入口。",
+        "acceptable_fallback": "提供最近活动时间线和快速返回最近工作区。"
+      },
+      {
+        "id": "S03",
+        "feature": "可配置提醒编排",
+        "feature_type": "explicit",
+        "user_value": "降低通知噪音，提高关键信号到达率。",
+        "ideal_form": "支持规则优先级、静默时段和角色化通知模板。",
+        "acceptable_fallback": "至少支持风险级别过滤和每日摘要两种提醒模式。"
+      }
+    ],
+    "explicitly_excluded": [
+      {
+        "id": "X01",
+        "feature": "第三方公开社交分享广场",
+        "exclusion_reason": "与企业内部降噪协作主目标无关，且增加合规暴露面。"
+      },
+      {
+        "id": "X02",
+        "feature": "电商/支付闭环",
+        "exclusion_reason": "不属于本案核心工作流，无法提升信息过载治理目标。"
+      }
+    ]
+  },
+  "non_functional_requirements": {
+    "performance_perception": "关键交互应在100-300ms内给出可见反馈；实时模块避免阻塞主线程；地图与白板在中端设备保持流畅。",
+    "visual_trust_level": "premium",
+    "accessibility_baseline": "WCAG AA",
+    "responsive_priority": "balanced"
+  },
+  "constraints": {
+    "design_constraints": [
+      "必须采用新拟态软UI风格，但需控制对比与可读性",
+      "高信息密度页面需保持清晰的视觉层级与聚焦路径"
+    ],
+    "tech_constraints": [
+      "最终交付必须是TypeScript多文件工程",
+      "支持实时交互模拟与状态管理",
+      "需要为低性能设备提供动效降级策略"
+    ],
+    "brand_constraints": [
+      "风格语义为 calm-secure-collaborative，避免过度娱乐化视觉"
+    ]
+  },
+  "open_risks": [
+    {
+      "risk": "新拟态在高密度数据界面中可能导致对比不足",
+      "impact": "high",
+      "mitigation": "建立对比度守卫与阴影层级规则，在关键文本使用高对比语义色。"
+    },
+    {
+      "risk": "实时模块同时更新导致性能抖动",
+      "impact": "high",
+      "mitigation": "采用分片渲染、节流与动画帧调度，优先保证交互主链路。"
+    },
+    {
+      "risk": "跨模块联动逻辑复杂，容易出现状态不一致",
+      "impact": "medium",
+      "mitigation": "统一状态模型并用契约化事件总线管理联动。"
+    }
+  ]
+}

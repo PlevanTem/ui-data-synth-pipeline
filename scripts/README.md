@@ -65,6 +65,30 @@ python scripts/batch_web_design_pipeline.py --inputs test_data/example_inputs_5.
 
 在 **已有完整 case 目录** 上，调用 OpenAI 兼容 API，按 **slow-think-causal-chain** 规范合成因果链样本（JSONL）。依赖见 `requirements-batch-synth.txt`。
 
+### 通过 Cursor 批量调用（CLI）
+
+如果你希望**直接让 Cursor Agent 按 skill 逐 case 产出 JSON 文件**（而不是走 OpenAI API JSONL），可使用：
+
+```bash
+chmod +x scripts/run_cursor_agent_batch_causal_chain.sh
+
+# 试跑 1 条（从 outputs 下自动筛选含完整产物的 case 目录）
+./scripts/run_cursor_agent_batch_causal_chain.sh outputs 1
+
+# 全量执行（默认输出到 outputs/slow-think-causal-chain-data）
+./scripts/run_cursor_agent_batch_causal_chain.sh outputs
+
+# 强制覆盖已存在结果
+FORCE_REGEN=1 ./scripts/run_cursor_agent_batch_causal_chain.sh outputs
+```
+
+脚本行为：
+
+- 逐个 case 调用 `cursor agent -p --force`
+- 强制读取 `/.cursor/skills/slow-think-causal-chain/SKILL.md`
+- 默认输出 `outputs/slow-think-causal-chain-data/<case_id>_causal_chains.json`
+- 写运行日志到 `outputs/cursor_agent_batch_causal_chain_*.log`
+
 ## `build_causal_chains_003.py`
 
 无 API、固定独白 + 读磁盘源码，拼装 `003_smart-home` 因果链 JSON（用于对齐格式/回归）。

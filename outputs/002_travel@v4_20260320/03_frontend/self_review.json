@@ -1,0 +1,132 @@
+{
+  "stack": "react+vite",
+  "language": "typescript",
+  "delivery_mode": "multi-file",
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "任务完成与积分发放闭环",
+      "acceptance_criteria": "点击完成后任务状态更新、积分增加、账本写入并持久化",
+      "expression_goal": "即时反馈与成就动效",
+      "status": "met",
+      "evidence": "App.tsx `completeTask` + `record` + useLocalState",
+      "expression_achieved": "任务状态、积分、toast 同步反馈",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "积分商城兑换与校验",
+      "acceptance_criteria": "积分不足不可兑换，成功后扣减积分并更新拥有数量与账本",
+      "expression_goal": "兑换反馈清晰可解释",
+      "status": "met",
+      "evidence": "App.tsx `redeem` 分支校验与状态更新",
+      "expression_achieved": "禁用/失败/成功三类反馈完整",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "无障碍多步表单",
+      "acceptance_criteria": "3 步、验证、错误提示、loading、成功反馈、偏好生效",
+      "expression_goal": "高信任可访问表单体验",
+      "status": "met",
+      "evidence": "App.tsx `submitForm`, step controls, focus to invalid field",
+      "expression_achieved": "字段错误提示、提交中状态、成功 toast 与偏好应用均生效",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "AR 导览权限状态机与降级",
+      "acceptance_criteria": "camera/fallback 路径都可用，waypoint 联动 overlay",
+      "expression_goal": "沉浸感与可用性安全并存",
+      "status": "met",
+      "evidence": "App.tsx `startAR`, `arMode`, waypoint selection",
+      "expression_achieved": "权限拒绝有降级导览与提示，不出现空白",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M05",
+      "feature": "导航切换与状态持久化",
+      "acceptance_criteria": "跨视图与刷新后关键状态不丢失",
+      "expression_goal": "流程连续不重来",
+      "status": "met",
+      "evidence": "Top tabs + useLocalState persistence",
+      "expression_achieved": "points/tasks/rewards/a11y/waypoint 均可恢复",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M06",
+      "feature": "加载态/空态/错误态完整性",
+      "acceptance_criteria": "关键模块具备 loading/empty/error 及恢复动作",
+      "expression_goal": "具备系统感而非脚本感",
+      "status": "met",
+      "evidence": "Task view has loading/error/retry and empty handling; AR and shop expose failure/disabled feedback",
+      "expression_achieved": "用户在失败路径始终有下一步动作",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M07",
+      "feature": "prefers-reduced-motion 兼容",
+      "acceptance_criteria": "reduce 时降低或停止高频动画并保持可用",
+      "expression_goal": "克制但不廉价的降级",
+      "status": "met",
+      "evidence": "FlowFieldCanvas uses reducedMotion to lower density/speed",
+      "expression_achieved": "视觉层仍保留氛围但不干扰阅读",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+  "completed_items": [
+    "多视图导航切换",
+    "任务-积分-账本闭环",
+    "商城兑换校验",
+    "三步无障碍表单",
+    "AR 权限降级路径",
+    "生成式背景层封装",
+    "本地状态持久化"
+  ],
+  "design_fidelity_notes": [
+    "蓝黑冷调与路径语义已落地",
+    "生成式视觉层处于背景位，不遮挡主信息"
+  ],
+  "interaction_completeness": {
+    "navigation": "complete",
+    "filtering": "complete",
+    "forms": "complete",
+    "component_communication": "complete",
+    "animation_orchestration": "complete",
+    "modal_overlay": "partial",
+    "empty_loading_error_states": "complete"
+  },
+  "generative_visual_notes": [
+    "Canvas flow field with device-aware particle caps",
+    "state-linked intensity and reduced-motion fallback"
+  ],
+  "interaction_fidelity_notes": [
+    "核心业务动作均有即时可见反馈",
+    "失败路径均可恢复，不会中断主流程"
+  ],
+  "a11y_notes": [
+    "focus ring visible",
+    "field labels and inline errors exist",
+    "toast feedback supports aria-live patterns"
+  ],
+  "performance_notes": [
+    "background animation paused on hidden tab",
+    "particle count/speed constrained for mobile"
+  ],
+  "known_gaps": [
+    "未实现独立 modal/drawer 体系，仅使用 toast 反馈",
+    "AR 为浏览器相机权限模拟方案，非 WebXR 真锚点"
+  ],
+  "next_fix_candidates": [
+    "补充 modal/drawer 和 focus trap",
+    "增加商城排序与更细粒度筛选联动",
+    "扩展 AR overlay 的视频 HUD 细节"
+  ]
+}

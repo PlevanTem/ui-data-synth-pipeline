@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "001_devtools",
+    "dir": "001_devtools@v4_20260320",
+    "path": "outputs/001_devtools@v4_20260320",
+    "status": "skeleton_ready"
+  },
+  {
+    "case_id": "002_travel",
+    "dir": "002_travel@v4_20260320",
+    "path": "outputs/002_travel@v4_20260320",
+    "status": "skeleton_ready"
+  },
+  {
+    "case_id": "003_agritech",
+    "dir": "003_agritech@v4_20260320",
+    "path": "outputs/003_agritech@v4_20260320",
+    "status": "skeleton_ready"
+  },
+  {
+    "case_id": "004_e-commerce",
+    "dir": "004_e-commerce@v4_20260320",
+    "path": "outputs/004_e-commerce@v4_20260320",
+    "status": "skeleton_ready"
+  },
+  {
+    "case_id": "005_saas",
+    "dir": "005_saas@v4_20260320",
+    "path": "outputs/005_saas@v4_20260320",
+    "status": "skeleton_ready"
+  }
+]

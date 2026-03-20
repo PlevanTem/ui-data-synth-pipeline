@@ -1,0 +1,43 @@
+{
+  "design_direction": "Cinematic Route Pulse",
+  "color_palette": {
+    "bg_canvas": "#070B14",
+    "bg_surface": "#0D1424",
+    "bg_elevated": "#121C31",
+    "text_primary": "#E8F2FF",
+    "text_secondary": "#9CB4D4",
+    "accent_primary": "#3B82F6",
+    "accent_secondary": "#22D3EE",
+    "accent_success": "#34D399",
+    "accent_warning": "#F59E0B",
+    "accent_error": "#F87171"
+  },
+  "typography": {
+    "heading_family": "Syncopate, sans-serif",
+    "body_family": "Inter, sans-serif",
+    "mono_family": "Space Mono, monospace"
+  },
+  "motion": {
+    "duration_scale_ms": {
+      "fast": 140,
+      "base": 220,
+      "slow": 320
+    },
+    "orchestration_rules": [
+      "状态反馈优先于装饰动画",
+      "同屏最多 2 个主动画焦点",
+      "reduced-motion 下降级为透明度过渡"
+    ]
+  },
+  "responsive_rules": [
+    "mobile-first",
+    "最小触控区 44x44",
+    "桌面双列，移动单列"
+  ],
+  "accessibility_rules": [
+    "WCAG AA 对比度",
+    "focus ring 可见",
+    "错误提示支持 aria-live",
+    "支持 prefers-reduced-motion"
+  ]
+}

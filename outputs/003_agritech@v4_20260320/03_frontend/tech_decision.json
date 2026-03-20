@@ -1,0 +1,101 @@
+{
+  "experience_priority": "visual-first",
+  "wow_goals": [
+    "让用户在 10 秒内感知资源流动与热点变化",
+    "实现图表-地图-工作流三模块实时联动",
+    "在高科技蓝黑语义下保持企业级可读性"
+  ],
+  "north_star_experience": "一个可交互的农业调度指挥中枢，而不是静态展示页。",
+  "selected_stack": {
+    "framework": "react",
+    "language": "typescript",
+    "reasoning": [
+      "需要高密度状态联动与组件通信",
+      "Canvas 生成层与 SVG 图表在 React 中易于模块化封装",
+      "适合后续扩展为真实 SaaS 功能"
+    ],
+    "why_not_others": [
+      "nextjs：本案核心是前端交互验证，SSR/SEO 不是主约束",
+      "vue：可行，但团队生态与组件复用优先 React",
+      "svelte：动画性能优秀，但协作与生态兼容性本案次优"
+    ]
+  },
+  "frontier_candidates_considered": [
+    {
+      "name": "React + Vite + TypeScript",
+      "category": "framework",
+      "why_considered": ["快速搭建", "高交互友好", "工程结构清晰"],
+      "adoption_decision": "chosen",
+      "decision_reason": ["最均衡地满足交互复杂度、可维护性和交付速度"]
+    },
+    {
+      "name": "React Three Fiber",
+      "category": "3d",
+      "why_considered": ["可做更强空间叙事"],
+      "adoption_decision": "rejected",
+      "decision_reason": ["本案以数据可读和调度效率优先，重 3D 会增加噪声和性能风险"]
+    },
+    {
+      "name": "GSAP ScrollTrigger",
+      "category": "animation",
+      "why_considered": ["可实现强滚动叙事"],
+      "adoption_decision": "partial",
+      "decision_reason": ["当前采用轻量 CSS/React 动画；保留后续升级空间"]
+    }
+  ],
+  "interaction_bets": [
+    "统一筛选状态驱动图表、地图和告警面板",
+    "工作流编辑器拖拽与发布反馈闭环",
+    "地图选中对象反向驱动图表聚焦与详情抽屉"
+  ],
+  "generative_art_strategy": {
+    "modes_used": ["Mode A", "Mode B"],
+    "combination_approach": "Canvas flow-field 作为背景层，SVG 图表与地图热力作为业务表达层，形成三层协同。",
+    "inspiration_sources": [
+      "Codrops 2026 WebGL for Designers",
+      "OpenProcessing GPU Particles",
+      "Observable AgroPatterns"
+    ],
+    "integration_method": "通过 React hook 管理 canvas 生命周期，绑定全局筛选状态与 reduced-motion。"
+  },
+  "visual_system_modules": [
+    { "name": "GenerativeFieldLayer", "role": "generative-layer", "tech": ["Canvas2D"], "must_keep": true },
+    { "name": "CommandCharts", "role": "data-module", "tech": ["SVG", "Recharts"], "must_keep": true },
+    { "name": "GeoHeatMapPanel", "role": "section", "tech": ["CSS gradients", "state mapping"], "must_keep": true },
+    { "name": "WorkflowEditor", "role": "narrative-block", "tech": ["React DnD style interactions"], "must_keep": true }
+  ],
+  "rendering_strategy": {
+    "use_webgl": false,
+    "use_canvas": true,
+    "use_svg_motion": true,
+    "use_3d": false,
+    "use_illustration_system": false,
+    "use_generative_layer": true,
+    "generative_modes": ["flow-field", "pulse overlay", "path morph"]
+  },
+  "project_structure": {
+    "delivery_mode": "multi-file",
+    "reasoning": ["按功能拆分组件、hooks、types、generative 模块，便于维护和验收"],
+    "entry_points": ["src/main.tsx", "src/App.tsx"]
+  },
+  "internal_interaction_plan": {
+    "navigation_scheme": "单页锚点 + 移动端抽屉导航",
+    "state_management": "React useState/useMemo，核心筛选状态上提到 App",
+    "component_communication": "props + callback + 共享状态对象",
+    "data_flow": "filterState -> charts/map/workflow -> toast and panel feedback",
+    "animation_orchestration": "微交互 160-240ms，关键反馈 300-420ms，支持 reduced-motion"
+  },
+  "performance_guardrails": [
+    "Canvas 粒子上限按断点降级",
+    "页面隐藏时暂停动画循环",
+    "避免高频重计算，筛选结果 useMemo"
+  ],
+  "fallback_plan": [
+    "reduced-motion 下关闭持续背景动画，仅保留离散状态变化",
+    "低性能设备降低粒子数量与地图脉冲频率"
+  ],
+  "brand_experience_notes": [
+    "蓝黑冷色+青色高亮构建高科技可信感",
+    "主 CTA 始终保持对比优势但不过度营销化"
+  ]
+}

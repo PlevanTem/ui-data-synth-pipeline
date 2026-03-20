@@ -1,0 +1,97 @@
+{
+  "components": [
+    {
+      "name": "TopNavigation",
+      "purpose": "区块导航与移动端菜单",
+      "variants": ["desktop-links", "mobile-drawer"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading", "error", "empty"],
+      "interaction_notes": ["点击跳转锚点", "移动端打开/关闭抽屉", "当前区块高亮"],
+      "linkage": {
+        "affects": ["HeroSection", "CommandDashboard", "LeadForm"],
+        "affected_by": [],
+        "shared_state": ["activeSection", "menuOpen"]
+      },
+      "motion_notes": ["drawer slide", "link underline transition"],
+      "responsive_notes": ["<768 使用抽屉菜单"]
+    },
+    {
+      "name": "CommandFilterBar",
+      "purpose": "筛选时间与区域",
+      "variants": ["inline", "compact"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading", "error", "empty"],
+      "interaction_notes": ["切换即联动图表、地图、KPI"],
+      "linkage": {
+        "affects": ["KpiCards", "SvgTrendChart", "ResourceMap", "WorkflowSummary"],
+        "affected_by": [],
+        "shared_state": ["selectedRegion", "timeRange"]
+      },
+      "motion_notes": ["kpi number transition", "chart morph"],
+      "responsive_notes": ["mobile 保持 sticky 可见"]
+    },
+    {
+      "name": "ResourceMap",
+      "purpose": "显示资源点位、热区和轨迹",
+      "variants": ["interactive", "reduced-motion"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading", "error", "empty"],
+      "interaction_notes": ["点选资源后详情面板和图表同步"],
+      "linkage": {
+        "affects": ["ResourceDetail", "SvgTrendChart"],
+        "affected_by": ["CommandFilterBar"],
+        "shared_state": ["selectedResourceId"]
+      },
+      "motion_notes": ["pulse ring", "route reveal"],
+      "responsive_notes": ["mobile 默认简化图层，仅高亮选中对象"]
+    },
+    {
+      "name": "WorkflowEditor",
+      "purpose": "拖拽式流程编辑与发布",
+      "variants": ["canvas", "mobile-list"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading", "error", "empty"],
+      "interaction_notes": ["节点拖拽", "新增自定义节点", "发布后全局反馈"],
+      "linkage": {
+        "affects": ["WorkflowSummary", "GlobalToast"],
+        "affected_by": ["CommandFilterBar"],
+        "shared_state": ["workflowNodes", "selectedNodeId"]
+      },
+      "motion_notes": ["drag highlight", "publish pulse"],
+      "responsive_notes": ["mobile 使用简化排序交互"]
+    },
+    {
+      "name": "LeadForm",
+      "purpose": "高转化 CTA 留资",
+      "variants": ["inline", "dialog"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading", "error", "empty"],
+      "interaction_notes": ["字段实时校验", "提交 loading", "成功/失败反馈"],
+      "linkage": {
+        "affects": ["GlobalToast"],
+        "affected_by": [],
+        "shared_state": ["formState", "submitStatus"]
+      },
+      "motion_notes": ["button loading", "error shake light"],
+      "responsive_notes": ["mobile 保持单列输入与大触控区域"]
+    }
+  ],
+  "interaction_flows": [
+    {
+      "trigger": "change filter",
+      "source_component": "CommandFilterBar",
+      "target_components": ["KpiCards", "SvgTrendChart", "ResourceMap"],
+      "state_changes": ["update selectedRegion/timeRange", "recompute chart data", "recompute heat intensity"],
+      "animation": "line morph + kpi count transition + heat pulse rescale"
+    },
+    {
+      "trigger": "select map resource",
+      "source_component": "ResourceMap",
+      "target_components": ["ResourceDetail", "SvgTrendChart"],
+      "state_changes": ["update selectedResourceId", "open detail", "highlight related line"],
+      "animation": "marker pulse + detail slide-in"
+    },
+    {
+      "trigger": "publish workflow",
+      "source_component": "WorkflowEditor",
+      "target_components": ["WorkflowSummary", "GlobalToast"],
+      "state_changes": ["set workflow version", "set publish status", "push toast"],
+      "animation": "publish button glow + toast rise-up"
+    }
+  ]
+}

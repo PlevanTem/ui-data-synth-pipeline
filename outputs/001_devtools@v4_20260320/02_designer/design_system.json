@@ -1,0 +1,119 @@
+{
+  "design_direction": "Neuro-Flow Neumorphism for high-density devtools",
+  "color_palette": {
+    "background_base": "#0B1020",
+    "background_elevated": "#121A2E",
+    "surface_soft": "#18233D",
+    "primary": "#3B82F6",
+    "accent_cyan": "#22D3EE",
+    "accent_warning": "#F59E0B",
+    "accent_error": "#F43F5E",
+    "text_primary": "#E6ECFF",
+    "text_secondary": "#9FB0D8",
+    "border_soft": "#273556"
+  },
+  "typography": {
+    "heading_family": "JetBrains Mono",
+    "body_family": "IBM Plex Sans",
+    "scale": {
+      "display": 40,
+      "h1": 32,
+      "h2": 24,
+      "h3": 18,
+      "body": 14,
+      "caption": 12
+    },
+    "line_height": {
+      "dense": 1.35,
+      "normal": 1.55
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32
+  },
+  "radius": {
+    "card": 18,
+    "input": 12,
+    "pill": 999
+  },
+  "shadow": {
+    "outer_soft": "0 10px 26px rgba(3,9,20,0.45)",
+    "inner_soft": "inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -8px 18px rgba(0,0,0,0.25)",
+    "focus_ring": "0 0 0 2px rgba(59,130,246,0.55)"
+  },
+  "motion": {
+    "timing_functions": {
+      "standard": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "emphasis": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+    },
+    "duration_scale": {
+      "fast": 140,
+      "base": 220,
+      "slow": 360
+    },
+    "orchestration_rules": [
+      "优先 transform/opacity，避免 layout 属性动画",
+      "状态反馈先信息后装饰",
+      "关键指标变化采用 stagger 40-80ms 避免同时闪动"
+    ],
+    "scroll_animation_strategy": "轻量 scroll-sync，仅用于 section reveal 与图表入场"
+  },
+  "interaction_principles": [
+    "任何筛选都必须跨区块联动",
+    "每个交互状态都有可见反馈",
+    "错误与空态必须提供恢复动作",
+    "语音入口必须具备可中断和可编辑确认"
+  ],
+  "visual_motifs": [
+    "soft-depth cards",
+    "flow-energy background",
+    "precision grid overlays",
+    "subtle pulse nodes"
+  ],
+  "generative_aesthetics": {
+    "color_mapping": {
+      "normal": "#3B82F6",
+      "elevated": "#22D3EE",
+      "critical": "#F43F5E"
+    },
+    "density_range": {
+      "low": 40,
+      "high": 140
+    },
+    "noise_parameters": {
+      "scale_min": 0.003,
+      "scale_max": 0.012,
+      "octaves": 2
+    },
+    "motion_speed_range": {
+      "min": 0.15,
+      "max": 0.55
+    },
+    "blend_modes": ["screen", "plus-lighter"],
+    "layer_opacity_strategy": "背景层低不透明度(0.12-0.28)，强调层按严重度脉冲提升"
+  },
+  "illustration_strategy": {
+    "style": "minimal technical line-icons with animated paths",
+    "usage": "仅在空态/帮助区使用，避免干扰数据主视图"
+  },
+  "depth_strategy": {
+    "layers": ["background generative", "content surface", "interactive highlight", "overlay"],
+    "z_index_scale": [0, 10, 30, 50]
+  },
+  "responsive_rules": [
+    "desktop 三核并行；tablet 转双栏；mobile 分段切换",
+    "移动端表格转关键信息卡片",
+    "语音查询与核心筛选在小屏固定入口"
+  ],
+  "accessibility_rules": [
+    "文字对比至少 WCAG AA",
+    "焦点态必须可见",
+    "支持 prefers-reduced-motion 并降低粒子更新频率",
+    "图表颜色之外增加形状/线型区分"
+  ]
+}
