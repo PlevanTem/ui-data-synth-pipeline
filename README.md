@@ -47,6 +47,14 @@ ui-data-synth-pipeline/
 2. 按顺序执行：PM Agent → Designer Agent → Frontend Agent，产出会写入 `outputs/<case_id>/`。
 3. 前端产物可直接在浏览器中打开或接入现有项目。
 
+### 批量生成多个 case 目录（编排脚本）
+
+若要从测试集 **批量建壳** 并生成每个 case 的 Agent 执行说明（基于 **web-design-pipeline**），可使用：
+
+`python scripts/batch_web_design_pipeline.py --inputs test_data/example_inputs_5.json --out-root outputs --batch-no-pause`
+
+说明见 [`scripts/README.md`](./scripts/README.md)。脚本会创建 `00_RUN_WEB_DESIGN_PIPELINE.md`，仍需在 Cursor Agent 中按文档跑完三阶段；完成后可用 `scripts/batch_synth_causal_chains.py` 对 `outputs/` 下各 case 批量合成因果链数据。
+
 ## 技能包说明
 
 | 技能包 | 用途 |
