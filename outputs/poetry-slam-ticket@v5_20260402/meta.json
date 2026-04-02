@@ -1,0 +1,17 @@
+{
+  "case_id": "poetry-slam-ticket@v5_20260402",
+  "pipeline_version": "v5",
+  "generated_date": "20260402",
+  "source_type": "query",
+  "input_summary": "International Collaborative Poetry Slam event ticket/invitation page — HTML+CSS centered digital ticket with event info, date/venue, description, pricing table, CTA, judging criteria, prizes, footer",
+  "domain": "cultural-event / literary-arts",
+  "delivery_mode": "single-file",
+  "stack": "html-tailwind-js",
+  "cdn_libs_used": [
+    "cdn.tailwindcss.com",
+    "fonts.googleapis.com — Playfair Display + Lora"
+  ],
+  "uses_visual_effects": true,
+  "interaction_completeness": "full",
+  "created_at": "2026-04-02T00:00:00Z"
+}

@@ -1,0 +1,30 @@
+{
+  "query": "I want to build a landing page for my AI manifestation app called Superconscious. It's a wellness/mindset app that uses AI to help people manifest their goals and upgrade their reality. The vibe should feel premium, dark, slightly mystical but also tech-forward — like the intersection of spirituality and advanced AI. We're in beta so the main goal is to collect waitlist emails. I need it to explain how the app works and make people feel like this is genuinely transformative.",
+  "instruction": {
+    "business_context": "Pre-launch waitlist landing page for 'Superconscious' — an AI-powered manifestation and mindset transformation app targeting the growing wellness-tech market. Core value proposition: personal AI that clears subconscious blocks, personalizes manifestation journeys, and tracks vibrational frequency. Dual market: individual consumers (B2C) and enterprise/team performance (B2B). Primary conversion goal is waitlist email capture ahead of Spring 2025 beta launch.",
+    "target_users": "Primary: Spiritually-curious millennials and Gen Z (25–40) interested in mindfulness, manifestation, and self-optimization; seek credible tools that blend science/tech with spiritual practice. Secondary: Business leaders and HR teams seeking peak-performance culture tools. Both segments are willing to pay premium for personalization and AI-driven insights.",
+    "core_functionality": [
+      "Waitlist email capture with modal form, validation, and success state",
+      "Sticky floating pill navigation with anchor-scroll to page sections",
+      "4-step onboarding flow visualization: Input Reality → AI Analysis → Personalized Journey → Adapt & Grow",
+      "Feature showcase: Hyper-Personalized Imagination Sessions, Superconscious Activations, AI Vibrational Intelligence, Daily Journals & AI Feedback",
+      "Dual audience sections: For Individuals and For Business with distinct value propositions",
+      "App UI mockup preview embedded in phone frame with frequency tracker (Hz display) and AI assistant",
+      "Footer with contact email, social links (Instagram, TikTok, Twitter X, LinkedIn), legal links"
+    ],
+    "data_content": "The page is entirely marketing/branding content — no dynamic data. Key data elements displayed: vibrational frequency metric (350 Hz as illustrative value), results progress metric (+79%), app UI states (Welcome back greeting, AI recommendation card, 'In Progress' task status). Content hierarchy: brand claim → how it works → features → social proof implied through UI → CTA.",
+    "design_spec": {
+      "layout": "Full-width dark single-page scroll. Sections: Floating Pill Nav → Full-screen Hero (centered typography with inline icon badges) → Overlapping Cards over giant background text (Upgrade Your Reality) → 2-column features grid with vertical divider → 2-column audience cards → CTA card with phone mockup → Full-width footer with oversized brand wordmark",
+      "visual_style": "Ultra-dark background (#060608 near-black), single brand accent: purple/violet (#7B5EA7 to #9B7BC8). Cards use dark glass morphism (rgba dark with subtle border). Gradient hero backgrounds shift from deep midnight blue to purple. Footer terminates with a massive oversized 'SUPERCONSCIOUS' wordmark with purple underglow. Overall mood: luxury spiritual tech — premium, mysterious, aspirational.",
+      "typography": "Display: Very large (clamp 52–110px) extra-bold sans-serif for section headlines. Mixed roman + italic serif (Instrument Serif italic) for 'Manifest' creating expressive tension. Floating nav and body copy in Inter. Eyebrow labels in small uppercase tracked caps. Giant footer wordmark at ~12vw. High contrast white-on-black with grey for secondary text."
+    },
+    "interaction_logic": {
+      "navigation_flow": "Single-page with anchor scroll. Nav links 'How it Works' → #how-it-works section, 'Mission' → #mission / audience section. All 'Join Waitlist' CTAs (nav, hero, CTA card, footer) open the same waitlist modal overlay.",
+      "component_behavior": "Floating pill nav is fixed/sticky. Feature cards in 'Upgrade Your Reality' section have CSS float animations (translateY oscillation) at slightly offset timing to create organic depth. 'Join Waitlist' buttons trigger modal with email input. Modal closes on outside click or ✕ button. Form validates email format before submission.",
+      "micro_interactions": "推测: Scroll-triggered entrance animations (fade + slide up) for feature items and audience cards. Float animations on 3–4 overlapping cards in the 'How it Works' section create a sense of objects hovering in space. Progress ring animation for the +79% results widget. Success state auto-dismisses modal after submission. Purple glow effects on frequency ring pulse subtly.",
+      "state_management": "Waitlist modal has 3 states: closed, open/form, open/success. Email input has error state (red border) on invalid submission. Scroll reveal: elements start opacity:0 + translateY(24px), transition to visible when entering viewport."
+    },
+    "technical_requirements": "Single HTML file with Tailwind CSS CDN. Google Fonts: Instrument Serif (for italic display) + Inter. No framework needed — vanilla JS for modal and IntersectionObserver scroll reveal. SVG icons inline. CSS custom properties for brand colors. Radial gradient backgrounds and box-shadow glow effects. Responsive via Tailwind clamp/responsive utilities. No backend needed for MVP — email capture can be wired to Webflow forms or third-party (Typeform, Mailchimp).",
+    "constraints": "Conversion-first: every section ends with or near a 'Join Waitlist' CTA. Premium feel must be maintained — no generic stock imagery; use app UI mockups as visual proof. Mobile-first consideration implied by phone mockup prominence. The brand sits at the intersection of spirituality and technology — avoid either looking too 'woo-woo' or too clinical. Waiting list launch mode means no actual app download yet, all CTAs defer to email capture."
+  }
+}

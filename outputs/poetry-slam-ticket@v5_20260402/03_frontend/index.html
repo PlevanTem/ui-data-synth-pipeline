@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>International Collaborative Poetry Slam — October 21, 2023</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'bg-base': '#F5EDD8',
+            'bg-card': '#FDF8EE',
+            'primary': '#8B1A2E',
+            'primary-hover': '#6B1222',
+            'accent': '#C49A44',
+            'text-main': '#1E1A14',
+            'text-muted': '#6B5D4A',
+            'border-base': '#D4C4A0',
+            'table-stripe': '#F0E8D4',
+            'bg-footer': '#1E1A14',
+            'text-footer': '#B0A080',
+          },
+          fontFamily: {
+            'display': ['"Playfair Display"', 'Georgia', 'serif'],
+            'body': ['Lora', 'Georgia', 'serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background-color: #F5EDD8; font-family: 'Lora', Georgia, serif; color: #1E1A14; }
+
+    /* Canvas Hero Layer */
+    #ink-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    #hero { position: relative; overflow: hidden; }
+    .hero-content { position: relative; z-index: 1; }
+
+    /* Fade-in animation */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94),
+                  transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* First letter drop cap */
+    .dropcap::first-letter {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: #8B1A2E;
+      float: left;
+      line-height: 0.72;
+      margin-right: 0.12em;
+      margin-top: 0.08em;
+    }
+
+    /* Decorative divider */
+    .ornament { text-align: center; color: #C49A44; letter-spacing: 0.5em; font-size: 1rem; }
+
+    /* Table hover */
+    .ticket-table tbody tr { transition: background 0.2s ease; cursor: default; }
+    .ticket-table tbody tr:hover { background: rgba(196,154,68,0.13) !important; }
+
+    /* VIP row accent */
+    .vip-row { border-left: 3px solid #C49A44; }
+
+    /* Progress bar */
+    .bar-track { background: #D4C4A0; border-radius: 9999px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #8B1A2E, #C49A44);
+      width: 0%;
+      transition: width 0.9s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+
+    /* CTA Button */
+    .btn-cta {
+      display: inline-block;
+      background: #8B1A2E;
+      color: #FDF8EE;
+      font-family: 'Lora', Georgia, serif;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 18px 56px;
+      border-radius: 9999px;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(139,26,46,0.32);
+      transition: background 0.25s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+    }
+    .btn-cta:hover {
+      background: #6B1222;
+      transform: scale(1.04);
+      box-shadow: 0 8px 28px rgba(139,26,46,0.40);
+    }
+    .btn-cta:active { transform: scale(0.97); }
+    .btn-cta:focus-visible { outline: 3px solid #C49A44; outline-offset: 4px; }
+
+    /* Prize cards */
+    .prize-card {
+      transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94),
+                  box-shadow 0.25s ease;
+    }
+    .prize-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 40px rgba(30,26,20,0.18);
+    }
+
+    /* Info cards */
+    .info-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 32px rgba(30,26,20,0.16);
+    }
+
+    /* Ticket dashed border */
+    .ticket-wrapper {
+      border: 2px dashed #D4C4A0;
+      border-radius: 12px;
+      position: relative;
+    }
+    .ticket-wrapper::before,
+    .ticket-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 24px; height: 24px;
+      background: #F5EDD8;
+      border-radius: 50%;
+      border: 2px dashed #D4C4A0;
+      transform: translateY(-50%);
+    }
+    .ticket-wrapper::before { left: -13px; }
+    .ticket-wrapper::after { right: -13px; }
+
+    /* SVG decorative line */
+    .svg-rule { display: block; margin: 0 auto; }
+
+    /* Scroll down indicator */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+    .bounce-arrow { animation: bounce 1.8s ease-in-out infinite; }
+
+    /* Footer link hover */
+    .footer-link { transition: color 0.2s; }
+    .footer-link:hover { color: #C49A44; }
+
+    @media (max-width: 768px) {
+      .dropcap::first-letter { font-size: 3rem; }
+      .ticket-wrapper::before, .ticket-wrapper::after { display: none; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ═══════════════════════════════════════════
+       HERO
+  ═══════════════════════════════════════════ -->
+  <section id="hero" class="min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-bg-base text-center">
+    <canvas id="ink-canvas"></canvas>
+    <div class="hero-content max-w-3xl mx-auto">
+      <!-- Eyebrow -->
+      <p class="reveal ornament mb-6 tracking-widest text-sm font-body uppercase" style="transition-delay:0.1s">
+        ✦ &nbsp; October 21, 2023 &nbsp;·&nbsp; Madrid, Spain &nbsp; ✦
+      </p>
+
+      <!-- Main Title -->
+      <h1 class="reveal font-display text-5xl md:text-7xl font-bold text-text-main leading-tight mb-4" style="transition-delay:0.25s">
+        International<br/>
+        <em class="text-primary not-italic">Collaborative</em><br/>
+        Poetry Slam
+      </h1>
+
+      <!-- Sub-headline -->
+      <p class="reveal font-body italic text-text-muted text-lg md:text-xl mb-10 leading-relaxed" style="transition-delay:0.4s">
+        An evening of global voices, creative collaboration,<br class="hidden md:inline"/> and the art of the spoken word.
+      </p>
+
+      <!-- CTA -->
+      <div class="reveal" style="transition-delay:0.55s">
+        <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener" class="btn-cta text-base md:text-lg">
+          Register Now
+        </a>
+      </div>
+
+      <!-- Scroll down arrow -->
+      <div class="reveal mt-16 bounce-arrow text-border-base" style="transition-delay:0.7s">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 4v20M6 16l8 8 8-8" stroke="#D4C4A0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN TICKET CONTENT
+  ═══════════════════════════════════════════ -->
+  <main class="px-6 py-16 max-w-3xl mx-auto">
+
+    <!-- Ticket wrapper -->
+    <div class="ticket-wrapper bg-bg-card p-8 md:p-12 shadow-md mb-16">
+
+      <!-- Ornamental header -->
+      <div class="reveal ornament mb-8">
+        ❧ &nbsp; YOUR INVITATION &nbsp; ❧
+      </div>
+
+      <!-- ── Date & Venue ── -->
+      <div class="reveal grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <!-- Date & Time -->
+        <div class="info-card bg-bg-base rounded-lg p-6 border border-border-base shadow-sm text-center">
+          <div class="text-3xl mb-3">🕕</div>
+          <h2 class="font-display text-primary text-lg font-bold mb-2 tracking-wide uppercase text-sm">Date &amp; Time</h2>
+          <p class="font-display text-text-main text-xl font-bold mb-1">October 21, 2023</p>
+          <p class="font-body text-text-muted italic">6:00 PM — 9:00 PM</p>
+        </div>
+        <!-- Venue -->
+        <div class="info-card bg-bg-base rounded-lg p-6 border border-border-base shadow-sm text-center">
+          <div class="text-3xl mb-3">📍</div>
+          <h2 class="font-display text-primary text-lg font-bold mb-2 tracking-wide uppercase text-sm">Venue</h2>
+          <p class="font-display text-text-main text-xl font-bold mb-1">Teatro Real</p>
+          <p class="font-body text-text-muted italic">Madrid, Spain</p>
+        </div>
+      </div>
+
+      <!-- SVG ornamental divider -->
+      <div class="reveal ornament text-border-base mb-10">
+        <svg class="svg-rule" width="240" height="18" viewBox="0 0 240 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="9" x2="95" y2="9" stroke="#D4C4A0" stroke-width="1"/>
+          <path d="M112 9 C115 3, 120 1, 120 9 C120 17, 125 15, 128 9" stroke="#C49A44" stroke-width="1.2" fill="none"/>
+          <circle cx="120" cy="9" r="3" fill="#C49A44"/>
+          <line x1="145" y1="9" x2="240" y2="9" stroke="#D4C4A0" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <!-- ── Description ── -->
+      <div class="reveal mb-12">
+        <h2 class="font-display text-primary text-2xl font-bold mb-6 text-center">About the Event</h2>
+        <p class="dropcap font-body text-text-main leading-relaxed text-base md:text-lg">
+          Join us for an evening of collaborative creativity at the International Collaborative Poetry Slam. Teams of poets from around the world will come together to craft and perform original works. Spectators can expect a night of riveting performances, artistic expression, and community spirit.
+        </p>
+      </div>
+
+      <!-- SVG ornamental divider -->
+      <div class="reveal ornament text-border-base mb-10">
+        <svg class="svg-rule" width="240" height="18" viewBox="0 0 240 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="9" x2="95" y2="9" stroke="#D4C4A0" stroke-width="1"/>
+          <polygon points="120,3 127,15 113,15" fill="#C49A44" opacity="0.7"/>
+          <line x1="145" y1="9" x2="240" y2="9" stroke="#D4C4A0" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <!-- ── Ticket Pricing ── -->
+      <div class="reveal mb-12">
+        <h2 class="font-display text-primary text-2xl font-bold mb-6 text-center">Ticket Pricing</h2>
+        <div class="overflow-x-auto rounded-lg border border-border-base shadow-sm">
+          <table class="ticket-table w-full font-body text-sm md:text-base">
+            <thead>
+              <tr class="bg-primary text-bg-card text-center">
+                <th class="py-4 px-6 font-display text-left font-bold tracking-wide">Ticket Type</th>
+                <th class="py-4 px-6 font-display font-bold tracking-wide">Price</th>
+                <th class="py-4 px-6 font-display font-bold tracking-wide text-right">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-border-base bg-bg-card text-center">
+                <td class="py-4 px-6 text-left">
+                  <span class="font-body font-semibold text-text-main">Early Bird</span>
+                </td>
+                <td class="py-4 px-6 font-display font-bold text-primary text-xl">€15</td>
+                <td class="py-4 px-6 text-right text-text-muted italic text-sm">Limited availability</td>
+              </tr>
+              <tr class="border-t border-border-base bg-table-stripe text-center">
+                <td class="py-4 px-6 text-left">
+                  <span class="font-body font-semibold text-text-main">General Admission</span>
+                </td>
+                <td class="py-4 px-6 font-display font-bold text-primary text-xl">€25</td>
+                <td class="py-4 px-6 text-right text-text-muted italic text-sm">Full event access</td>
+              </tr>
+              <tr class="border-t border-border-base bg-bg-card text-center vip-row">
+                <td class="py-4 px-6 text-left">
+                  <span class="font-body font-semibold text-text-main">VIP</span>
+                  <span class="ml-2 text-xs bg-accent text-bg-card px-2 py-0.5 rounded-full font-semibold tracking-wide">✦ VIP</span>
+                </td>
+                <td class="py-4 px-6 font-display font-bold text-accent text-xl">€50</td>
+                <td class="py-4 px-6 text-right text-text-muted italic text-sm">Priority seating + reception</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CTA ── -->
+      <div class="reveal text-center mb-4">
+        <p class="font-body italic text-text-muted mb-6 text-base">Secure your seat at this extraordinary celebration of world poetry.</p>
+        <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener" class="btn-cta text-base md:text-lg">
+          Register on Eventbrite →
+        </a>
+      </div>
+
+    </div><!-- /ticket-wrapper -->
+
+    <!-- ── Judging Criteria ── -->
+    <section class="reveal mb-16">
+      <h2 class="font-display text-primary text-2xl font-bold mb-8 text-center">Judging Criteria</h2>
+      <div class="bg-bg-card border border-border-base rounded-lg p-6 md:p-10 shadow-sm">
+        <div class="space-y-6" id="criteria-bars">
+          <!-- dynamically rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Prizes ── -->
+    <section class="reveal mb-16">
+      <h2 class="font-display text-primary text-2xl font-bold mb-8 text-center">Prizes</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 1st -->
+        <div class="prize-card bg-bg-card border-2 border-accent rounded-xl p-6 shadow-sm text-center">
+          <div class="text-4xl mb-3">🥇</div>
+          <h3 class="font-display text-accent text-xl font-bold mb-1">1st Place</h3>
+          <p class="font-display text-text-main text-2xl font-bold mb-3">€500</p>
+          <p class="font-body text-text-muted text-sm leading-relaxed italic">Publishing contract with Editorial Anagrama</p>
+        </div>
+        <!-- 2nd -->
+        <div class="prize-card bg-bg-card border border-border-base rounded-xl p-6 shadow-sm text-center">
+          <div class="text-4xl mb-3">🥈</div>
+          <h3 class="font-display text-text-main text-xl font-bold mb-1">2nd Place</h3>
+          <p class="font-display text-text-main text-2xl font-bold mb-3">€300</p>
+          <p class="font-body text-text-muted text-sm leading-relaxed italic">Feature in Poesía Digital magazine</p>
+        </div>
+        <!-- 3rd -->
+        <div class="prize-card bg-bg-card border border-border-base rounded-xl p-6 shadow-sm text-center">
+          <div class="text-4xl mb-3">🥉</div>
+          <h3 class="font-display text-text-main text-xl font-bold mb-1">3rd Place</h3>
+          <p class="font-display text-text-main text-2xl font-bold mb-3">€150</p>
+          <p class="font-body text-text-muted text-sm leading-relaxed italic">Workshop with renowned poet Ben Clark</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════ -->
+  <footer class="bg-bg-footer text-text-footer px-6 py-14">
+    <div class="max-w-3xl mx-auto">
+      <!-- Divider ornament -->
+      <div class="text-center mb-10 opacity-50">
+        <svg class="svg-rule" width="180" height="14" viewBox="0 0 180 14" fill="none">
+          <line x1="0" y1="7" x2="72" y2="7" stroke="#B0A080" stroke-width="1"/>
+          <circle cx="90" cy="7" r="4" fill="#C49A44" opacity="0.7"/>
+          <line x1="108" y1="7" x2="180" y2="7" stroke="#B0A080" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+        <!-- Contact -->
+        <div>
+          <h3 class="font-display text-bg-card text-base font-bold mb-4 tracking-widest uppercase text-sm">Contact</h3>
+          <ul class="space-y-2 font-body text-sm">
+            <li>
+              <a href="mailto:info@internationalpoetryslam.com" class="footer-link">
+                ✉ &nbsp;info@internationalpoetryslam.com
+              </a>
+            </li>
+            <li>
+              <a href="tel:+34911234567" class="footer-link">
+                ☎ &nbsp;+34 91 123 4567
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Sponsors -->
+        <div>
+          <h3 class="font-display text-bg-card text-base font-bold mb-4 tracking-widest uppercase text-sm">Proudly Sponsored By</h3>
+          <ul class="space-y-2 font-body text-sm">
+            <li class="footer-link cursor-default">Editorial Anagrama</li>
+            <li class="footer-link cursor-default">Poesía Digital</li>
+            <li class="footer-link cursor-default">Fundación Loewe</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="text-center text-xs opacity-40 font-body">
+        © 2023 International Collaborative Poetry Slam · Teatro Real, Madrid, Spain
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════
+       JAVASCRIPT
+  ═══════════════════════════════════════════ -->
+  <script>
+    /* ─── Judging Criteria Data ─── */
+    const criteria = [
+      { label: 'Performance',        points: 30, max: 100 },
+      { label: 'Originality',        points: 20, max: 100 },
+      { label: 'Collaboration',      points: 20, max: 100 },
+      { label: 'Language Usage',     points: 20, max: 100 },
+      { label: 'Audience Engagement',points: 10, max: 100 },
+    ];
+
+    function renderCriteria() {
+      const container = document.getElementById('criteria-bars');
+      criteria.forEach((c, i) => {
+        const row = document.createElement('div');
+        row.dataset.points = c.points;
+        row.innerHTML = `
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-body text-text-main font-semibold text-sm md:text-base">${c.label}</span>
+            <span class="font-display text-primary font-bold text-sm">${c.points} pts</span>
+          </div>
+          <div class="bar-track h-2.5">
+            <div class="bar-fill" data-width="${c.points}%"></div>
+          </div>`;
+        container.appendChild(row);
+      });
+    }
+
+    /* ─── Intersection Observer: reveal + bar animate ─── */
+    function setupReveal() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    function setupBars() {
+      const barObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const fills = entry.target.querySelectorAll('.bar-fill');
+            fills.forEach((fill, i) => {
+              setTimeout(() => {
+                fill.style.width = fill.dataset.width;
+              }, i * 120);
+            });
+            barObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+
+      const barsSection = document.getElementById('criteria-bars');
+      if (barsSection) barObserver.observe(barsSection);
+    }
+
+    /* ─── Canvas Ink Particle System ─── */
+    function initInkCanvas() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = document.getElementById('ink-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles;
+
+      function resize() {
+        W = canvas.width  = canvas.offsetWidth;
+        H = canvas.height = canvas.offsetHeight;
+      }
+
+      // Simple pseudo-noise using sine compositing
+      function noise(x, y, t) {
+        return Math.sin(x * 0.007 + t * 0.4)
+             * Math.cos(y * 0.009 + t * 0.3)
+             + Math.sin((x + y) * 0.006 + t * 0.2);
+      }
+
+      function createParticles() {
+        particles = Array.from({ length: 70 }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 30 + Math.random() * 55,
+          speed: 0.18 + Math.random() * 0.32,
+          phase: Math.random() * Math.PI * 2,
+          colorType: Math.random() > 0.5 ? 0 : 1,
+        }));
+      }
+
+      let t = 0;
+      function draw() {
+        // Very faint fade-over creates trailing effect
+        ctx.fillStyle = 'rgba(245, 237, 216, 0.08)';
+        ctx.fillRect(0, 0, W, H);
+
+        particles.forEach(p => {
+          const angle = noise(p.x, p.y, t + p.phase) * Math.PI * 2;
+          p.x += Math.cos(angle) * p.speed;
+          p.y += Math.sin(angle) * p.speed;
+          // Wrap
+          if (p.x < -p.r) p.x = W + p.r;
+          if (p.x > W + p.r) p.x = -p.r;
+          if (p.y < -p.r) p.y = H + p.r;
+          if (p.y > H + p.r) p.y = -p.r;
+
+          ctx.save();
+          ctx.filter = 'blur(18px)';
+          const alpha = p.colorType === 0 ? 0.045 : 0.055;
+          const color = p.colorType === 0
+            ? `rgba(139, 26, 46, ${alpha})`
+            : `rgba(196, 154, 68, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.restore();
+        });
+
+        t += 0.003;
+        requestAnimationFrame(draw);
+      }
+
+      resize();
+      createParticles();
+      draw();
+      window.addEventListener('resize', () => { resize(); createParticles(); });
+    }
+
+    /* ─── Hero reveal on load ─── */
+    function heroReveal() {
+      const hero = document.querySelectorAll('#hero .reveal');
+      hero.forEach(el => {
+        setTimeout(() => el.classList.add('visible'), parseInt(el.style.transitionDelay || '0') * 1000 + 200);
+      });
+    }
+
+    /* ─── Init ─── */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCriteria();
+      setupReveal();
+      setupBars();
+      initInkCanvas();
+      // Hero elements: trigger with delay from inline style
+      document.querySelectorAll('#hero .reveal').forEach(el => {
+        const delay = parseFloat(el.style.transitionDelay || 0) * 1000;
+        setTimeout(() => el.classList.add('visible'), delay + 100);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "https://cdn.tailwindcss.com",
+    "https://fonts.googleapis.com (Playfair Display + Lora)"
+  ],
+  "browser_runnable": true,
+
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "活动标题首屏展示",
+      "status": "met",
+      "evidence": "Hero section 包含活动名称、日期、地点，无需滚动即可看到；staggered 入场动画依次呈现",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "时间与地点双栏展示",
+      "status": "met",
+      "evidence": "ticket-wrapper 内双栏 grid，Date&Time 卡片和 Venue 卡片并列，hover 上浮效果已实现",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "活动描述段落",
+      "status": "met",
+      "evidence": "About the Event 区块，dropcap 首字下沉，Lora 正文字体，完整 description 文字呈现",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "票价对照表",
+      "status": "met",
+      "evidence": "ticket-table：三行 Early Bird €15 / General Admission €25 / VIP €50，VIP 行金铜左侧强调，hover 行高亮，交替底纹",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M05",
+      "feature": "注册 CTA 按钮",
+      "status": "met",
+      "evidence": "两处 btn-cta 均指向 eventbrite URL，target=_blank，hover scale + 颜色过渡 + 阴影变化",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M06",
+      "feature": "页脚联系信息 + 赞助商",
+      "status": "met",
+      "evidence": "Footer 包含 email + phone（可点击 mailto/tel），三家赞助商完整列出",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S01",
+      "feature": "评奖标准可视化",
+      "status": "met",
+      "evidence": "criteria-bars：5 项进度条，Intersection Observer 触发 width 动画增长，stagger 延迟依次触发",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S02",
+      "feature": "奖项卡片组",
+      "status": "met",
+      "evidence": "三列 prize-card，1st 金铜边框强调，hover 上浮，奖金+权益文字完整",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S03",
+      "feature": "滚动入场动画",
+      "status": "met",
+      "evidence": "所有 .reveal 元素通过 IntersectionObserver 触发 opacity+translateY 过渡",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S04",
+      "feature": "移动端响应式",
+      "status": "met",
+      "evidence": "双栏 grid 用 grid-cols-1 md:grid-cols-2，表格容器 overflow-x-auto，ticket-wrapper 伪元素在 <768px 隐藏",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+
+  "interaction_completeness": {
+    "navigation": "Hero 底部向下箭头为装饰性，无顶部导航（单屏活动票页无需），平滑 scroll-behavior 已设置",
+    "filtering": "N/A — 本案无筛选需求",
+    "forms": "注册通过外部 Eventbrite 链接，两处 CTA 按钮均有 hover/active 状态",
+    "animation": "Hero stagger 入场 + 区块 scroll reveal + 进度条 grow 动画 + Canvas 水墨粒子背景 + prize/info card hover",
+    "empty_error_states": "N/A — 纯展示页，无表单无空状态场景"
+  },
+
+  "visual_effects_notes": "使用 Canvas 2D 原生 API 实现水墨烟雾粒子系统（70粒子，噪声场游走，极低透明度，blur滤镜，拖尾效果）；SVG 内联装饰分隔线；CSS dropcap 首字下沉；prefers-reduced-motion 降级跳过 Canvas",
+
+  "known_gaps": [
+    "Canvas blur 滤镜在某些旧浏览器（Safari < 16）可能性能较差，降级方案：无动效背景",
+    "Google Fonts 需要网络连接，离线环境会回退系统衬线体"
+  ],
+
+  "next_fix_candidates": [
+    "可添加 GSAP ScrollTrigger 增强滚动视差（当前 Intersection Observer 已足够）",
+    "可添加票种 tooltip 说明VIP专属权益详情"
+  ]
+}
