@@ -113,7 +113,7 @@ description: Reverse-engineer website designs from screenshots, videos, or URLs 
 - 实现可感知的交互：悬浮态、点击态、下拉菜单、Tab 切换、侧边栏等
 - 代码结构清晰，注释仅在有非显而易见的设计决策时才加
 
-保存文件路径：`output/restored.html`（相对于当前工作目录）
+保存文件路径：`reverse_output/{case_name}_{YYYYMMDD}/restored.html`（相对于当前工作目录）
 
 ---
 
@@ -150,7 +150,7 @@ description: Reverse-engineer website designs from screenshots, videos, or URLs 
 }
 ```
 
-保存文件路径：`output/query_instruction.json`
+保存文件路径：`reverse_output/{case_name}_{YYYYMMDD}/query_instruction.json`
 
 ---
 
@@ -184,8 +184,24 @@ description: Reverse-engineer website designs from screenshots, videos, or URLs 
 
 ---
 
+## 输出目录规范
+
+所有产出统一归档至：`reverse_output/{case_name}_{YYYYMMDD}/`
+
+- `case_name`：取自输入来源的简短标识，优先级如下：
+  1. URL 域名主体（如 `notion`、`linear`、`stripe`）
+  2. 图片/视频文件名去扩展名（如 `dashboard-screenshot`）
+  3. 用户指定名称（如用户说"这是 xx 项目"则用 `xx`）
+  4. 以上均无则用 `ui`
+- `case_name` 仅含小写字母、数字和连字符，不含空格
+- `YYYYMMDD`：执行当日日期（如 `20260403`）
+- 示例：`reverse_output/stripe_20260403/`
+
+---
+
 ## 输出顺序
 
-1. 先完成并保存 `output/restored.html`
-2. 再完成并保存 `output/query_instruction.json`
-3. 最后向用户做简短汇报：说明两个文件的存放位置，以及 1-2 句关于设计的关键洞察
+1. 根据规范确定输出目录 `reverse_output/{case_name}_{YYYYMMDD}/`，必要时创建
+2. 先完成并保存 `restored.html` 至该目录
+3. 再完成并保存 `query_instruction.json` 至该目录
+4. 最后向用户做简短汇报：说明两个文件的存放位置，以及 1-2 句关于设计的关键洞察

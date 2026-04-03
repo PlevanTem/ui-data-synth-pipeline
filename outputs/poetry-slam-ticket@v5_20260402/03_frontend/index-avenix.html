@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>International Collaborative Poetry Slam — October 21, 2023</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ══════════════════════════════════════════════
+       AVENIX DESIGN DNA — CSS TOKENS
+    ══════════════════════════════════════════════ */
+    :root {
+      /* Color */
+      --color-primary:      #D6177A;
+      --color-primary-dark: #A8135F;
+      --color-accent:       #F72585;
+      --color-secondary:    #2C2C3E;
+      --bg:                 #F4F4F8;
+      --card:               #FFFFFF;
+      --text-main:          #1A1A2E;
+      --text-muted:         #8B8B9E;
+      --border:             #EDEDF2;
+      --success:            #22C55E;
+      --warning:            #F59E0B;
+      --info:               #3B82F6;
+
+      /* Shape */
+      --r-sm:   6px;
+      --r-md:   10px;
+      --r-lg:   14px;
+      --r-pill: 9999px;
+
+      /* Elevation */
+      --shadow-low:  0 1px 3px rgba(0,0,0,0.06);
+      --shadow-med:  0 4px 16px rgba(0,0,0,0.08);
+      --shadow-high: 0 8px 32px rgba(0,0,0,0.12);
+
+      /* Motion */
+      --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+      --dur-micro:  100ms;
+      --dur-normal: 200ms;
+      --dur-macro:  350ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Sticky Nav ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 24px; width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--color-primary);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-logo-name { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+    .nav-tabs { display: flex; gap: 2px; }
+    @media (max-width: 640px) { .nav-tabs { display: none; } }
+
+    /* ── Tabs ── */
+    .tab {
+      padding: 7px 16px; border-radius: var(--r-pill);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      color: var(--text-muted); border: none; background: transparent;
+      transition: background var(--dur-normal) var(--ease),
+                  color var(--dur-normal) var(--ease);
+    }
+    .tab:hover { background: rgba(214,23,122,0.07); color: var(--color-primary); }
+    .tab.active { background: var(--color-primary); color: #fff; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--color-primary); color: #fff;
+      font-size: 13px; font-weight: 600;
+      padding: 9px 20px; border-radius: var(--r-pill);
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(214,23,122,0.28);
+      transition: background var(--dur-normal) var(--ease),
+                  transform var(--dur-normal) var(--ease),
+                  box-shadow var(--dur-normal) var(--ease);
+      white-space: nowrap;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(214,23,122,0.36);
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--text-muted);
+      font-size: 13px; font-weight: 500;
+      padding: 9px 18px; border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+      text-decoration: none; cursor: pointer;
+      transition: background var(--dur-normal) var(--ease),
+                  color var(--dur-normal) var(--ease),
+                  border-color var(--dur-normal) var(--ease);
+      white-space: nowrap;
+    }
+    .btn-ghost:hover {
+      background: rgba(214,23,122,0.06);
+      color: var(--color-primary);
+      border-color: rgba(214,23,122,0.3);
+    }
+
+    /* ── Hero ── */
+    #hero {
+      position: relative; overflow: hidden;
+      padding: 80px 24px 72px;
+      text-align: center;
+    }
+    .hero-blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(72px); pointer-events: none; z-index: 0;
+    }
+    .hero-blob-1 {
+      width: 480px; height: 480px;
+      background: rgba(214,23,122,0.10);
+      top: -120px; right: -60px;
+      animation: blob-drift 14s ease-in-out infinite;
+    }
+    .hero-blob-2 {
+      width: 340px; height: 340px;
+      background: rgba(247,37,133,0.08);
+      bottom: -80px; left: 5%;
+      animation: blob-drift 18s ease-in-out infinite reverse;
+    }
+    .hero-blob-3 {
+      width: 260px; height: 260px;
+      background: rgba(123,47,247,0.06);
+      top: 30%; left: -80px;
+      animation: blob-drift 22s ease-in-out infinite;
+    }
+    @keyframes blob-drift {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(24px,-18px) scale(1.04); }
+      66%      { transform: translate(-16px,12px) scale(0.97); }
+    }
+    @media (prefers-reduced-motion: reduce) { .hero-blob { animation: none; } }
+    .hero-content { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+
+    /* ── Reveal animation ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity var(--dur-macro) var(--ease),
+                  transform var(--dur-macro) var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Badge / Chip ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: var(--r-pill);
+      font-size: 12px; font-weight: 500; line-height: 18px;
+    }
+    .badge-primary { background: rgba(214,23,122,0.10); color: var(--color-primary); }
+    .badge-success { background: rgba(34,197,94,0.12);  color: #16a34a; }
+    .badge-warning { background: rgba(245,158,11,0.12); color: #d97706; }
+    .badge-info    { background: rgba(59,130,246,0.12); color: #2563eb; }
+    .badge-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    .chip {
+      display: inline-flex; align-items: center;
+      padding: 5px 12px; border-radius: var(--r-pill);
+      font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border); color: var(--text-muted);
+      background: var(--card);
+    }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+      max-width: 1100px; margin: 0 auto; padding: 0 24px 24px;
+    }
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md, var(--r-md));
+      padding: 16px 18px;
+      box-shadow: var(--shadow-low);
+      transition: box-shadow var(--dur-normal) var(--ease);
+    }
+    .stat-card:hover { box-shadow: var(--shadow-med); }
+    .stat-label {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stat-value {
+      font-size: 22px; font-weight: 700; color: var(--text-main);
+      line-height: 1.2; margin: 5px 0 3px;
+    }
+    .stat-sub { font-size: 12px; color: var(--text-muted); }
+    .stat-delta { font-size: 12px; font-weight: 500; color: #16a34a; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      box-shadow: var(--shadow-low);
+      padding: 24px;
+    }
+    .card-hover {
+      transition: transform var(--dur-normal) var(--ease),
+                  box-shadow var(--dur-normal) var(--ease);
+    }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-high); }
+
+    /* ── Upgrade card ── */
+    .upgrade-card {
+      background: linear-gradient(135deg, #D6177A 0%, #7B2FF7 100%);
+      border-radius: var(--r-lg);
+      padding: 24px 20px; color: #fff;
+    }
+    .upgrade-card .btn-white {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 9px 0;
+      background: #fff; color: var(--color-primary);
+      font-size: 13px; font-weight: 600;
+      border-radius: var(--r-pill); border: none; cursor: pointer;
+      text-decoration: none;
+      transition: opacity var(--dur-normal) var(--ease);
+    }
+    .upgrade-card .btn-white:hover { opacity: 0.9; }
+
+    /* ── Section heading ── */
+    .section-head { margin-bottom: 16px; }
+    .section-title {
+      font-size: 17px; font-weight: 600; color: var(--text-main); line-height: 1.3;
+    }
+    .section-subtitle {
+      font-size: 13px; color: var(--text-muted); margin-top: 2px;
+    }
+
+    /* ── Data table ── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      padding: 11px 16px;
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-align: left; text-transform: uppercase; letter-spacing: 0.05em;
+      background: #FAFAFA; border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 14px 16px; font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tbody tr {
+      transition: background var(--dur-micro) var(--ease);
+    }
+    .data-table tbody tr:hover { background: rgba(214,23,122,0.025); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Progress bar ── */
+    .bar-track {
+      background: var(--border); border-radius: var(--r-pill);
+      overflow: hidden; height: 7px;
+    }
+    .bar-fill {
+      height: 100%; border-radius: var(--r-pill);
+      background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+      width: 0%;
+      transition: width 0.9s var(--ease);
+    }
+
+    /* ── Prize card ── */
+    .prize-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 28px 20px;
+      box-shadow: var(--shadow-low); text-align: center;
+      transition: transform var(--dur-normal) var(--ease),
+                  box-shadow var(--dur-normal) var(--ease);
+    }
+    .prize-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-high); }
+    .prize-card.gold { border-top: 3px solid var(--color-primary); }
+
+    /* ── Tab bar pair ── */
+    .tab-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 14px; gap: 8px; flex-wrap: wrap;
+    }
+    .tab-bar { display: flex; gap: 3px; }
+
+    /* ── Scroll bounce ── */
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+    .bounce { animation: bounce 1.8s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .bounce { animation: none; } }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 48px 24px 32px;
+    }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-link {
+      color: var(--text-muted); text-decoration: none;
+      font-size: 13px;
+      transition: color var(--dur-normal) var(--ease);
+    }
+    .footer-link:hover { color: var(--color-primary); }
+
+    /* ── Main layout ── */
+    .main-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px 64px; }
+    .main-wrap > * + * { margin-top: 20px; }
+
+    @media (max-width: 640px) {
+      #hero { padding: 56px 20px 52px; }
+      .hero-blob-1 { width: 260px; height: 260px; }
+      .hero-blob-2 { width: 200px; height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       NAV BAR
+  ══════════════════════════════════ -->
+  <nav class="nav-bar">
+    <div class="nav-inner">
+      <!-- Logo -->
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 3h6c2.2 0 4 1.8 4 4s-1.8 4-4 4H3V3z" fill="white" opacity="0.9"/>
+            <path d="M3 11h4v4H3v-4z" fill="white" opacity="0.6"/>
+          </svg>
+        </div>
+        <span class="nav-logo-name">PoetrySlam</span>
+      </a>
+
+      <!-- Center tabs -->
+      <div class="nav-tabs">
+        <button class="tab active">Event</button>
+        <button class="tab">Tickets</button>
+        <button class="tab">Prizes</button>
+        <button class="tab">Judging</button>
+      </div>
+
+      <!-- Right CTA -->
+      <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener" class="btn-primary">
+        Register Now
+      </a>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════
+       HERO
+  ══════════════════════════════════ -->
+  <section id="hero">
+    <!-- Soft gradient blobs -->
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
+
+    <div class="hero-content">
+      <!-- Eyebrow badge -->
+      <div class="reveal" style="margin-bottom:20px;transition-delay:0.05s">
+        <span class="badge badge-primary" style="padding:6px 16px;font-size:13px">
+          <span class="badge-dot"></span>
+          October 21, 2023 &nbsp;·&nbsp; Madrid, Spain
+        </span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="reveal" style="
+        font-size: clamp(2rem, 5.5vw, 3.75rem);
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.025em;
+        color: var(--text-main);
+        margin-bottom: 18px;
+        transition-delay: 0.15s;
+      ">
+        International<br/>
+        <span style="color:var(--color-primary)">Collaborative</span><br/>
+        Poetry Slam
+      </h1>
+
+      <!-- Sub -->
+      <p class="reveal" style="
+        font-size: 16px;
+        color: var(--text-muted);
+        line-height: 1.65;
+        max-width: 500px;
+        margin: 0 auto 32px;
+        transition-delay: 0.25s;
+      ">
+        An evening of global voices, creative collaboration,<br class="hidden-sm"/>
+        and the art of the spoken word.
+      </p>
+
+      <!-- CTA row -->
+      <div class="reveal" style="
+        display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+        transition-delay: 0.35s;
+      ">
+        <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener"
+           class="btn-primary" style="padding:13px 32px;font-size:14px">
+          Register on Eventbrite →
+        </a>
+        <button class="btn-ghost" style="padding:13px 24px;font-size:14px">
+          Learn more
+        </button>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="reveal bounce" style="margin-top:56px;transition-delay:0.5s">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style="margin:0 auto;display:block">
+          <path d="M11 3v16M4 13l7 7 7-7" stroke="#D1D1DB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       KPI STAT CARDS
+  ══════════════════════════════════ -->
+  <div class="stat-grid reveal" style="padding-top:8px">
+    <div class="stat-card">
+      <div class="stat-label">Date</div>
+      <div class="stat-value">Oct 21</div>
+      <div class="stat-delta">+1 day event</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Duration</div>
+      <div class="stat-value">3 hrs</div>
+      <div class="stat-sub">6:00 PM — 9:00 PM</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Venue</div>
+      <div class="stat-value" style="font-size:17px">Teatro Real</div>
+      <div class="stat-sub">Madrid, Spain</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Starting From</div>
+      <div class="stat-value" style="color:var(--color-primary)">€15</div>
+      <div class="stat-delta">Early Bird live</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════ -->
+  <main class="main-wrap">
+
+    <!-- ── About + VIP Upgrade Card ── -->
+    <div class="card reveal">
+      <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:240px">
+          <div class="section-head">
+            <div class="section-title">About the Event</div>
+            <div class="section-subtitle">An international celebration of the spoken word</div>
+          </div>
+          <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-top:12px">
+            Join us for an evening of collaborative creativity at the International Collaborative Poetry Slam.
+            Teams of poets from around the world will come together to craft and perform original works.
+            Spectators can expect a night of riveting performances, artistic expression, and community spirit.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+            <span class="chip">🌍 Global Teams</span>
+            <span class="chip">🎤 Live Performance</span>
+            <span class="chip">🏆 €950 Prize Pool</span>
+            <span class="chip">📍 Teatro Real</span>
+          </div>
+        </div>
+
+        <!-- VIP Upgrade Card -->
+        <div class="upgrade-card" style="width:220px;flex-shrink:0">
+          <div style="font-size:36px;margin-bottom:10px">🎙️</div>
+          <div style="font-size:12px;font-weight:600;opacity:0.75;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">
+            VIP Access
+          </div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:8px">€50</div>
+          <p style="font-size:12px;opacity:0.82;line-height:1.55;margin-bottom:18px">
+            Priority seating, exclusive pre-show reception, and meet-the-poets access.
+          </p>
+          <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener" class="btn-white">
+            Get VIP →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Ticket Pricing ── -->
+    <section class="reveal">
+      <div class="tab-row">
+        <div class="section-head" style="margin-bottom:0">
+          <div class="section-title">Ticket Pricing</div>
+          <div class="section-subtitle">Secure your seat at this extraordinary celebration</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="tab-bar" id="ticket-tab-bar">
+            <button class="tab active" data-filter="all">All Tickets</button>
+            <button class="tab" data-filter="available">Available</button>
+            <button class="tab" data-filter="vip">VIP</button>
+          </div>
+          <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener"
+             class="btn-ghost" style="font-size:12px;padding:7px 14px">
+            ↗ Eventbrite
+          </a>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket Type</th>
+              <th style="text-align:center">Price</th>
+              <th style="text-align:center">Status</th>
+              <th style="text-align:right;padding-right:20px">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-type="available">
+              <td>
+                <div style="font-weight:600;color:var(--text-main)">Early Bird</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:1px">Limited availability</div>
+              </td>
+              <td style="text-align:center">
+                <span style="font-size:20px;font-weight:700;color:var(--color-primary)">€15</span>
+              </td>
+              <td style="text-align:center">
+                <span class="badge badge-warning">
+                  <span class="badge-dot" style="background:#d97706"></span>
+                  Limited
+                </span>
+              </td>
+              <td style="text-align:right;padding-right:20px">
+                <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" class="btn-ghost" style="font-size:12px;padding:5px 14px">Book →</a>
+              </td>
+            </tr>
+            <tr data-type="available">
+              <td>
+                <div style="font-weight:600;color:var(--text-main)">General Admission</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:1px">Full event access</div>
+              </td>
+              <td style="text-align:center">
+                <span style="font-size:20px;font-weight:700;color:var(--color-primary)">€25</span>
+              </td>
+              <td style="text-align:center">
+                <span class="badge badge-success">
+                  <span class="badge-dot" style="background:#16a34a"></span>
+                  Available
+                </span>
+              </td>
+              <td style="text-align:right;padding-right:20px">
+                <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" class="btn-ghost" style="font-size:12px;padding:5px 14px">Book →</a>
+              </td>
+            </tr>
+            <tr data-type="vip">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-weight:600;color:var(--text-main)">VIP</span>
+                  <span class="badge badge-primary" style="padding:2px 8px;font-size:11px">✦ VIP</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:1px">Priority seating + reception</div>
+              </td>
+              <td style="text-align:center">
+                <span style="font-size:20px;font-weight:700;color:var(--color-primary)">€50</span>
+              </td>
+              <td style="text-align:center">
+                <span class="badge badge-info">
+                  <span class="badge-dot" style="background:#2563eb"></span>
+                  Exclusive
+                </span>
+              </td>
+              <td style="text-align:right;padding-right:20px">
+                <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" class="btn-ghost" style="font-size:12px;padding:5px 14px">Book →</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Judging Criteria ── -->
+    <section class="reveal">
+      <div class="section-head">
+        <div class="section-title">Judging Criteria</div>
+        <div class="section-subtitle">How performances are evaluated — total 100 points</div>
+      </div>
+      <div class="card">
+        <div id="criteria-bars" style="display:flex;flex-direction:column;gap:18px"></div>
+      </div>
+    </section>
+
+    <!-- ── Prizes ── -->
+    <section class="reveal">
+      <div class="section-head">
+        <div class="section-title">Prize Pool</div>
+        <div class="section-subtitle">€950 total across three podium positions</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+        <div class="prize-card gold">
+          <div style="font-size:38px;margin-bottom:14px">🥇</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">1st Place</div>
+          <div style="font-size:34px;font-weight:700;color:var(--color-primary);line-height:1;margin-bottom:10px">€500</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.55">Publishing contract with<br/>Editorial Anagrama</div>
+        </div>
+        <div class="prize-card">
+          <div style="font-size:38px;margin-bottom:14px">🥈</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">2nd Place</div>
+          <div style="font-size:34px;font-weight:700;color:var(--text-main);line-height:1;margin-bottom:10px">€300</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.55">Feature in<br/>Poesía Digital magazine</div>
+        </div>
+        <div class="prize-card">
+          <div style="font-size:38px;margin-bottom:14px">🥉</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">3rd Place</div>
+          <div style="font-size:34px;font-weight:700;color:var(--text-main);line-height:1;margin-bottom:10px">€150</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.55">Workshop with<br/>renowned poet Ben Clark</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Register CTA Banner ── -->
+    <section class="reveal">
+      <div style="
+        background: linear-gradient(135deg, #FFF0F7 0%, #FFFFFF 60%);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 48px 32px;
+        text-align: center;
+        box-shadow: var(--shadow-low);
+      ">
+        <div style="
+          display:inline-flex;align-items:center;gap:6px;
+          background:rgba(214,23,122,0.08);
+          border-radius:var(--r-pill);
+          padding:5px 14px;
+          font-size:12px;font-weight:500;color:var(--color-primary);
+          margin-bottom:18px;
+        ">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--color-primary);display:inline-block"></span>
+          Registration Open
+        </div>
+        <h3 style="font-size:24px;font-weight:700;color:var(--text-main);margin-bottom:8px">Ready to Perform?</h3>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.65;max-width:400px;margin:0 auto 28px">
+          Secure your seat at this extraordinary celebration of world poetry. Limited tickets available.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+          <a href="https://internationalpoetryslam.eventbrite.com" target="_blank" rel="noopener"
+             class="btn-primary" style="padding:13px 32px;font-size:14px">
+            Register on Eventbrite →
+          </a>
+          <button class="btn-ghost" style="padding:13px 20px;font-size:14px">
+            View Schedule
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════════════════════
+       FOOTER
+  ══════════════════════════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:40px;margin-bottom:36px">
+
+        <!-- Brand -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="width:28px;height:28px;border-radius:7px;background:var(--color-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 2h6c2 0 3.5 1.5 3.5 3.5S10 9 8 9H2V2z" fill="white" opacity="0.9"/>
+                <path d="M2 9.5h3.5V14H2V9.5z" fill="white" opacity="0.55"/>
+              </svg>
+            </div>
+            <span style="font-weight:700;font-size:14px;color:var(--text-main)">PoetrySlam</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
+            An international celebration of the spoken word.
+            Teatro Real, Madrid — October 2023.
+          </p>
+        </div>
+
+        <!-- Contact -->
+        <div>
+          <h3 style="font-size:11px;font-weight:600;color:var(--text-main);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">Contact</h3>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li>
+              <a href="mailto:info@internationalpoetryslam.com" class="footer-link">
+                ✉ info@internationalpoetryslam.com
+              </a>
+            </li>
+            <li>
+              <a href="tel:+34911234567" class="footer-link">
+                ☎ +34 91 123 4567
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Sponsors -->
+        <div>
+          <h3 style="font-size:11px;font-weight:600;color:var(--text-main);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">Proudly Sponsored By</h3>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li style="font-size:13px;color:var(--text-muted)">Editorial Anagrama</li>
+            <li style="font-size:13px;color:var(--text-muted)">Poesía Digital</li>
+            <li style="font-size:13px;color:var(--text-muted)">Fundación Loewe</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div style="border-top:1px solid var(--border);padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px">
+        <p style="font-size:12px;color:var(--text-muted)">
+          © 2023 International Collaborative Poetry Slam · Teatro Real, Madrid, Spain
+        </p>
+        <div style="display:flex;gap:20px">
+          <a href="#" class="footer-link">Privacy</a>
+          <a href="#" class="footer-link">Terms</a>
+          <a href="#" class="footer-link">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════ -->
+  <script>
+    /* ─── Judging Criteria Data ─── */
+    const criteria = [
+      { label: 'Performance',          points: 30 },
+      { label: 'Originality',          points: 20 },
+      { label: 'Collaboration',        points: 20 },
+      { label: 'Language Usage',       points: 20 },
+      { label: 'Audience Engagement',  points: 10 },
+    ];
+
+    function renderCriteria() {
+      const container = document.getElementById('criteria-bars');
+      criteria.forEach(c => {
+        const row = document.createElement('div');
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+            <span style="font-size:14px;font-weight:500;color:var(--text-main)">${c.label}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--color-primary)">${c.points} pts</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" data-width="${c.points}%"></div>
+          </div>`;
+        container.appendChild(row);
+      });
+    }
+
+    /* ─── IntersectionObserver: reveal animations ─── */
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.10 });
+
+    /* ─── IntersectionObserver: progress bars ─── */
+    const barObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('.bar-fill').forEach((fill, i) => {
+            setTimeout(() => { fill.style.width = fill.dataset.width; }, i * 110);
+          });
+          barObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.25 });
+
+    /* ─── Nav tab interaction ─── */
+    function setupTabGroup(selector) {
+      const groups = document.querySelectorAll(selector);
+      groups.forEach(group => {
+        group.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            group.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+          });
+        });
+      });
+    }
+
+    /* ─── Ticket tab filter ─── */
+    function setupTicketFilter() {
+      const tabBar = document.getElementById('ticket-tab-bar');
+      if (!tabBar) return;
+      tabBar.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const filter = tab.dataset.filter;
+          const rows = document.querySelectorAll('.data-table tbody tr[data-type]');
+          rows.forEach(row => {
+            if (filter === 'all' || row.dataset.type === filter) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+
+    /* ─── Number countUp for stat values ─── */
+    function countUp(el, target, duration = 900) {
+      const start = performance.now();
+      const isFloat = String(target).includes('.');
+      const update = (time) => {
+        const progress = Math.min((time - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const val = target * ease;
+        el.textContent = isFloat
+          ? val.toFixed(1)
+          : Math.floor(val).toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+      };
+      requestAnimationFrame(update);
+    }
+
+    /* ─── Init ─── */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCriteria();
+
+      // Observe all reveal elements
+      document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+      // Observe bars
+      const barsSection = document.getElementById('criteria-bars');
+      if (barsSection) barObs.observe(barsSection);
+
+      // Hero reveal with inline delay
+      document.querySelectorAll('#hero .reveal').forEach(el => {
+        const delay = parseFloat(el.style.transitionDelay || '0') * 1000;
+        setTimeout(() => el.classList.add('visible'), delay + 80);
+      });
+
+      // Stat cards stagger
+      document.querySelectorAll('.stat-card').forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(14px)';
+        card.style.transition = `opacity 0.35s var(--ease) ${i * 70 + 280}ms, transform 0.35s var(--ease) ${i * 70 + 280}ms`;
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, i * 70 + 280);
+      });
+
+      // Tab interaction
+      setupTabGroup('nav .nav-tabs');
+      setupTicketFilter();
+    });
+  </script>
+</body>
+</html>
