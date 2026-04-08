@@ -1,0 +1,103 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": ["tailwindcss-cdn", "three@0.164.1 (jsdelivr)", "google-fonts"],
+  "browser_runnable": true,
+
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "大规模数据 WebGL 渲染层",
+      "status": "met",
+      "evidence": "`initThree()` 使用 THREE.BufferGeometry + Points，5 簇 × 桌面约 2600 点（合计约 1.3×10⁴）；滚轮缩放、Shift+框选、单击簇过滤；`state.webglMode` 与 HUD 显示 LOD/点数；`tick` 中簇选中时尺寸/透明度变化。平板/手机点数按 design_brief 区间降低。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "动态 SVG 指标视图",
+      "status": "met",
+      "evidence": "`renderCharts()` 中 `#svg-line` 折线（p50/p95/p99）与 `#svg-bar` 服务分布条形图；数据来自同一 `buildDataset()`/`stateSignature()`；条形 transition 高度；图例按钮切换序列；折线 hover tooltip、点击联动选中行；条形点击切换 `serviceFilter` 并 `setState` 刷新表与折线。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "自然语言查询入口",
+      "status": "met",
+      "evidence": "`parseNaturalLanguage` + `#nl-input` + `#parsed-json` 展示机器可读 filters；`runQueryPipeline` 分阶段更新 `#query-status-fill`/`#query-status-text`；空/过短/不可解析时 `pushToast`+错误文案；建议词条 `#suggestions`。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "暗黑模式高性能数据表",
+      "status": "partial",
+      "evidence": "表体使用 shell/surface/elevated token；首列 `sticky-col`；列头点击排序（`#table-head-row` 事件委托）；行 hover/选中/高亮；搜索框过滤。演示生成约 800 行、视口仅渲染前 200 行以控 DOM。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "未实现 1k 行全量 DOM 虚拟化；PRD 的「1k 行滚动不掉帧」未按全量行数实测验证。"
+    },
+    {
+      "contract_id": "M05",
+      "feature": "全局加载与渐进呈现",
+      "status": "met",
+      "evidence": "`refreshAll` 切换 `globalLoading`+`#table-loading`/`#kpi-skeleton` shimmer；查询管线多阶段进度条；`state.cancelToken` 防止过期回调覆盖状态（简化版取消）。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M06",
+      "feature": "空状态",
+      "status": "met",
+      "evidence": "`#table-empty` 区分「无查询结果」与「无权限」文案与动作（重置筛选/载入演示）；`emptyMode`/`permissionDenied` 与 KPI/表联动为 0 行。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "「无数据源」与「无结果」在实现上共用空表路径，通过模拟按钮区分权限与无结果。"
+    },
+    {
+      "contract_id": "M07",
+      "feature": "错误恢复",
+      "status": "met",
+      "evidence": "`#error-banner` + 重试/简化视图/关闭；`enableGlFallback`+`#gl-fallback` Canvas 聚合；`webglcontextlost` 监听；诊断区模拟超时/403/500；Toast 与横幅并存。着色器失败归入 WebGL 初始化 catch → 同降级路径。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M08",
+      "feature": "动效编排",
+      "status": "partial",
+      "evidence": "`state.animationPriority` 在加载/横幅间占位；CSS 变量 `--ease-out`/时长分级；`reveal-io`+IntersectionObserver 入场；图表与抽屉 transition；查询状态条 pulse。",
+      "fail_condition_triggered": false,
+      "deviation_reason": "未做严格的「图表不打断加载 toast」队列调度，仅优先级字段占位。"
+    },
+    {
+      "contract_id": "M09",
+      "feature": "响应式可读性",
+      "status": "met",
+      "evidence": "断点下栅格折叠；`#detail-drawer`+`#drawer-scrim` 窄屏覆盖；WebGL 点数随 `innerWidth` 调整；导航移动端抽屉；表横向滚动容器 `table-scroll`。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+
+  "interaction_completeness": {
+    "navigation": "桌面锚点 `.nav-link` + `scroll-behavior`；`setupNavScrollSpy` 高亮；移动端 `#btn-mobile-nav` 展开/收起 `#mobile-nav-panel`（max-height 过渡），点击链接触发收起。",
+    "filtering": "`select-env`/`select-time`/`serviceFilter`/`clusterIds`/`parsed.filters` 均进入 `stateSignature`→`buildDataset`，联动 KPI、SVG、表与点云样式。",
+    "forms": "自然语言非空/长度/可解析校验；语音 `SpeechRecognition` 可用则录入，否则 `#voice-fallback` 与 toast。",
+    "animation": "IO 入场、toast 入场、抽屉 transform、shimmer 骨架；`prefers-reduced-motion` 下减弱 shimmer/位移/点云旋转。",
+    "empty_error_states": "加载骨架、无结果、无权限、WebGL 降级、横幅错误、toast 成功/警告/错误；复制与分享成功 toast。"
+  },
+
+  "visual_effects_notes": "Three.js 点云 additive 色彩映射（青/紫/红风险）；选择性 neumorphism（`.neo-control`/`.neo-input`）仅用于控件与 KPI 卡；主数据区为扁平 shell/surface；降级静态 Canvas 聚合圆。",
+
+  "known_gaps": [
+    "表格仅挂载前 200 行 DOM，非完整 800 行虚拟滚动。",
+    "自然语言解析为前端规则模板，非真实 NLU/后端。",
+    "M08 动效优先级未实现完整事件队列。"
+  ],
+
+  "next_fix_candidates": [
+    "为表体增加行虚拟化或分页以贴近 1k 行性能验收。",
+    "折线路径数值插值过渡（当前为直接重算 path d）。",
+    "将 animationPriority 接入 toast/图表更新的互斥调度。"
+  ]
+}

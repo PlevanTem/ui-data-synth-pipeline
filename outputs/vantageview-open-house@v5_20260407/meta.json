@@ -1,0 +1,21 @@
+{
+  "case_id": "vantageview-open-house",
+  "pipeline_version": "v5",
+  "generated_date": "20260407",
+  "source_type": "query",
+  "input_summary": "VantageView Themed Virtual Open House Portal — 奢侈地产经纪人Sarah的主题化开放日调度平台，含Atmosphere Slider实时光效预览、日历排期、参与热度分析",
+  "domain": "real-estate / luxury-property / scheduling-dashboard",
+  "delivery_mode": "single-file",
+  "stack": "html-tailwind-js",
+  "cdn_libs_used": [
+    "tailwindcss@CDN",
+    "chart.js@4.4.2",
+    "Google Fonts: Cormorant Garamond + DM Mono"
+  ],
+  "uses_visual_effects": true,
+  "visual_effects_type": ["Canvas 2D atmosphere rendering", "CSS keyframe animations", "CSS custom property theme switching"],
+  "design_direction": "Temporal Architecture — dark luxury editorial",
+  "interaction_completeness": "full",
+  "views": ["Preview (Atmosphere Slider + Theme Cards)", "Schedule (Calendar + Event Panel)", "Analytics (Charts + Filter Tabs)"],
+  "created_at": "2026-04-07T00:00:00Z"
+}

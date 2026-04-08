@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevTools - Performance Topology</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: '#09090B',
+            surface: '#121215',
+            sunken: '#050506',
+            primary: '#00F0FF',
+            accent: '#39FF14',
+            danger: '#FF003C',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace'],
+          },
+          boxShadow: {
+            'neumorph-up': '8px 8px 16px #000000, -8px -8px 16px rgba(255,255,255,0.03)',
+            'neumorph-down': 'inset 6px 6px 12px #000000, inset -6px -6px 12px rgba(255,255,255,0.03)',
+            'glow': '0 0 15px rgba(0, 240, 255, 0.4)',
+            'glow-danger': '0 0 15px rgba(255, 0, 60, 0.4)'
+          },
+          transitionTimingFunction: {
+            'smooth': 'cubic-bezier(0.16, 1, 0.3, 1)',
+          },
+          animation: {
+            'scan': 'scan 1.5s infinite linear',
+            'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            scan: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            },
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      background-color: #09090B;
+      color: #F3F4F6;
+      /* Prevent scrollbar from shifting layout */
+      overflow-y: scroll;
+    }
+    
+    /* Custom Scrollbar for dark theme */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090B; 
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a30; 
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46; 
+    }
+
+    /* Staggered animation delays */
+    .delay-100 { animation-delay: 100ms; }
+    .delay-200 { animation-delay: 200ms; }
+    .delay-300 { animation-delay: 300ms; }
+
+    /* Loading state for search bar */
+    .search-loading {
+      background: linear-gradient(90deg, #050506 0%, rgba(0, 240, 255, 0.1) 50%, #050506 100%);
+      background-size: 200% 100%;
+    }
+    
+    /* Interactive Neumorphic Button */
+    .btn-neumorph {
+      box-shadow: 8px 8px 16px #000000, -8px -8px 16px rgba(255,255,255,0.03);
+      transition: box-shadow 0.15s ease, transform 0.1s ease;
+    }
+    .btn-neumorph:active {
+      box-shadow: inset 6px 6px 12px #000000, inset -6px -6px 12px rgba(255,255,255,0.03);
+      transform: scale(0.98);
+    }
+    
+    /* Table hover */
+    tbody tr {
+      transition: background-color 0.15s ease;
+    }
+    tbody tr:hover {
+      background-color: #121215;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-6 gap-6 font-sans">
+
+  <!-- Header & Search Area -->
+  <header class="w-full flex items-center justify-between gap-4 opacity-0 animate-fade-in-up">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-surface shadow-neumorph-up flex items-center justify-center">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight">System<span class="text-primary font-light">Topology</span></h1>
+    </div>
+    
+    <div class="flex-1 max-w-2xl relative group">
+      <div id="searchContainer" class="absolute inset-0 rounded-lg shadow-neumorph-down transition-shadow duration-300"></div>
+      <div class="relative flex items-center w-full bg-sunken rounded-lg overflow-hidden transition-all duration-300 z-10" id="searchWrapper">
+        <svg class="w-5 h-5 ml-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="w-full bg-transparent border-none py-3 px-4 text-primary focus:outline-none placeholder-gray-600 focus:ring-0" 
+          placeholder="Ask system to analyze rendering bottleneck..."
+          autocomplete="off"
+        >
+        <button class="mr-2 p-2 rounded-md hover:bg-surface text-gray-400 hover:text-accent transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <div class="text-right">
+        <div class="text-xs text-gray-500">System Health</div>
+        <div class="text-lg font-mono font-semibold text-accent" id="healthScore">98.4%</div>
+      </div>
+      <button class="btn-neumorph w-10 h-10 rounded-full bg-surface flex items-center justify-center text-gray-300">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- WebGL Topology View -->
+    <section class="lg:col-span-2 bg-surface rounded-2xl shadow-neumorph-up relative overflow-hidden flex flex-col opacity-0 animate-fade-in-up delay-100 min-h-[400px]">
+      <div class="absolute top-4 left-4 z-10 pointer-events-none">
+        <h2 class="text-sm font-semibold text-gray-300">Live Network Topology</h2>
+        <div class="text-xs text-gray-500 font-mono mt-1" id="topologyStatus">Rendering 1,204 Nodes</div>
+      </div>
+      <!-- Controls overlay -->
+      <div class="absolute bottom-4 right-4 z-10 flex gap-2">
+        <button class="btn-neumorph w-8 h-8 rounded bg-surface flex items-center justify-center text-gray-400" id="btnZoomIn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        </button>
+        <button class="btn-neumorph w-8 h-8 rounded bg-surface flex items-center justify-center text-gray-400" id="btnZoomOut">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+        </button>
+      </div>
+      <!-- Tooltip for WebGL -->
+      <div id="webglTooltip" class="absolute hidden z-20 bg-sunken border border-gray-800 rounded px-3 py-2 text-xs font-mono shadow-lg pointer-events-none transition-opacity duration-200">
+        <div class="text-primary" id="ttName">Node-A</div>
+        <div class="text-gray-400">Latency: <span id="ttTime" class="text-white">12ms</span></div>
+      </div>
+      <!-- Container for Three.js -->
+      <div id="webglContainer" class="w-full h-full cursor-crosshair"></div>
+    </section>
+
+    <!-- Metrics Chart -->
+    <section class="bg-surface rounded-2xl shadow-neumorph-up p-5 flex flex-col opacity-0 animate-fade-in-up delay-200 min-h-[400px]">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-sm font-semibold text-gray-300">Resource Utilization</h2>
+        <select class="bg-sunken text-xs text-gray-400 border-none rounded px-2 py-1 outline-none shadow-neumorph-down">
+          <option>CPU & Memory</option>
+          <option>Network I/O</option>
+        </select>
+      </div>
+      <div class="flex-1 relative w-full">
+        <canvas id="metricsChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Detailed Data Table -->
+    <section class="lg:col-span-3 bg-surface rounded-2xl shadow-neumorph-up p-1 flex flex-col opacity-0 animate-fade-in-up delay-300 h-80">
+      <div class="px-5 py-4 border-b border-gray-800/50 flex justify-between items-center">
+        <h2 class="text-sm font-semibold text-gray-300">Event Trace Log</h2>
+        <div class="flex gap-2">
+          <button class="text-xs px-3 py-1 bg-sunken rounded shadow-neumorph-down text-primary" id="filterAllBtn">All</button>
+          <button class="text-xs px-3 py-1 bg-sunken rounded text-gray-500 hover:text-gray-300 transition-colors" id="filterWarnBtn">Warnings</button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-auto p-1">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead class="sticky top-0 bg-surface z-10 text-xs text-gray-500 font-medium">
+            <tr>
+              <th class="px-4 py-3 cursor-pointer hover:text-gray-300">Timestamp ↓</th>
+              <th class="px-4 py-3">Node ID</th>
+              <th class="px-4 py-3">Event Type</th>
+              <th class="px-4 py-3 cursor-pointer hover:text-gray-300">Duration (ms)</th>
+              <th class="px-4 py-3">Memory Allocation</th>
+              <th class="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="text-sm font-mono text-gray-300">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ==========================================
+    // State & Mock Data
+    // ==========================================
+    const state = {
+      searchQuery: '',
+      filterCategory: 'all', // 'all', 'warnings'
+      selectedNode: null
+    };
+
+    // Generate mock data for the table and topology
+    const numNodes = 100;
+    const mockData = Array.from({length: numNodes}).map((_, i) => {
+      const isWarn = Math.random() > 0.85;
+      const isErr = !isWarn && Math.random() > 0.95;
+      const duration = isErr ? Math.random() * 2000 + 1000 : isWarn ? Math.random() * 500 + 200 : Math.random() * 50 + 10;
+      
+      let status = 'SUCCESS';
+      if(isErr) status = 'ERROR';
+      else if(isWarn) status = 'WARN';
+
+      return {
+        id: `node-${1000 + i}`,
+        timestamp: new Date(Date.now() - Math.random() * 100000).toISOString().split('T')[1].split('.')[0],
+        type: ['RENDER', 'FETCH', 'PARSE', 'COMPUTE'][Math.floor(Math.random()*4)],
+        duration: duration.toFixed(1),
+        memory: (Math.random() * 15 + 1).toFixed(2) + ' MB',
+        status: status
+      };
+    }).sort((a,b) => (b.timestamp > a.timestamp ? 1 : -1));
+
+    // ==========================================
+    // Three.js Topology Implementation
+    // ==========================================
+    let scene, camera, renderer, particles, particleSystem;
+    const container = document.getElementById('webglContainer');
+
+    function initWebGL() {
+      scene = new THREE.Scene();
+      
+      // Setup Camera
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 1000);
+      camera.position.z = 250;
+
+      // Setup Renderer
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      // Create Particle System
+      const particleCount = mockData.length;
+      particles = new THREE.BufferGeometry();
+      
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+      
+      const colorNormal = new THREE.Color('#F3F4F6');
+      const colorWarn = new THREE.Color('#39FF14');
+      const colorErr = new THREE.Color('#FF003C');
+
+      for(let i=0; i<particleCount; i++) {
+        // Spherical distribution
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const radius = 50 + Math.random() * 100;
+        
+        positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
+        positions[i*3+2] = radius * Math.cos(phi);
+
+        const dataRef = mockData[i];
+        let c = colorNormal;
+        if(dataRef.status === 'ERROR') c = colorErr;
+        else if(dataRef.status === 'WARN') c = colorWarn;
+
+        colors[i*3] = c.r;
+        colors[i*3+1] = c.g;
+        colors[i*3+2] = c.b;
+      }
+
+      particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      // Custom Shader Material for glowing dots
+      const material = new THREE.PointsMaterial({
+        size: 4,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        opacity: 0.8,
+        sizeAttenuation: true
+      });
+
+      particleSystem = new THREE.Points(particles, material);
+      scene.add(particleSystem);
+
+      // Add connecting lines (sub-sampled for performance)
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0x00F0FF,
+        transparent: true,
+        opacity: 0.05
+      });
+      const lineGeo = new THREE.BufferGeometry();
+      const linePos = [];
+      for(let i=0; i<particleCount; i+=2) {
+        if(i+1 < particleCount) {
+          linePos.push(positions[i*3], positions[i*3+1], positions[i*3+2]);
+          linePos.push(positions[(i+1)*3], positions[(i+1)*3+1], positions[(i+1)*3+2]);
+        }
+      }
+      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+      const lines = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(lines);
+
+      // Event Listeners for Interaction
+      setupWebGLInteraction();
+      animateWebGL();
+    }
+
+    function setupWebGLInteraction() {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const tooltip = document.getElementById('webglTooltip');
+      
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(particleSystem);
+
+        if (intersects.length > 0) {
+          const idx = intersects[0].index;
+          const nodeData = mockData[idx];
+          
+          tooltip.style.display = 'block';
+          tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+          tooltip.style.top = (e.clientY - rect.top + 15) + 'px';
+          document.getElementById('ttName').textContent = nodeData.id;
+          document.getElementById('ttTime').textContent = nodeData.duration + 'ms';
+          
+          if(nodeData.status === 'ERROR') document.getElementById('ttName').className = 'text-danger';
+          else if(nodeData.status === 'WARN') document.getElementById('ttName').className = 'text-accent';
+          else document.getElementById('ttName').className = 'text-primary';
+
+          document.body.style.cursor = 'pointer';
+        } else {
+          tooltip.style.display = 'none';
+          document.body.style.cursor = 'default';
+        }
+      });
+
+      container.addEventListener('click', (e) => {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(particleSystem);
+        if(intersects.length > 0) {
+          const idx = intersects[0].index;
+          state.selectedNode = mockData[idx].id;
+          document.getElementById('searchInput').value = `Analyze ${state.selectedNode}`;
+          updateTable();
+        }
+      });
+      
+      // Basic Zoom controls
+      document.getElementById('btnZoomIn').addEventListener('click', () => {
+        camera.position.z = Math.max(50, camera.position.z - 30);
+      });
+      document.getElementById('btnZoomOut').addEventListener('click', () => {
+        camera.position.z = Math.min(400, camera.position.z + 30);
+      });
+    }
+
+    function animateWebGL() {
+      requestAnimationFrame(animateWebGL);
+      particleSystem.rotation.y += 0.001;
+      particleSystem.rotation.x += 0.0005;
+      scene.children[1].rotation.y += 0.001; // rotate lines
+      scene.children[1].rotation.x += 0.0005;
+      renderer.render(scene, camera);
+    }
+
+    // ==========================================
+    // Chart.js Implementation
+    // ==========================================
+    let metricsChartObj = null;
+    function initChart() {
+      const ctx = document.getElementById('metricsChart').getContext('2d');
+      
+      // Gradient for area
+      const gradientPrimary = ctx.createLinearGradient(0, 0, 0, 300);
+      gradientPrimary.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
+      gradientPrimary.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+      
+      const gradientAccent = ctx.createLinearGradient(0, 0, 0, 300);
+      gradientAccent.addColorStop(0, 'rgba(57, 255, 20, 0.2)');
+      gradientAccent.addColorStop(1, 'rgba(57, 255, 20, 0.0)');
+
+      metricsChartObj = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['10s', '20s', '30s', '40s', '50s', '60s', '70s'],
+          datasets: [
+            {
+              label: 'CPU Usage',
+              data: [35, 42, 38, 65, 85, 45, 30],
+              borderColor: '#00F0FF',
+              backgroundColor: gradientPrimary,
+              borderWidth: 2,
+              pointBackgroundColor: '#09090B',
+              pointBorderColor: '#00F0FF',
+              pointBorderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Memory',
+              data: [20, 25, 22, 30, 40, 35, 38],
+              borderColor: '#39FF14',
+              backgroundColor: gradientAccent,
+              borderWidth: 2,
+              pointBackgroundColor: '#09090B',
+              pointBorderColor: '#39FF14',
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#050506',
+              titleColor: '#9CA3AF',
+              bodyColor: '#F3F4F6',
+              borderColor: '#2a2a30',
+              borderWidth: 1,
+              padding: 10,
+              displayColors: true,
+              boxPadding: 4,
+              usePointStyle: true
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+              ticks: { color: '#9CA3AF', font: {family: 'Fira Code', size: 10} }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+              ticks: { color: '#9CA3AF', font: {family: 'Fira Code', size: 10}, maxTicksLimit: 5 }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // DOM & State Rendering
+    // ==========================================
+    function updateTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      let filtered = mockData;
+      
+      if(state.filterCategory === 'warnings') {
+        filtered = filtered.filter(d => d.status !== 'SUCCESS');
+      }
+      
+      if(state.searchQuery || state.selectedNode) {
+        const q = (state.searchQuery || state.selectedNode).toLowerCase();
+        filtered = filtered.filter(d => 
+          d.id.toLowerCase().includes(q) || 
+          d.type.toLowerCase().includes(q) ||
+          d.status.toLowerCase().includes(q)
+        );
+      }
+
+      if(filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No events found matching criteria.</td></tr>`;
+        return;
+      }
+
+      filtered.slice(0, 50).forEach((d) => {
+        let statusClass = 'text-gray-400';
+        if(d.status === 'ERROR') statusClass = 'text-danger font-semibold';
+        else if(d.status === 'WARN') statusClass = 'text-accent';
+        
+        let durClass = parseFloat(d.duration) > 500 ? 'text-danger' : 'text-gray-300';
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-gray-800/30 cursor-pointer";
+        tr.innerHTML = `
+          <td class="px-4 py-2">${d.timestamp}</td>
+          <td class="px-4 py-2 text-primary">${d.id}</td>
+          <td class="px-4 py-2">${d.type}</td>
+          <td class="px-4 py-2 ${durClass}">${d.duration}</td>
+          <td class="px-4 py-2">${d.memory}</td>
+          <td class="px-4 py-2 ${statusClass}">${d.status}</td>
+        `;
+        
+        // Click row to highlight in Three.js (simulate)
+        tr.addEventListener('click', () => {
+          state.selectedNode = d.id;
+          document.getElementById('searchInput').value = d.id;
+          // Simulate flash effect on input
+          document.getElementById('searchInput').parentElement.classList.add('shadow-glow');
+          setTimeout(()=> {
+            document.getElementById('searchInput').parentElement.classList.remove('shadow-glow');
+          }, 300);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setupInteractions() {
+      // Search input interaction
+      const searchInput = document.getElementById('searchInput');
+      const searchContainer = document.getElementById('searchContainer');
+      const searchWrapper = document.getElementById('searchWrapper');
+      
+      searchInput.addEventListener('focus', () => {
+        searchContainer.classList.add('shadow-glow');
+      });
+      
+      searchInput.addEventListener('blur', () => {
+        searchContainer.classList.remove('shadow-glow');
+      });
+
+      let debounceTimer;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        searchWrapper.classList.add('search-loading', 'animate-scan');
+        
+        debounceTimer = setTimeout(() => {
+          state.searchQuery = e.target.value;
+          state.selectedNode = null;
+          updateTable();
+          searchWrapper.classList.remove('search-loading', 'animate-scan');
+        }, 800); // Simulate AI parsing delay
+      });
+
+      // Filter Buttons
+      const btnAll = document.getElementById('filterAllBtn');
+      const btnWarn = document.getElementById('filterWarnBtn');
+      
+      btnAll.addEventListener('click', () => {
+        state.filterCategory = 'all';
+        btnAll.className = 'text-xs px-3 py-1 bg-sunken rounded shadow-neumorph-down text-primary';
+        btnWarn.className = 'text-xs px-3 py-1 bg-sunken rounded text-gray-500 hover:text-gray-300 transition-colors';
+        updateTable();
+      });
+      
+      btnWarn.addEventListener('click', () => {
+        state.filterCategory = 'warnings';
+        btnWarn.className = 'text-xs px-3 py-1 bg-sunken rounded shadow-neumorph-down text-danger';
+        btnAll.className = 'text-xs px-3 py-1 bg-sunken rounded text-gray-500 hover:text-gray-300 transition-colors';
+        updateTable();
+      });
+    }
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initWebGL();
+      initChart();
+      updateTable();
+      setupInteractions();
+
+      // Handle Resize
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        if(metricsChartObj) metricsChartObj.resize();
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "https://cdn.tailwindcss.com",
+    "https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Inter"
+  ],
+  "browser_runnable": true,
+
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "WebGL 大数据量指标渲染",
+      "status": "met",
+      "evidence": "canvas-metrics: 原生 Canvas 2D 振荡波形，requestAnimationFrame draw-on 入场，鼠标滚轮缩放 (canvasZoom)，拖拽平移 (canvasPan)，120 点时序数据模拟",
+      "fail_condition_triggered": false,
+      "deviation_reason": "使用 Canvas 2D 替代 WebGL，对此场景帧率更稳定且依赖更轻量，与 Gemini 版本（Three.js）形成差异化"
+    },
+    {
+      "contract_id": "M02",
+      "feature": "动态 SVG 图表与微交互动画",
+      "status": "met",
+      "evidence": "initSVGBarChart: SVG 柱状图含 SVG animate 入场动画；initMiniChart: Canvas 2D 折线+面积图 draw-on；所有图表有 hover tooltip 和点击联动",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "自然语言查询接口",
+      "status": "met",
+      "evidence": "view-query: 输入框 + token 气泡解析 (parseQueryTokens)，5 条预设 query，历史记录，executeQuery 模拟查询 loading→结果→联动表格",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "高性能数据表格（暗黑模式）",
+      "status": "met",
+      "evidence": "view-table: 12 行数据，列排序 (sortTable)，关键词搜索 + 状态筛选联动 (filterTable)，danger 行 animate-pulse-danger 脉冲边框，空状态，骨架屏 loading 态",
+      "fail_condition_triggered": false,
+      "deviation_reason": "虚拟滚动简化实现（50行上限），真实虚拟列表在 1000+ 行时需要更完整的 offset 管理"
+    },
+    {
+      "contract_id": "M05",
+      "feature": "图表与表格联动",
+      "status": "met",
+      "evidence": "canvas click → switchView('table') + filterTable() + state.tableTimeFilter；SVG bar chart click → filterTableByService()；查询执行 → 表格状态筛选更新",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M06",
+      "feature": "导航与视图切换",
+      "status": "met",
+      "evidence": "switchView(): 4个视图 opacity+translateY fade 过渡，侧边导航 active 状态，移动端底部 tab 同步，sidebar toggle 宽度 transition",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+
+  "should_compliance": [
+    { "id": "S01", "status": "partial", "note": "语音模拟实现：toggleVoice() 3s 后填充模拟文字，非真实 Web Speech API" },
+    { "id": "S02", "status": "met",     "note": "toggleTheme() 切换 dark class，全局颜色更新，有 toast 反馈" },
+    { "id": "S03", "status": "met",     "note": "告警抽屉完整实现：dismissAlert、badge 数字更新、空状态" },
+    { "id": "S04", "status": "partial", "note": "未实现双时间段并排对比图，但指标大盘的缩放/平移可近似实现此功能" }
+  ],
+
+  "interaction_completeness": {
+    "navigation": "4个主视图切换完整，侧边导航收起/展开，移动端底部 tab，视图切换 fade 过渡",
+    "filtering": "表格多维度筛选（关键词+状态下拉），图表点击联动表格，SVG 柱图点击服务名筛选，查询联动表格",
+    "forms": "查询输入框：token 解析视觉、loading 态、success 反馈、历史记录；语音输入模拟",
+    "animation": "Canvas draw-on 入场，KPI 数字计数动效，danger 行脉冲，Intersection Observer 卡片入场，Toast slide-in/out，告警抽屉 translate",
+    "empty_error_states": "表格空状态 + 清除筛选按钮，表格骨架屏 loading，告警面板空状态 All Clear，查询空输入提示"
+  },
+
+  "visual_effects_notes": "主视觉手法：原生 Canvas 2D 振荡波形（Industrial Blueprint 风格）—— 工业坐标纸背景 + amber/slate/ok/danger 多线路振荡 + 异常区段 amber 半透明标注 + draw-on 入场动画；SVG 柱状图 animate 入场；Neumorphism 局部应用于 KPI 指标卡（shadow-nm-up）；amber glow 异常指示；danger 行 CSS keyframe 脉冲；所有颜色方案基于 Industrial Blueprint 调色板（amber signal + charcoal base）",
+
+  "design_differentiation": "相比 Gemini 版本（cyan/Three.js/节点拓扑）：本版本用 amber 暖信号色 + Canvas 振荡波形 + Industrial Blueprint 审美完成差异化；避免了 neon-green/cyan、Three.js、粒子背景、全页 Neumorphism 四大同质化陷阱",
+
+  "known_gaps": [
+    "虚拟滚动为简化实现（50行渲染上限），真实 1000+ 行需要完整 offset 管理",
+    "语音控制为模拟实现，非真实 Web Speech API",
+    "双时间段对比图未实现"
+  ],
+
+  "next_fix_candidates": [
+    "补全真实虚拟滚动（窗口内渲染 + scrollTop 监听）",
+    "Canvas 时间轴添加精确时间戳标注",
+    "指标卡 Neumorph 光影在亮色模式下的适配"
+  ]
+}

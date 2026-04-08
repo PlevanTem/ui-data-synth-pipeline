@@ -1,0 +1,69 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "tailwindcss",
+    "chart.js"
+  ],
+  "browser_runnable": true,
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "流量时间趋势分析 (Temporal Volume Analytics)",
+      "status": "met",
+      "evidence": "在左侧上方实现 Chart.js 绘制折线图，通过 custom plugin 实现了悬浮时的十字准线(crosshair)，并带有 Tooltip 和平滑载入动效。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "伤害类型分布地图 (Injury Distribution Mapping)",
+      "status": "met",
+      "evidence": "使用基于原生 CSS Grid 和 DOM 元素的矩形网格阵列替代传统饼图，符合高信噪比与严谨的设计属性；支持点击某个色块时高亮该区块并将其他区块透明度降至 30%。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "案件状态流转管线 (Case Status Flow)",
+      "status": "met",
+      "evidence": "在主内容区中央通过 Canvas 2D 实现了粒子流管线仿真。粒子从初审流向体检，体检处由于超载堵塞粒子变慢变红并展现布朗运动式抖动，离开体检后恢复正常并变绿，结合下方的漏斗卡片呈现整体流动感与积压感。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "鉴定时间线预估器 (Appraisal Timeline Estimator)",
+      "status": "met",
+      "evidence": "建立终端控制台命令风格（Terminal 风格）原生表单估算器，包含队列人数输入和复杂度的原生滑块范围选择。处理计算状态的文本提示、loading (pulse) 动效及输入出错验证，并在最后使用数字跳动展示结果并执行弹跳微动效。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S01",
+      "feature": "全局核心指标看板 (Global Metric Cards)",
+      "status": "met",
+      "evidence": "顶部展示了包含总鉴定人数、设备利用率等在内的 4 张全局卡片，附带极简的上升趋势、警告文案，并采用了大字号等宽数字 (tabular-nums) 排版。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S02",
+      "feature": "数据警报机制",
+      "status": "met",
+      "evidence": "针对 Med Exam 体检卡片（设定由于超载产生积压），外层加入了定制的 `pulse-danger` 红色缓慢呼吸光效边框阴影动画，实现全局监控第一视角的强提醒。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+  "interaction_completeness": {
+    "navigation": "实现了响应式的顶部锚点滚动导航 (Smooth Scroll) 与移动端 Hamburger 折叠侧边菜单切换。",
+    "filtering": "伤害地图网格区实现了点击交互逻辑 (基于 JS 操控类名，高亮当前元素，变暗其他区块)。",
+    "forms": "预估器实现了输入错误拦截验证、防空提交、以及模拟网络延迟下的进行中脉冲动效和反馈展示。",
+    "animation": "页面所有 KPI 数字触发 CountUp 滚动动画；整体 UI 布局通过 CSS 交错延时加载 (staggered fade-up) 平滑进入；部分状态卡片包含持续缓慢发光帧动画。",
+    "empty_error_states": "为预估器加入了表单报错并标红警告文本逻辑；另外针对 Canvas 生成粒子实现了帧率监测（< 30 fps 则自动降级为静态警示条隐藏 Canvas 从而保证性能）。"
+  },
+  "visual_effects_notes": "在视觉特效层面采用 Generative UI Mode A 的思想，通过原生 Canvas 2D 构建了粒子流场模拟系统，用于直观隐喻后台流程负载。粒子绘制运用 `shadowBlur` 微弱发光与画布全局 `fillRect(alpha)` 拖尾，且无需引入重型 3D 库，极大节约了资源且完全单文件运行。",
+  "known_gaps": [],
+  "next_fix_candidates": []
+}

@@ -1,0 +1,8 @@
+{
+  "case_id": "001_devtools",
+  "pipeline_version": "v4",
+  "generated_at": "2026-04-03",
+  "domain": "开发者工具 (DevTools)",
+  "user_req": "系统性能瓶颈",
+  "original_example_text": "创建一个解决'系统性能瓶颈'痛点的开发者工具应用，包括：1) 基于 WebGL 的大数据量渲染引擎；2) 动态 SVG 图表与微交互动画；3) 语音控制与自然语言查询接口；4) 暗黑模式适配的高性能数据表格；5) 采用新拟态 (Neumorphism) 软UI风格，确保视觉一致性与用户体验。"
+}

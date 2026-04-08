@@ -1,0 +1,77 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": ["Tailwind CSS", "Chart.js", "Three.js", "GSAP"],
+  "browser_runnable": true,
+
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "技能缺口雷达图 (Skill-Gap Radar Chart)",
+      "status": "met",
+      "evidence": "在 `index.html` 中通过 Chart.js 实例化了一个带有 5 个维度标签的多边形雷达图。设置了两个 dataset 呈现 'Certification Target'（虚线轮廓）和 'Current Profile'（半透明填充色）并对比。配置了 `animation.duration: 1500` 与 `easing: 'easeOutQuart'` 实现了生长的入场动画。配置了 Tooltip plugin 在 Hover 时显示定制的暗色框样式，且展示了各轴的数据。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "3D 神经人格资源探索器 (Interactive 3D Brain Model)",
+      "status": "met",
+      "evidence": "在 `<script>` 的 `initThreeJS()` 函数内使用 Three.js 初始化了节点网络（Nodes and Edges）。节点对应大五人格和暗黑四分体等维度，赋予不同颜色与发光材质。应用了 `Raycaster` 监测悬浮与点击，点击脑区节点更新全局 `state.activeFilter`，联动重新渲染右侧课程列表（通过 `renderCoursePool` 函数和 GSAP 淡入淡出）。移动端通过媒体查询隐藏 canvas，降级为 Chip 标签云交互。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "拖拽式年度学分追踪器 (Drag-and-Drop Credit Tracker)",
+      "status": "met",
+      "evidence": "给左侧未选择的卡片添加了 `draggable=\"true\"` 属性并绑定 `ondragstart` 和 `ondragend`。给底部计划区绑定了 `dragover`、`dragleave`、`drop` 原生 HTML5 事件。当拖拽释放时，调用 `addCourse` 触发数组更新。总学时累加采用了带有 GSAP `gsap.to(el, { innerHTML: currentCredits, ... snap: { innerHTML: 1 } })` 的数字滚动上升动画（Count-up animation）。移出时也能通过按钮扣除。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "选课进度条与目标反馈",
+      "status": "met",
+      "evidence": "在 `renderTracker()` 函数中，动态计算当前学分占比更新 `width` 样式。一旦达到 50 学分，进度条由 `bg-primary` 切换为 `bg-success shadow-glow-success`（Neon Lime 颜色与脉冲发光），总学分数字文字发光。底部的 'Generate Plan' 按钮由 `disabled` 变为激活状态，并切换颜色和阴影样式。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S01",
+      "feature": "复杂模块初始加载动效编排",
+      "status": "met",
+      "evidence": "页面包含 `stagger-enter` 类的模块容器，通过在 `DOMContentLoaded` 内调用 `gsap.from(\".stagger-enter\", { y: 30, opacity: 0, duration: 0.8, stagger: 0.15 ... })` 实现了平滑错开的入场动画。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S02",
+      "feature": "响应式交互降级处理",
+      "status": "met",
+      "evidence": "使用 Tailwind 类名 `.mobile-hide-3d` 在移动端隐藏 Three.js 画布，显示 `.mobile-show-chips`（通过 `renderMobileChips()` 动态渲染的按钮标签）进行筛选替代。课程卡片在移动端通过 `lg:hidden` 额外显示 `+ Add` 按钮替代拖拽（因移动端拖拽极难触发）。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S03",
+      "feature": "空状态与初始占位提示",
+      "status": "met",
+      "evidence": "当 `state.plannedCourses` 为空时，底部 Drop 区域显示带有 `svg` 占位图及 \"Drag & Drop courses here\" 提示的容器元素 `#plan-empty-state`，非空时隐藏。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+
+  "interaction_completeness": {
+    "navigation": "无强制页面跳转需求；所有的筛选和添加均在单页完成并产生即时状态更新。",
+    "filtering": "在 3D 模型上悬浮及点击节点，右侧列表根据 traitId 进行数据筛选，无缝淡入淡出动画过渡。",
+    "forms": "仅有学时拖放收集器，达到目标激活提交按钮，不包含真实表单提交网络请求，满足交互意图。",
+    "animation": "雷达图丝滑向外生长；3D 模型自动缓转与点击光晕放大；GSAP 全局 staggered入场；拖放卡片缩放及发光；总学时数字滚动与进度条填充动画；进度达成时荧光绿状态突变和呼吸光圈提示。",
+    "empty_error_states": "课程池如果筛选到空类别，显示文本提示。计划追踪器具有空状态虚线提示图。已拦截拖拽重复同一课程。防呆完善。"
+  },
+
+  "visual_effects_notes": "使用了生成式视觉手法中的 Three.js Force-Directed 网络图基础构建法（节点网格 + 内核心 + 透明连线），契合了 Neural-Trait 精神病学的赛博科技主题（Neon Cyan & Violet）。图表使用 Chart.js，页面字体和配色均完全符合 Design Brief 中的 Token 系统。",
+  "known_gaps": [],
+  "next_fix_candidates": []
+}

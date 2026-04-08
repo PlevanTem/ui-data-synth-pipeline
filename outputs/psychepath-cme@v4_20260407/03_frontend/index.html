@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsychePath CME Navigator</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        base: '#09090B',
+                        surface: '#18181B',
+                        elevated: '#27272A',
+                        subtle: '#3F3F46',
+                        primary: '#00FCED', 
+                        secondary: '#8B5CF6', 
+                        success: '#e3fc02', 
+                        textPrimary: '#F5F5F7',
+                        textSecondary: '#A1A1AA'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'glow-primary': '0 0 20px rgba(0, 252, 237, 0.15)',
+                        'glow-success': '0 0 25px rgba(227, 252, 2, 0.25)',
+                    },
+                    transitionTimingFunction: {
+                        'tech': 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        body {
+            background-color: theme('colors.base');
+            color: theme('colors.textPrimary');
+            font-family: theme('fontFamily.sans');
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .display-font {
+            font-family: theme('fontFamily.display');
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.base');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.subtle');
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.primary');
+        }
+
+        /* Glass / Surface panels */
+        .glass-panel {
+            background: theme('colors.surface');
+            border: 1px solid theme('colors.subtle');
+            border-radius: 16px;
+        }
+
+        /* Drag and Drop utilities */
+        .draggable-card {
+            cursor: grab;
+            transition: all 150ms theme('transitionTimingFunction.tech');
+        }
+        .draggable-card:active {
+            cursor: grabbing;
+        }
+        .draggable-card.dragging {
+            opacity: 0.8;
+            transform: scale(0.95);
+            box-shadow: theme('boxShadow.glow-primary');
+            border-color: theme('colors.primary');
+        }
+
+        .drop-zone {
+            transition: all 300ms theme('transitionTimingFunction.tech');
+        }
+        .drop-zone.drag-over {
+            border: 2px dashed theme('colors.primary');
+            box-shadow: theme('boxShadow.glow-primary');
+            background: rgba(0, 252, 237, 0.05);
+        }
+
+        /* 3D Canvas Container */
+        #neural-canvas-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            position: relative;
+        }
+        #neural-canvas-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            outline: none;
+        }
+
+        /* Animations */
+        .stagger-enter {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .neon-text-primary {
+            text-shadow: 0 0 10px rgba(0, 252, 237, 0.5);
+        }
+        
+        .neon-text-success {
+            text-shadow: 0 0 10px rgba(227, 252, 2, 0.5);
+        }
+
+        /* Count up animation span */
+        .count-up {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Mobile specific */
+        @media (max-width: 768px) {
+            .mobile-hide-3d {
+                display: none !important;
+            }
+            .mobile-show-chips {
+                display: flex !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col p-4 md:p-8 gap-8">
+
+    <!-- Header / Profile Snippet -->
+    <header class="glass-panel p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 stagger-enter">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-textPrimary">Dr. Aris Thorne</h1>
+            <p class="text-textSecondary mt-1 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-primary shadow-glow-primary"></span>
+                Senior Clinical Psychologist • Personality Trait Analysis
+            </p>
+        </div>
+        <div class="text-right">
+            <p class="text-sm text-textSecondary mb-1">FY2026 CME Goal</p>
+            <div class="display-font text-2xl font-semibold flex items-baseline gap-1">
+                <span id="header-current-credits" class="text-primary neon-text-primary count-up">0</span>
+                <span class="text-textSecondary text-lg">/ 50 Hours</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow">
+        
+        <!-- Left Column: Radar & 3D Explorer -->
+        <div class="lg:col-span-8 flex flex-col gap-8">
+            
+            <!-- Skill-Gap Analysis -->
+            <section class="glass-panel p-6 stagger-enter flex flex-col">
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl text-textPrimary">Trait-Knowledge Gap Analysis</h2>
+                        <p class="text-sm text-textSecondary mt-1">Comparing current expertise vs. advanced certification requirements.</p>
+                    </div>
+                    <div class="flex gap-4 text-xs">
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-secondary opacity-50 border border-secondary"></span> Target</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-primary opacity-50 border border-primary"></span> Current</div>
+                    </div>
+                </div>
+                <div class="relative w-full aspect-video max-h-[400px] mx-auto flex items-center justify-center">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Interactive 3D Brain/Neural Model -->
+            <section class="glass-panel p-0 overflow-hidden stagger-enter flex flex-col lg:flex-row min-h-[500px]">
+                <!-- 3D Viewport (Hidden on Mobile, replaced by chips) -->
+                <div class="w-full lg:w-3/5 bg-base border-r border-subtle relative mobile-hide-3d">
+                    <div class="absolute top-6 left-6 z-10 pointer-events-none">
+                        <h2 class="text-xl text-textPrimary">Neural-Trait Explorer</h2>
+                        <p class="text-sm text-textSecondary mt-1">Interact with nodes to filter courses.</p>
+                    </div>
+                    <!-- 3D Canvas -->
+                    <div id="neural-canvas-container"></div>
+                    
+                    <!-- Node Info Overlay (Dynamic) -->
+                    <div id="node-info-overlay" class="absolute bottom-6 left-6 z-10 pointer-events-none opacity-0 transition-opacity duration-300">
+                        <div class="text-primary font-bold tracking-wider uppercase text-xs mb-1">Selected Region</div>
+                        <div id="node-title" class="display-font text-xl text-white">Default Network</div>
+                    </div>
+                </div>
+
+                <!-- Mobile Fallback (Visible only on mobile) -->
+                <div class="w-full p-6 border-b border-subtle lg:hidden mobile-show-chips hidden flex-col gap-3 bg-elevated">
+                    <h2 class="text-xl text-textPrimary">Trait Filters</h2>
+                    <div class="flex flex-wrap gap-2" id="mobile-trait-chips">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Course List Sidebar -->
+                <div class="w-full lg:w-2/5 p-6 flex flex-col bg-surface">
+                    <div class="mb-4 flex justify-between items-center">
+                        <h3 class="text-lg font-semibold" id="course-list-title">All Advanced Courses</h3>
+                        <span class="text-xs text-textSecondary" id="course-count">Loading...</span>
+                    </div>
+                    
+                    <!-- Draggable Course List -->
+                    <div id="course-pool" class="flex flex-col gap-3 overflow-y-auto pr-2 pb-4" style="max-height: 400px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column (Desktop) / Bottom (Mobile): Tracker -->
+        <div class="lg:col-span-4 flex flex-col h-full">
+            <section class="glass-panel p-6 flex flex-col h-full stagger-enter sticky top-8">
+                <div class="mb-6">
+                    <h2 class="text-xl text-textPrimary">FY26 Learning Plan</h2>
+                    <p class="text-sm text-textSecondary mt-1">Drag courses here to build your 50h requirement.</p>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <div class="display-font text-4xl font-bold transition-colors duration-300" id="total-credits-display">
+                            <span class="count-up">0</span><span class="text-lg text-textSecondary font-sans font-normal ml-1">h</span>
+                        </div>
+                        <div class="text-sm text-textSecondary mb-1" id="goal-status-text">0/50 Hours</div>
+                    </div>
+                    <div class="w-full h-3 bg-elevated rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-primary w-0 transition-all duration-500 tech" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Drop Zone / Tracker List -->
+                <div id="plan-drop-zone" class="drop-zone flex-grow border border-subtle rounded-xl p-4 flex flex-col gap-3 overflow-y-auto relative min-h-[300px] bg-elevated/30">
+                    <!-- Empty State -->
+                    <div id="plan-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-textSecondary p-6 text-center pointer-events-none">
+                        <svg class="w-12 h-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <p class="text-sm border border-dashed border-subtle rounded-lg py-2 px-4">Drag & Drop courses here</p>
+                    </div>
+                    <!-- Planned Courses will appear here -->
+                </div>
+
+                <!-- CTA -->
+                <button id="submit-plan-btn" disabled class="mt-6 w-full py-4 rounded-xl font-bold tracking-wide text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-elevated text-textSecondary border border-subtle">
+                    Generate Plan
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <!-- Data & Application Logic -->
+    <script>
+        // --- DATA ---
+        const ALL_COURSES = [
+            { id: 'c1', title: 'Dark Tetrad in Corporate Leadership', credits: 12, traitId: 'dark-tetrad', traitName: 'Dark Tetrad', color: '#8B5CF6' },
+            { id: 'c2', title: 'Neurobiology of Neuroticism', credits: 8, traitId: 'neuroticism', traitName: 'Neuroticism', color: '#00FCED' },
+            { id: 'c3', title: 'Advanced CBT for Borderline Traits', credits: 15, traitId: 'borderline', traitName: 'Borderline', color: '#8B5CF6' },
+            { id: 'c4', title: 'Big Five Clinical Applications', credits: 10, traitId: 'big-five', traitName: 'Big Five', color: '#00FCED' },
+            { id: 'c5', title: 'Psychopathy & Empathy Deficits', credits: 14, traitId: 'dark-tetrad', traitName: 'Dark Tetrad', color: '#8B5CF6' },
+            { id: 'c6', title: 'Trait-based Trauma Interventions', credits: 9, traitId: 'neuroticism', traitName: 'Neuroticism', color: '#00FCED' },
+            { id: 'c7', title: 'Narcissism Spectrum Seminar', credits: 6, traitId: 'dark-tetrad', traitName: 'Dark Tetrad', color: '#8B5CF6' },
+            { id: 'c8', title: 'Agreeableness in Couples Therapy', credits: 5, traitId: 'big-five', traitName: 'Big Five', color: '#00FCED' },
+        ];
+
+        const TRAIT_NODES = [
+            { id: 'dark-tetrad', name: 'Dark Tetrad Core', pos: [2, 1, 0], color: 0x8B5CF6 },
+            { id: 'neuroticism', name: 'Amygdala / Neuroticism', pos: [-1.5, -0.5, 1], color: 0x00FCED },
+            { id: 'borderline', name: 'Limbic Dysregulation', pos: [0, -2, -1.5], color: 0x8B5CF6 },
+            { id: 'big-five', name: 'Prefrontal / Big Five', pos: [-0.5, 2, 0.5], color: 0x00FCED },
+        ];
+
+        // --- STATE ---
+        const state = {
+            targetCredits: 50,
+            plannedCourses: [], // array of course objects
+            activeFilter: null, // traitId or null
+        };
+
+        // --- UTILS ---
+        function getCredits() {
+            return state.plannedCourses.reduce((sum, c) => sum + c.credits, 0);
+        }
+
+        function formatCourseCardHTML(course, isPlanned = false) {
+            const actionIcon = isPlanned 
+                ? `<button onclick="removeCourse('${course.id}')" class="text-textSecondary hover:text-red-400 p-1 rounded transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`
+                : `<div class="cursor-grab text-subtle hover:text-primary transition-colors hidden lg:block" title="Drag to add"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
+                   <button onclick="addCourse('${course.id}')" class="lg:hidden text-primary text-xs font-semibold py-1 px-2 border border-primary/30 rounded bg-primary/10">+ Add</button>`;
+            
+            const borderStyle = isPlanned ? `border-l-2` : `border`;
+            const borderColor = isPlanned ? `border-[${course.color}] border-subtle` : `border-subtle`;
+
+            return `
+                <div id="course-${course.id}" 
+                     class="bg-surface p-4 rounded-xl flex justify-between items-start gap-3 ${borderStyle} ${borderColor} transition-all duration-150 hover:border-primary/50 group ${!isPlanned ? 'draggable-card' : ''}"
+                     ${!isPlanned ? `draggable="true" ondragstart="handleDragStart(event, '${course.id}')" ondragend="handleDragEnd(event)"` : ''}
+                     style="${isPlanned ? `border-left-color: ${course.color};` : ''}">
+                    <div class="flex-grow">
+                        <div class="text-xs font-medium mb-1" style="color: ${course.color}">${course.traitName}</div>
+                        <h4 class="text-sm text-textPrimary font-medium leading-snug mb-2">${course.title}</h4>
+                        <div class="flex items-center gap-1 text-xs text-textSecondary font-mono">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            ${course.credits} CME Hours
+                        </div>
+                    </div>
+                    <div>
+                        ${actionIcon}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- RENDERERS ---
+
+        function renderCoursePool() {
+            const poolEl = document.getElementById('course-pool');
+            const titleEl = document.getElementById('course-list-title');
+            const countEl = document.getElementById('course-count');
+            
+            // Filter out already planned courses
+            let availableCourses = ALL_COURSES.filter(c => !state.plannedCourses.some(p => p.id === c.id));
+            
+            // Apply trait filter
+            if (state.activeFilter) {
+                availableCourses = availableCourses.filter(c => c.traitId === state.activeFilter);
+                const traitNode = TRAIT_NODES.find(n => n.id === state.activeFilter);
+                titleEl.textContent = traitNode ? traitNode.name + ' Courses' : 'Filtered Courses';
+            } else {
+                titleEl.textContent = 'All Advanced Courses';
+            }
+
+            countEl.textContent = `${availableCourses.length} available`;
+
+            // Animate out, then in
+            gsap.to(poolEl, {
+                opacity: 0, duration: 0.2, onComplete: () => {
+                    if (availableCourses.length === 0) {
+                        poolEl.innerHTML = `<div class="text-sm text-textSecondary text-center p-4 border border-dashed border-subtle rounded-xl">No more courses available in this category.</div>`;
+                    } else {
+                        poolEl.innerHTML = availableCourses.map(c => formatCourseCardHTML(c, false)).join('');
+                    }
+                    gsap.to(poolEl, {opacity: 1, duration: 0.3});
+                }
+            });
+        }
+
+        function renderTracker() {
+            const zoneEl = document.getElementById('plan-drop-zone');
+            const emptyEl = document.getElementById('plan-empty-state');
+            const currentCredits = getCredits();
+            
+            // Update List
+            const existingCards = zoneEl.querySelectorAll('[id^="course-"]');
+            existingCards.forEach(c => c.remove()); // Remove existing to re-render, keeping empty state intact
+            
+            if (state.plannedCourses.length > 0) {
+                emptyEl.classList.add('hidden');
+                const html = state.plannedCourses.map(c => formatCourseCardHTML(c, true)).join('');
+                zoneEl.insertAdjacentHTML('beforeend', html);
+            } else {
+                emptyEl.classList.remove('hidden');
+            }
+
+            // Animate Numbers
+            const displayEls = document.querySelectorAll('.count-up');
+            displayEls.forEach(el => {
+                const oldVal = parseInt(el.textContent) || 0;
+                gsap.to(el, {
+                    innerHTML: currentCredits,
+                    duration: 0.8,
+                    ease: "power2.out",
+                    snap: { innerHTML: 1 }
+                });
+            });
+
+            // Update Progress Bar & Status
+            const progressPercent = Math.min((currentCredits / state.targetCredits) * 100, 100);
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = `${progressPercent}%`;
+            
+            document.getElementById('goal-status-text').textContent = `${currentCredits}/${state.targetCredits} Hours`;
+
+            // Success State Handling
+            const isSuccess = currentCredits >= state.targetCredits;
+            const displayContainer = document.getElementById('total-credits-display');
+            const btn = document.getElementById('submit-plan-btn');
+
+            if (isSuccess) {
+                bar.classList.remove('bg-primary');
+                bar.classList.add('bg-success', 'shadow-glow-success');
+                displayContainer.classList.remove('text-textPrimary');
+                displayContainer.classList.add('text-success', 'neon-text-success');
+                
+                btn.disabled = false;
+                btn.classList.remove('bg-elevated', 'text-textSecondary', 'border-subtle');
+                btn.classList.add('bg-success', 'text-base', 'border-success', 'shadow-glow-success', 'hover:bg-[#d0e602]');
+                btn.textContent = 'Lock & Submit Plan';
+            } else {
+                bar.classList.add('bg-primary');
+                bar.classList.remove('bg-success', 'shadow-glow-success');
+                displayContainer.classList.add('text-textPrimary');
+                displayContainer.classList.remove('text-success', 'neon-text-success');
+
+                btn.disabled = true;
+                btn.classList.add('bg-elevated', 'text-textSecondary', 'border-subtle');
+                btn.classList.remove('bg-success', 'text-base', 'border-success', 'shadow-glow-success', 'hover:bg-[#d0e602]');
+                btn.textContent = 'Generate Plan';
+            }
+        }
+
+        function renderMobileChips() {
+            const container = document.getElementById('mobile-trait-chips');
+            
+            const allBtn = `<button onclick="setFilter(null)" class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!state.activeFilter ? 'bg-primary text-base border-primary' : 'bg-transparent text-textSecondary border-subtle'}">All</button>`;
+            
+            const chips = TRAIT_NODES.map(t => `
+                <button onclick="setFilter('${t.id}')" class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${state.activeFilter === t.id ? 'bg-primary/20 text-primary border-primary' : 'bg-transparent text-textSecondary border-subtle'}">${t.name}</button>
+            `).join('');
+            
+            container.innerHTML = allBtn + chips;
+        }
+
+        // --- ACTIONS ---
+
+        function addCourse(courseId) {
+            const course = ALL_COURSES.find(c => c.id === courseId);
+            if (course && !state.plannedCourses.find(c => c.id === courseId)) {
+                state.plannedCourses.push(course);
+                renderCoursePool();
+                renderTracker();
+            }
+        }
+
+        function removeCourse(courseId) {
+            state.plannedCourses = state.plannedCourses.filter(c => c.id !== courseId);
+            renderCoursePool();
+            renderTracker();
+        }
+
+        function setFilter(traitId) {
+            state.activeFilter = traitId;
+            renderCoursePool();
+            renderMobileChips();
+            // In 3D logic, we also need to update visual state, handled via events/globals
+        }
+
+        // --- DRAG AND DROP ---
+        let draggedCourseId = null;
+
+        window.handleDragStart = function(e, id) {
+            draggedCourseId = id;
+            e.dataTransfer.effectAllowed = 'move';
+            // Required for Firefox
+            e.dataTransfer.setData('text/plain', id); 
+            setTimeout(() => {
+                e.target.classList.add('dragging');
+            }, 0);
+        };
+
+        window.handleDragEnd = function(e) {
+            e.target.classList.remove('dragging');
+            document.getElementById('plan-drop-zone').classList.remove('drag-over');
+            draggedCourseId = null;
+        };
+
+        const dropZone = document.getElementById('plan-drop-zone');
+        
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', e => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (draggedCourseId) {
+                addCourse(draggedCourseId);
+            }
+        });
+
+
+        // --- INITIALIZATION ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Initial Render
+            renderCoursePool();
+            renderTracker();
+            renderMobileChips();
+
+            // 2. Setup Chart.js (Radar)
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // Tailwind colors
+            const cPrimary = '#00FCED';
+            const cSecondary = '#8B5CF6';
+            const cText = '#A1A1AA';
+            const cGrid = '#3F3F46';
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Dark Tetrad', 'Neuroticism', 'Borderline Traits', 'Big Five Dynamics', 'Trauma Res.'],
+                    datasets: [
+                        {
+                            label: 'Certification Target',
+                            data: [85, 90, 80, 75, 85],
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)', // secondary
+                            borderColor: cSecondary,
+                            borderWidth: 2,
+                            pointBackgroundColor: cSecondary,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Current Profile',
+                            data: [50, 65, 45, 85, 60],
+                            backgroundColor: 'rgba(0, 252, 237, 0.2)', // primary
+                            borderColor: cPrimary,
+                            borderWidth: 2,
+                            pointBackgroundColor: cPrimary,
+                            pointRadius: 4,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { color: cGrid },
+                            grid: { color: cGrid },
+                            pointLabels: {
+                                color: '#F5F5F7',
+                                font: { family: 'Space Grotesk', size: 12, weight: '500' }
+                            },
+                            ticks: {
+                                display: false, // Hide numeric ticks
+                                min: 0,
+                                max: 100
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // handled via custom HTML legend
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(24, 24, 27, 0.9)', // surface
+                            titleColor: '#F5F5F7',
+                            bodyColor: '#A1A1AA',
+                            borderColor: '#3F3F46',
+                            borderWidth: 1,
+                            padding: 12,
+                            titleFont: { family: 'Space Grotesk', size: 14 },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Setup Three.js
+            initThreeJS();
+
+            // 4. Stagger Entrance Animation
+            gsap.from(".stagger-enter", {
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "power3.out",
+                delay: 0.1
+            });
+        });
+
+        function initThreeJS() {
+            const container = document.getElementById('neural-canvas-container');
+            if (!container) return;
+
+            const scene = new THREE.Scene();
+            
+            // Camera
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 6;
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+
+            // Visual Data Group
+            const networkGroup = new THREE.Group();
+            scene.add(networkGroup);
+
+            const nodes = [];
+            const nodeMaterialOpts = {
+                color: 0x3F3F46,
+                transparent: true,
+                opacity: 0.8,
+                wireframe: true
+            };
+
+            // Create nodes
+            TRAIT_NODES.forEach(data => {
+                const geometry = new THREE.IcosahedronGeometry(0.5, 1);
+                // Create a base material
+                const material = new THREE.MeshBasicMaterial({ color: data.color, wireframe: true, transparent: true, opacity: 0.3 });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                mesh.position.set(...data.pos);
+                mesh.userData = { id: data.id, name: data.name, baseColor: data.color };
+                
+                // Add inner solid core
+                const coreGeo = new THREE.IcosahedronGeometry(0.2, 0);
+                const coreMat = new THREE.MeshBasicMaterial({ color: data.color });
+                const core = new THREE.Mesh(coreGeo, coreMat);
+                mesh.add(core);
+
+                networkGroup.add(mesh);
+                nodes.push(mesh);
+            });
+
+            // Create Edges (lines)
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3F3F46, transparent: true, opacity: 0.4 });
+            for(let i=0; i<nodes.length; i++) {
+                for(let j=i+1; j<nodes.length; j++) {
+                    const points = [];
+                    points.push(nodes[i].position);
+                    points.push(nodes[j].position);
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, lineMaterial);
+                    networkGroup.add(line);
+                }
+            }
+
+            // Raycaster for interaction
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let hoveredNode = null;
+
+            function onMouseMove(event) {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            }
+
+            function onClick(event) {
+                if (hoveredNode) {
+                    setFilter(hoveredNode.userData.id);
+                    updateNodeVisuals(hoveredNode.userData.id);
+                } else {
+                    setFilter(null);
+                    updateNodeVisuals(null);
+                }
+            }
+
+            container.addEventListener('mousemove', onMouseMove);
+            container.addEventListener('click', onClick);
+
+            const overlay = document.getElementById('node-info-overlay');
+            const overlayTitle = document.getElementById('node-title');
+
+            function updateNodeVisuals(activeId) {
+                nodes.forEach(node => {
+                    const isHovered = (node === hoveredNode);
+                    const isActive = (node.userData.id === activeId);
+                    
+                    if (isActive || isHovered) {
+                        node.material.opacity = 1;
+                        node.material.wireframe = false;
+                        node.scale.set(1.2, 1.2, 1.2);
+                        document.body.style.cursor = 'pointer';
+                    } else {
+                        node.material.opacity = 0.3;
+                        node.material.wireframe = true;
+                        node.scale.set(1, 1, 1);
+                    }
+                });
+
+                if (activeId) {
+                    const nodeData = TRAIT_NODES.find(n => n.id === activeId);
+                    overlayTitle.textContent = nodeData.name;
+                    overlayTitle.style.color = '#' + nodeData.color.toString(16).padStart(6, '0');
+                    overlay.style.opacity = '1';
+                } else if (!hoveredNode) {
+                    overlay.style.opacity = '0';
+                    document.body.style.cursor = 'default';
+                } else {
+                    overlayTitle.textContent = hoveredNode.userData.name;
+                    overlayTitle.style.color = '#' + hoveredNode.userData.baseColor.toString(16).padStart(6, '0');
+                    overlay.style.opacity = '1';
+                }
+            }
+
+            // Animation Loop
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const delta = clock.getDelta();
+                
+                // Slow rotation
+                networkGroup.rotation.y += 0.2 * delta;
+                networkGroup.rotation.x += 0.1 * delta;
+
+                // Raycasting
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(nodes);
+                
+                let currentHover = intersects.length > 0 ? intersects[0].object : null;
+                
+                if (currentHover !== hoveredNode) {
+                    hoveredNode = currentHover;
+                    updateNodeVisuals(state.activeFilter);
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Resize handler
+            window.addEventListener('resize', () => {
+                if (!container.clientWidth) return;
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "Tailwind CSS",
+    "Google Fonts (JetBrains Mono, DM Sans)",
+    "Three.js",
+    "Three.js OrbitControls",
+    "ECharts",
+    "GSAP"
+  ],
+  "browser_runnable": true,
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "3D 生产线蓝图 (Three.js)",
+      "status": "met",
+      "evidence": "引入了 Three.js 在屏幕左半边（或移动端顶部）渲染了流水线和带有 Wireframe 外壳的机器，配置了极客绿色的发光 Hotspots 节点。支持拖拽控制，并且鼠标经过和点击热点时有 Tooltip 和平滑的相机镜头推拉（GSAP Tween）。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "交互式案例画廊与筛选",
+      "status": "met",
+      "evidence": "通过左侧 Dashboard 面板头部的 Industry Selector，支持点击不同行业 Tab 进行案例切换。案例信息的切换使用 GSAP 添加了文字错位滚入滚出的动效。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "影响对比仪表盘 (Echarts)",
+      "status": "met",
+      "evidence": "集成了 ECharts 并在 Dashboard 的独立面板内显示，定制了深度工业风和荧光绿渐变的主题（无网格边框、悬浮有Tooltip）。当 Tab 筛选发生时，向 ECharts 的 setOption 传入新数据，自带流畅的柱状图伸缩动画。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "效率 ROI 估算器",
+      "status": "met",
+      "evidence": "实现了轻量级表单面板，监听输入事件触发实时的 ROI 数字测算。大数字展示加入了原生 JS 实现的 Scramble Text (密码乱码解码) 特效，完美契合极客控制室的设计语境。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S01",
+      "feature": "3D 热点与案例看板联动",
+      "status": "met",
+      "evidence": "完全实现。无论是点击 3D 画布内的热点，还是点击 HTML 的 Tab 按钮，都会双向更新全局状态 `currentState`。点击时不仅更新仪表盘，还能让 Three.js 相机自动飞行（focusCameraOnNode）对齐对应的物理节点。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "S02",
+      "feature": "数据加载与场景切换过渡",
+      "status": "met",
+      "evidence": "使用 GSAP 实现了初始加载时控制面板元素的序列滑入（Stagger Reveal），以及 3D 相机从远景极速降落至近景的启动序列动效。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+  "interaction_completeness": {
+    "navigation": "导航以页面内部的节点和 Tab 为主，点击无缝切换状态，伴随视角飞行和内容动画，不需要真实路由跳转。",
+    "filtering": "完成了完整的联动。行业选择（Tab/3D）实时联动文字内容、ECharts 对比图及 ROI 计算底层的 `improvementRate`。",
+    "forms": "表单采用即时响应架构（input 事件触发），遇到空输入时容错处理（默认按0算），防止了因输入空字符串导致NaN的报错。",
+    "animation": "动画覆盖了三个维度：DOM/CSS (Hover 的硬阴影、边框和色彩过渡)，3D (粒子的漂浮、相机的飞行、热点的脉冲)，JS (数字打字机乱码、ECharts 柱子变化、文字错落显现)。",
+    "empty_error_states": "无网络请求错误的情况（数据预置），但针对边界操作和首屏留白做了设计填充（如 Placeholder 和零值显示）。"
+  },
+  "visual_effects_notes": "遵循了 Neubrutalism 和 Control Room 的设定，剔除了所有圆角（0px），使用了极客工业深灰色（Gunmetal）和荧光绿（Acid Green）。大量使用了大号的等宽字体 JetBrains Mono 和极细的边框分割（Bento Grid）。生成式视觉方面，使用 Three.js 制作了带有粒子漂浮效果的线框机械模型。",
+  "known_gaps": [],
+  "next_fix_candidates": []
+}

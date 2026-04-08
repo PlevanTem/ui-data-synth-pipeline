@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PerfScope — 系统性能分析工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            void: '#0A0A0C',
+            surface: '#111115',
+            inset: '#0D0D10',
+            'grid-line': '#1E1E28',
+            'border-active': '#2A2A38',
+            signal: { DEFAULT: '#F59E0B', dim: '#D97706', bright: '#FCD34D', glow: 'rgba(245,158,11,0.15)' },
+            data: { DEFAULT: '#64748B', light: '#94A3B8' },
+            danger: { DEFAULT: '#EF4444', bg: 'rgba(239,68,68,0.08)', glow: 'rgba(239,68,68,0.2)' },
+            warn: '#EAB308',
+            ok: '#22C55E',
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            'nm-up': '6px 6px 12px rgba(0,0,0,0.6), -6px -6px 12px rgba(255,255,255,0.025)',
+            'nm-down': 'inset 4px 4px 8px rgba(0,0,0,0.6), inset -4px -4px 8px rgba(255,255,255,0.02)',
+            'amber-glow': '0 0 14px rgba(245,158,11,0.35)',
+            'danger-glow': '0 0 10px rgba(239,68,68,0.3)',
+            'panel': '0 4px 24px rgba(0,0,0,0.6)',
+          },
+          transitionTimingFunction: { 'expo': 'cubic-bezier(0.16, 1, 0.3, 1)' },
+          keyframes: {
+            pulseDanger: { '0%,100%': { boxShadow: '0 0 4px rgba(239,68,68,0.2)' }, '50%': { boxShadow: '0 0 14px rgba(239,68,68,0.55)' } },
+            fadeInUp: { '0%': { opacity: '0', transform: 'translateY(14px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            slideInRight: { '0%': { transform: 'translateX(28px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+            slideInLeft: { '0%': { transform: 'translateX(-20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+            shimmer: { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } },
+            badgePulse: { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.5' } },
+          },
+          animation: {
+            'pulse-danger': 'pulseDanger 2s ease-in-out infinite',
+            'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards',
+            'slide-right': 'slideInRight 0.28s cubic-bezier(0.16,1,0.3,1) forwards',
+            'slide-left': 'slideInLeft 0.28s cubic-bezier(0.16,1,0.3,1) forwards',
+            shimmer: 'shimmer 1.8s infinite linear',
+            'badge-pulse': 'badgePulse 1.5s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0A0A0C; }
+    ::-webkit-scrollbar-thumb { background: #2A2A38; border-radius: 2px; }
+    .shimmer-line {
+      background: linear-gradient(90deg, #1E1E28 25%, #2A2A38 50%, #1E1E28 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.8s infinite linear;
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(30,30,40,0.6) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,30,40,0.6) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .amber-underline { border-bottom: 1px solid rgba(245,158,11,0.3); }
+    .view-transition { animation: fadeInUp 0.22s cubic-bezier(0.16,1,0.3,1) forwards; }
+    #canvas-metrics { cursor: crosshair; }
+    .nav-item.active .nav-indicator { opacity: 1; }
+    .nav-item .nav-indicator { opacity: 0; transition: opacity 0.15s; }
+    @media (max-width: 767px) {
+      #sidebar { display: none; }
+      #mobile-nav { display: flex; }
+    }
+    @media (min-width: 768px) {
+      #mobile-nav { display: none; }
+    }
+    .tag-token {
+      display: inline-flex; align-items: center;
+      background: rgba(245,158,11,0.12); color: #F59E0B;
+      border: 1px solid rgba(245,158,11,0.3);
+      padding: 2px 8px; border-radius: 2px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      margin: 2px;
+    }
+    .toast-item { pointer-events: auto; }
+    input:focus { outline: none; }
+    textarea:focus { outline: none; }
+  </style>
+</head>
+<body class="bg-void text-slate-200 font-sans min-h-screen overflow-hidden flex flex-col">
+
+<!-- ═══════════════════ TOAST CONTAINER ═══════════════════ -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" style="max-width:320px"></div>
+
+<!-- ═══════════════════ ALERT DRAWER ═══════════════════ -->
+<div id="alert-overlay" class="fixed inset-0 z-40 bg-black/50 hidden" onclick="closeAlertDrawer()"></div>
+<div id="alert-drawer" class="fixed right-0 top-0 h-full w-80 bg-surface border-l border-grid-line z-50 translate-x-full transition-transform duration-[280ms] ease-expo flex flex-col">
+  <div class="flex items-center justify-between px-4 py-3 border-b border-grid-line">
+    <span class="font-mono text-xs uppercase tracking-widest text-data-light">告警面板</span>
+    <button onclick="closeAlertDrawer()" class="text-data hover:text-slate-200 transition-colors text-lg leading-none">×</button>
+  </div>
+  <div id="alert-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+</div>
+
+<!-- ═══════════════════ LAYOUT ═══════════════════ -->
+<div class="flex flex-1 overflow-hidden h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="flex flex-col bg-inset border-r border-grid-line transition-[width] duration-[220ms] ease-expo overflow-hidden shrink-0" style="width:220px">
+    <!-- Logo -->
+    <div class="px-4 py-4 border-b border-grid-line flex items-center gap-2">
+      <div class="w-6 h-6 bg-signal rounded-sm flex items-center justify-center shrink-0">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="0,8 3,4 6,6 9,2 12,5" stroke="#0A0A0C" stroke-width="1.5" fill="none"/></svg>
+      </div>
+      <span class="font-mono text-sm font-600 text-slate-100 whitespace-nowrap overflow-hidden sidebar-label">PerfScope</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 py-2">
+      <div class="nav-item active" data-view="overview" onclick="switchView('overview')">
+        <div class="nav-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-signal rounded-r-sm"></div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span class="sidebar-label">总览</span>
+      </div>
+      <div class="nav-item" data-view="metrics" onclick="switchView('metrics')">
+        <div class="nav-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-signal rounded-r-sm"></div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0"><polyline points="1,12 4,6 7,8 10,3 13,7 15,5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        <span class="sidebar-label">指标大盘</span>
+      </div>
+      <div class="nav-item" data-view="table" onclick="switchView('table')">
+        <div class="nav-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-signal rounded-r-sm"></div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0"><rect x="1" y="3" width="14" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/><line x1="6" y1="3" x2="6" y2="13" stroke="currentColor" stroke-width="1"/></svg>
+        <span class="sidebar-label">数据表格</span>
+      </div>
+      <div class="nav-item" data-view="query" onclick="switchView('query')">
+        <div class="nav-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-signal rounded-r-sm"></div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="11" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="sidebar-label">查询控制台</span>
+      </div>
+    </nav>
+
+    <!-- Bottom controls -->
+    <div class="border-t border-grid-line p-3 flex flex-col gap-2">
+      <!-- Alert badge -->
+      <button onclick="openAlertDrawer()" class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-border-active/40 transition-colors w-full text-left group">
+        <div class="relative shrink-0">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a5 5 0 0 1 5 5v3l1.5 2H1.5L3 9V6a5 5 0 0 1 5-5z" stroke="currentColor" stroke-width="1.5"/><path d="M6 13a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span id="alert-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white text-[9px] font-mono font-600 rounded-full flex items-center justify-center animation-badge-pulse">3</span>
+        </div>
+        <span class="sidebar-label text-xs font-mono text-data-light group-hover:text-slate-200 transition-colors">告警</span>
+      </button>
+      <!-- Theme toggle -->
+      <button id="theme-toggle" onclick="toggleTheme()" class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-border-active/40 transition-colors w-full text-left">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" id="theme-icon-dark"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="1" x2="8" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="13" x2="8" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="8" x2="3" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="sidebar-label text-xs font-mono text-data-light">主题</span>
+      </button>
+      <!-- Collapse -->
+      <button id="sidebar-toggle" onclick="toggleSidebar()" class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-border-active/40 transition-colors w-full text-left">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" id="sidebar-toggle-icon"><polyline points="10,3 5,8 10,13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="sidebar-label text-xs font-mono text-data-light">收起</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 overflow-y-auto overflow-x-hidden bg-void">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-20 bg-void/90 backdrop-blur-sm border-b border-grid-line px-4 md:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Mobile hamburger -->
+        <button class="md:hidden text-data hover:text-slate-200" onclick="toggleMobileMenu()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="2" y1="5" x2="16" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="13" x2="16" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <span id="view-title" class="font-mono text-sm font-500 text-slate-100 uppercase tracking-wider">总览</span>
+        <span class="hidden sm:flex items-center gap-1 font-mono text-[10px] text-data bg-inset border border-grid-line px-2 py-0.5 rounded-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-ok inline-block animate-pulse"></span>
+          LIVE
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="hidden md:block font-mono text-[11px] text-data">更新于 <span id="last-updated">--:--:--</span></span>
+        <button onclick="refreshData()" class="font-mono text-[11px] text-data hover:text-signal transition-colors border border-grid-line hover:border-signal/30 px-3 py-1 rounded-sm">↻ 刷新</button>
+      </div>
+    </header>
+
+    <!-- Views container -->
+    <div class="p-4 md:p-6">
+
+      <!-- ══════ VIEW: OVERVIEW ══════ -->
+      <div id="view-overview" class="view-transition">
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <!-- Health Score -->
+          <div class="bg-surface border border-grid-line rounded p-4 shadow-nm-up cursor-pointer hover:border-border-active transition-all duration-200 group" onclick="switchView('metrics')">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-data mb-3">系统健康评分</div>
+            <div id="kpi-health" class="font-mono text-4xl font-700 text-ok mb-1 transition-colors duration-300" data-target="87">87</div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[10px] text-ok">↑ +3 vs 1h ago</span>
+              <span class="font-mono text-[10px] text-data ml-auto group-hover:text-signal transition-colors">查看大盘 →</span>
+            </div>
+          </div>
+          <!-- P99 Latency -->
+          <div class="bg-surface border border-grid-line rounded p-4 shadow-nm-up cursor-pointer hover:border-border-active transition-all duration-200" id="kpi-p99-card">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-data mb-3">P99 延迟</div>
+            <div id="kpi-p99" class="font-mono text-4xl font-700 text-signal mb-1" data-target="142">142<span class="text-lg font-400 text-data ml-1">ms</span></div>
+            <div class="font-mono text-[10px] text-warn">↑ +28ms 异常波动</div>
+          </div>
+          <!-- Error Rate -->
+          <div class="bg-surface border border-grid-line rounded p-4 shadow-danger-glow animate-pulse-danger cursor-pointer hover:border-danger/30 transition-all duration-200" id="kpi-error-card">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-data mb-3">错误率</div>
+            <div id="kpi-error" class="font-mono text-4xl font-700 text-danger mb-1" data-target="2.4">2.4<span class="text-lg font-400 text-data ml-1">%</span></div>
+            <div class="font-mono text-[10px] text-danger">↑ 超出阈值 (>1%)</div>
+          </div>
+        </div>
+
+        <!-- Top 5 Anomaly Services -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="bg-surface border border-grid-line rounded p-4">
+            <div class="flex items-center justify-between mb-4 amber-underline pb-2">
+              <span class="font-mono text-xs uppercase tracking-widest text-data-light">异常服务 TOP 5</span>
+              <span class="font-mono text-[10px] text-data">按 P99 降序</span>
+            </div>
+            <div id="anomaly-list" class="space-y-2"></div>
+          </div>
+
+          <!-- Mini Trend Chart -->
+          <div class="bg-surface border border-grid-line rounded p-4">
+            <div class="flex items-center justify-between mb-3 amber-underline pb-2">
+              <span class="font-mono text-xs uppercase tracking-widest text-data-light">全局吞吐趋势</span>
+              <span class="font-mono text-[10px] text-data">过去 24h</span>
+            </div>
+            <canvas id="mini-chart" height="120" style="width:100%;height:120px"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Alerts Preview -->
+        <div class="bg-surface border border-grid-line rounded p-4">
+          <div class="flex items-center justify-between mb-3 amber-underline pb-2">
+            <span class="font-mono text-xs uppercase tracking-widest text-data-light">最近告警</span>
+            <button onclick="openAlertDrawer()" class="font-mono text-[10px] text-signal hover:text-signal-bright transition-colors">全部查看 →</button>
+          </div>
+          <div id="recent-alerts" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- ══════ VIEW: METRICS ══════ -->
+      <div id="view-metrics" class="view-transition hidden">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex gap-2 flex-wrap">
+            <button class="metric-filter active font-mono text-[11px] px-3 py-1 border border-signal/40 text-signal bg-signal/10 rounded-sm transition-all" data-metric="cpu" onclick="toggleMetric('cpu')">CPU</button>
+            <button class="metric-filter font-mono text-[11px] px-3 py-1 border border-grid-line text-data rounded-sm hover:border-border-active transition-all" data-metric="mem" onclick="toggleMetric('mem')">内存</button>
+            <button class="metric-filter font-mono text-[11px] px-3 py-1 border border-grid-line text-data rounded-sm hover:border-border-active transition-all" data-metric="latency" onclick="toggleMetric('latency')">延迟</button>
+            <button class="metric-filter font-mono text-[11px] px-3 py-1 border border-grid-line text-data rounded-sm hover:border-border-active transition-all" data-metric="throughput" onclick="toggleMetric('throughput')">吞吐量</button>
+          </div>
+          <div class="ml-auto flex gap-1">
+            <button class="time-range-btn active font-mono text-[10px] px-2 py-1 border border-signal/40 text-signal bg-signal/10 rounded-sm" data-range="1h" onclick="setTimeRange('1h')">1h</button>
+            <button class="time-range-btn font-mono text-[10px] px-2 py-1 border border-grid-line text-data rounded-sm hover:border-border-active" data-range="6h" onclick="setTimeRange('6h')">6h</button>
+            <button class="time-range-btn font-mono text-[10px] px-2 py-1 border border-grid-line text-data rounded-sm hover:border-border-active" data-range="24h" onclick="setTimeRange('24h')">24h</button>
+          </div>
+        </div>
+
+        <!-- Canvas Waveform Panel -->
+        <div class="bg-surface border border-grid-line rounded mb-4 overflow-hidden">
+          <div class="px-4 py-2 border-b border-grid-line flex items-center gap-3">
+            <span class="font-mono text-[10px] uppercase tracking-widest text-data-light">指标振荡波形</span>
+            <span class="font-mono text-[10px] text-data">滚轮缩放 · 拖拽平移 · 点击选区→联动表格</span>
+          </div>
+          <div class="relative grid-bg" style="height:280px">
+            <canvas id="canvas-metrics" style="width:100%;height:280px;display:block"></canvas>
+            <div id="canvas-tooltip" class="hidden absolute bg-inset border border-border-active rounded px-3 py-2 pointer-events-none z-10" style="min-width:140px">
+              <div id="tooltip-time" class="font-mono text-[10px] text-data mb-1"></div>
+              <div id="tooltip-values" class="space-y-0.5"></div>
+            </div>
+          </div>
+          <!-- Legend -->
+          <div class="px-4 py-2 border-t border-grid-line flex gap-4 flex-wrap">
+            <span class="font-mono text-[10px] flex items-center gap-1.5"><span class="w-5 h-0.5 bg-signal inline-block"></span>CPU</span>
+            <span class="font-mono text-[10px] flex items-center gap-1.5 text-data"><span class="w-5 h-0.5 bg-sky-400 inline-block"></span>内存</span>
+            <span class="font-mono text-[10px] flex items-center gap-1.5 text-data"><span class="w-5 h-0.5 bg-ok inline-block"></span>吞吐量</span>
+            <span class="font-mono text-[10px] flex items-center gap-1.5 text-data"><span class="w-5 h-0.5 bg-danger inline-block"></span>延迟 P99</span>
+          </div>
+        </div>
+
+        <!-- SVG Chart below canvas -->
+        <div class="bg-surface border border-grid-line rounded p-4">
+          <div class="flex items-center justify-between mb-3 amber-underline pb-2">
+            <span class="font-mono text-xs uppercase tracking-widest text-data-light">服务错误率分布</span>
+          </div>
+          <div id="svg-bar-chart" style="height:120px" class="relative"></div>
+        </div>
+      </div>
+
+      <!-- ══════ VIEW: TABLE ══════ -->
+      <div id="view-table" class="view-transition hidden">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <input id="table-search" type="text" placeholder="搜索服务名 / 状态..." oninput="filterTable()" class="bg-inset border border-grid-line focus:border-signal/50 text-slate-200 font-mono text-xs px-3 py-2 rounded-sm w-56 transition-colors placeholder:text-data" />
+          <select id="status-filter" onchange="filterTable()" class="bg-inset border border-grid-line focus:border-signal/50 text-data font-mono text-xs px-3 py-2 rounded-sm transition-colors">
+            <option value="all">全部状态</option>
+            <option value="normal">正常</option>
+            <option value="warn">警告</option>
+            <option value="danger">异常</option>
+          </select>
+          <span class="font-mono text-[10px] text-data ml-auto" id="table-count">共 -- 条</span>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-surface border border-grid-line rounded overflow-hidden">
+          <table class="w-full text-xs font-mono">
+            <thead>
+              <tr class="border-b border-grid-line bg-inset">
+                <th class="text-left px-4 py-2.5 text-data uppercase tracking-wider font-500 cursor-pointer hover:text-data-light transition-colors select-none" onclick="sortTable('service')">
+                  服务名 <span class="sort-indicator" data-col="service"></span>
+                </th>
+                <th class="text-right px-4 py-2.5 text-data uppercase tracking-wider font-500 cursor-pointer hover:text-data-light transition-colors select-none" onclick="sortTable('p99')">
+                  P99<span class="sort-indicator" data-col="p99"></span>
+                </th>
+                <th class="text-right px-4 py-2.5 text-data uppercase tracking-wider font-500 cursor-pointer hover:text-data-light transition-colors select-none hidden sm:table-cell" onclick="sortTable('throughput')">
+                  吞吐<span class="sort-indicator" data-col="throughput"></span>
+                </th>
+                <th class="text-right px-4 py-2.5 text-data uppercase tracking-wider font-500 cursor-pointer hover:text-data-light transition-colors select-none" onclick="sortTable('errorRate')">
+                  错误率<span class="sort-indicator" data-col="errorRate"></span>
+                </th>
+                <th class="text-center px-4 py-2.5 text-data uppercase tracking-wider font-500">状态</th>
+                <th class="text-right px-4 py-2.5 text-data uppercase tracking-wider font-500 hidden md:table-cell">时间戳</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-grid-line"></tbody>
+          </table>
+          <div id="table-empty" class="hidden flex flex-col items-center justify-center py-16 text-center">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" class="text-data mb-3 mx-auto"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="1.5"/><path d="M14 20h12M20 14v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" transform="rotate(45 20 20)"/></svg>
+            <p class="font-mono text-xs text-data">无匹配结果</p>
+            <button onclick="clearTableFilters()" class="mt-2 font-mono text-[11px] text-signal hover:text-signal-bright transition-colors">清除筛选</button>
+          </div>
+          <div id="table-loading" class="p-4 space-y-2">
+            <div class="shimmer-line h-6 rounded"></div>
+            <div class="shimmer-line h-6 rounded"></div>
+            <div class="shimmer-line h-6 rounded"></div>
+          </div>
+        </div>
+        <div id="table-filter-hint" class="hidden mt-2 font-mono text-[10px] text-signal px-1">
+          ⚡ 已联动图表时间段过滤 · <button onclick="clearTableFilters()" class="underline hover:text-signal-bright">清除</button>
+        </div>
+      </div>
+
+      <!-- ══════ VIEW: QUERY ══════ -->
+      <div id="view-query" class="view-transition hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Query Input -->
+          <div class="lg:col-span-2">
+            <div class="bg-surface border border-grid-line rounded p-4">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-data-light mb-3">自然语言查询</div>
+              <div class="relative">
+                <div id="token-display" class="hidden flex flex-wrap gap-1 mb-2"></div>
+                <textarea id="query-input" rows="3" placeholder="例：找出过去 1 小时 P99 延迟最高的服务..." oninput="parseQueryTokens()" class="w-full bg-inset border border-grid-line focus:border-signal/50 text-slate-200 font-mono text-xs px-3 py-2 rounded-sm resize-none transition-colors placeholder:text-data"></textarea>
+                <button id="query-submit" onclick="executeQuery()" class="mt-2 font-mono text-xs px-4 py-2 bg-signal/10 border border-signal/40 text-signal rounded-sm hover:bg-signal/20 transition-all flex items-center gap-2">
+                  <span id="query-btn-text">执行查询</span>
+                  <span id="query-spinner" class="hidden w-3 h-3 border border-signal border-t-transparent rounded-full animate-spin"></span>
+                </button>
+              </div>
+
+              <!-- Query Result -->
+              <div id="query-result" class="hidden mt-4 pt-4 border-t border-grid-line">
+                <div class="font-mono text-[10px] uppercase tracking-widest text-ok mb-2 flex items-center gap-2">
+                  <span>✓ 查询完成</span>
+                  <span id="query-result-count" class="text-data"></span>
+                </div>
+                <div id="query-result-summary" class="font-mono text-xs text-data-light bg-inset rounded p-3"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preset Queries -->
+          <div class="bg-surface border border-grid-line rounded p-4">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-data-light mb-3">快速查询</div>
+            <div class="space-y-2" id="preset-query-list"></div>
+
+            <!-- History -->
+            <div class="mt-4 pt-3 border-t border-grid-line">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-data mb-2">历史记录</div>
+              <div id="query-history" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+            </div>
+
+            <!-- Voice control -->
+            <div class="mt-3 pt-3 border-t border-grid-line">
+              <button id="voice-btn" onclick="toggleVoice()" class="flex items-center gap-2 w-full px-3 py-2 bg-inset border border-grid-line rounded-sm hover:border-border-active transition-colors font-mono text-xs text-data">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="1" width="6" height="8" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 7a5 5 0 0 0 10 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="7" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span id="voice-status">语音输入</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /p-4 -->
+  </main>
+</div>
+
+<!-- MOBILE NAV -->
+<nav id="mobile-nav" class="fixed bottom-0 left-0 right-0 bg-inset border-t border-grid-line flex z-30 md:hidden">
+  <button class="flex-1 flex flex-col items-center py-2 gap-0.5 nav-mobile-item active text-signal" data-view="overview" onclick="switchView('overview')">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+    <span class="font-mono text-[9px]">总览</span>
+  </button>
+  <button class="flex-1 flex flex-col items-center py-2 gap-0.5 nav-mobile-item text-data" data-view="metrics" onclick="switchView('metrics')">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><polyline points="1,12 4,6 7,8 10,3 13,7 15,5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    <span class="font-mono text-[9px]">指标</span>
+  </button>
+  <button class="flex-1 flex flex-col items-center py-2 gap-0.5 nav-mobile-item text-data" data-view="table" onclick="switchView('table')">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/><line x1="6" y1="3" x2="6" y2="13" stroke="currentColor" stroke-width="1"/></svg>
+    <span class="font-mono text-[9px]">表格</span>
+  </button>
+  <button class="flex-1 flex flex-col items-center py-2 gap-0.5 nav-mobile-item text-data" data-view="query" onclick="switchView('query')">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="11" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <span class="font-mono text-[9px]">查询</span>
+  </button>
+</nav>
+
+<!-- NAV ITEM STYLE (injected via JS because Tailwind purge can't infer dynamic classes) -->
+<style>
+  .nav-item {
+    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px 8px 16px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #64748B;
+    transition: color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { color: #E2E8F0; background: rgba(42,42,56,0.4); }
+  .nav-item.active { color: #F59E0B; }
+  .sidebar-label { white-space: nowrap; overflow: hidden; transition: opacity 0.2s, width 0.2s; }
+  .sidebar-collapsed .sidebar-label { opacity: 0; width: 0; pointer-events: none; }
+  .sidebar-collapsed { width: 56px !important; }
+  #sidebar-toggle-icon.rotated { transform: rotate(180deg); }
+</style>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const state = {
+  activeView: 'overview',
+  sidebarCollapsed: false,
+  isDark: true,
+  activeMetrics: new Set(['cpu']),
+  timeRange: '1h',
+  tableSortCol: 'p99',
+  tableSortDir: 'desc',
+  tableFilterText: '',
+  tableStatusFilter: 'all',
+  tableTimeFilter: null,
+  alertCount: 3,
+  queryHistory: [],
+  voiceActive: false,
+  canvasZoom: 1,
+  canvasPan: 0,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartPan: 0,
+};
+
+// ═══════════════════════════════════════════════
+// MOCK DATA
+// ═══════════════════════════════════════════════
+const SERVICES = [
+  { id:1, service:'auth-service',     p99:142, throughput:3420, errorRate:2.4, status:'danger', ts:'2026-04-03 14:32:11' },
+  { id:2, service:'payment-svc',      p99:118, throughput:1840, errorRate:0.8, status:'warn',   ts:'2026-04-03 14:31:55' },
+  { id:3, service:'user-profile',     p99:88,  throughput:5600, errorRate:0.1, status:'normal', ts:'2026-04-03 14:31:48' },
+  { id:4, service:'recommendation',   p99:210, throughput:920,  errorRate:3.1, status:'danger', ts:'2026-04-03 14:32:05' },
+  { id:5, service:'search-indexer',   p99:67,  throughput:2200, errorRate:0.0, status:'normal', ts:'2026-04-03 14:31:50' },
+  { id:6, service:'notification-svc', p99:155, throughput:780,  errorRate:1.5, status:'danger', ts:'2026-04-03 14:32:08' },
+  { id:7, service:'file-storage',     p99:44,  throughput:1100, errorRate:0.0, status:'normal', ts:'2026-04-03 14:31:42' },
+  { id:8, service:'analytics-worker', p99:334, throughput:310,  errorRate:4.8, status:'danger', ts:'2026-04-03 14:32:20' },
+  { id:9, service:'gateway',          p99:19,  throughput:8900, errorRate:0.3, status:'normal', ts:'2026-04-03 14:31:38' },
+  { id:10,service:'config-service',   p99:8,   throughput:200,  errorRate:0.0, status:'normal', ts:'2026-04-03 14:31:35' },
+  { id:11,service:'cache-layer',      p99:3,   throughput:12000,errorRate:0.0, status:'normal', ts:'2026-04-03 14:31:33' },
+  { id:12,service:'batch-processor',  p99:890, throughput:40,   errorRate:6.2, status:'danger', ts:'2026-04-03 14:32:25' },
+];
+
+const ALERTS = [
+  { id:1, level:'danger', service:'batch-processor',   msg:'P99 延迟 890ms，超出 SLA 阈值 (500ms)', time:'14:32:25' },
+  { id:2, level:'danger', service:'analytics-worker',  msg:'错误率 4.8%，持续 15 分钟',            time:'14:31:50' },
+  { id:3, level:'warn',   service:'notification-svc',  msg:'队列深度 >1000，可能延迟',             time:'14:30:10' },
+];
+
+const PRESET_QUERIES = [
+  { label:'P99 最高服务', q:'找出过去 1 小时 P99 延迟最高的服务' },
+  { label:'错误率 >1% 服务', q:'列出错误率超过 1% 的服务' },
+  { label:'低吞吐告警', q:'吞吐量低于 100 RPS 的服务' },
+  { label:'所有异常服务', q:'当前状态为异常的全部服务' },
+  { label:'今日最佳表现', q:'今天延迟最低的 3 个服务' },
+];
+
+// Canvas data: simulate oscillation
+function generateTimeSeries(base, amplitude, noise, count=120) {
+  const data = [];
+  for (let i = 0; i < count; i++) {
+    const t = i / count;
+    const wave = Math.sin(t * Math.PI * 6) * amplitude;
+    const n = (Math.random()-0.5) * noise;
+    // spike at 60-70
+    const spike = (i >= 60 && i <= 70) ? amplitude * 1.8 : 0;
+    data.push(Math.max(0, base + wave + n + spike));
+  }
+  return data;
+}
+
+const SERIES = {
+  cpu:        { data: generateTimeSeries(55, 20, 8),  color:'#F59E0B', label:'CPU %', max:100 },
+  mem:        { data: generateTimeSeries(70, 10, 4),  color:'#38BDF8', label:'MEM %', max:100 },
+  throughput: { data: generateTimeSeries(50, 30, 12), color:'#22C55E', label:'RPS',   max:100 },
+  latency:    { data: generateTimeSeries(30, 25, 10), color:'#EF4444', label:'P99 ms',max:100 },
+};
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+  renderAnomalyList();
+  renderRecentAlerts();
+  renderAlertDrawer();
+  renderTableBody();
+  renderPresetQueries();
+  renderQueryHistory();
+  initMiniChart();
+  initCanvasMetrics();
+  initSVGBarChart();
+  animateKPINumbers();
+  initIntersectionObserver();
+});
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('last-updated').textContent = now.toTimeString().slice(0,8);
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+const VIEW_TITLES = { overview:'总览', metrics:'指标大盘', table:'数据表格', query:'查询控制台' };
+
+function switchView(v) {
+  state.activeView = v;
+  // Hide all
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+  // Show target
+  const target = document.getElementById('view-' + v);
+  target.classList.remove('hidden');
+  target.style.opacity = '0';
+  target.style.transform = 'translateY(10px)';
+  requestAnimationFrame(() => {
+    target.style.transition = 'opacity 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1)';
+    target.style.opacity = '1';
+    target.style.transform = 'translateY(0)';
+  });
+
+  // Update sidebar
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === v);
+  });
+  // Mobile nav
+  document.querySelectorAll('.nav-mobile-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === v);
+    el.classList.toggle('text-signal', el.dataset.view === v);
+    el.classList.toggle('text-data', el.dataset.view !== v);
+  });
+
+  document.getElementById('view-title').textContent = VIEW_TITLES[v];
+
+  // Special: redraw canvas when switching to metrics
+  if (v === 'metrics') {
+    requestAnimationFrame(() => resizeCanvas());
+  }
+}
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  const sidebar = document.getElementById('sidebar');
+  const icon = document.getElementById('sidebar-toggle-icon');
+  sidebar.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
+  icon.classList.toggle('rotated', state.sidebarCollapsed);
+}
+
+function toggleMobileMenu() {
+  const drawer = document.getElementById('sidebar');
+  // On mobile show as overlay
+  if (window.innerWidth < 768) {
+    drawer.style.display = drawer.style.display === 'flex' ? 'none' : 'flex';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+function toggleTheme() {
+  state.isDark = !state.isDark;
+  document.documentElement.classList.toggle('dark', state.isDark);
+  showToast('主题已切换', state.isDark ? '已切换为暗色模式' : '已切换为亮色模式', 'info');
+}
+
+// ═══════════════════════════════════════════════
+// ALERT DRAWER
+// ═══════════════════════════════════════════════
+function openAlertDrawer() {
+  document.getElementById('alert-overlay').classList.remove('hidden');
+  document.getElementById('alert-drawer').style.transform = 'translateX(0)';
+}
+function closeAlertDrawer() {
+  document.getElementById('alert-overlay').classList.add('hidden');
+  document.getElementById('alert-drawer').style.transform = 'translateX(100%)';
+}
+
+function renderAlertDrawer() {
+  const list = document.getElementById('alert-list');
+  if (ALERTS.length === 0) {
+    list.innerHTML = `<div class="flex flex-col items-center justify-center h-full py-12 text-center">
+      <div class="text-ok text-2xl mb-2">✓</div>
+      <p class="font-mono text-xs text-ok">All Clear</p>
+      <p class="font-mono text-[10px] text-data mt-1">无待处理告警</p>
+    </div>`;
+    return;
+  }
+  list.innerHTML = ALERTS.map(a => `
+    <div class="alert-card bg-inset border-l-2 ${a.level==='danger'?'border-danger':'border-warn'} rounded-r px-3 py-2.5 animate-slide-right" data-id="${a.id}">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <div class="font-mono text-[10px] ${a.level==='danger'?'text-danger':'text-warn'} uppercase tracking-wider mb-0.5">${a.level === 'danger' ? '⚠ 严重' : '△ 警告'}</div>
+          <div class="font-mono text-xs text-slate-200 mb-1">${a.service}</div>
+          <div class="font-mono text-[11px] text-data">${a.msg}</div>
+          <div class="font-mono text-[10px] text-data-light/50 mt-1">${a.time}</div>
+        </div>
+        <button onclick="dismissAlert(${a.id})" class="text-data hover:text-slate-200 transition-colors text-base leading-none mt-0.5 shrink-0">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function dismissAlert(id) {
+  const idx = ALERTS.findIndex(a => a.id === id);
+  if (idx >= 0) {
+    ALERTS.splice(idx, 1);
+    state.alertCount = ALERTS.length;
+    document.getElementById('alert-badge').textContent = state.alertCount;
+    renderAlertDrawer();
+    renderRecentAlerts();
+    showToast('告警已处理', `告警 #${id} 已关闭`, 'success');
+    if (state.alertCount === 0) {
+      document.getElementById('alert-badge').style.display = 'none';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// OVERVIEW RENDERS
+// ═══════════════════════════════════════════════
+function renderAnomalyList() {
+  const sorted = [...SERVICES].sort((a,b) => b.p99 - a.p99).slice(0,5);
+  const el = document.getElementById('anomaly-list');
+  el.innerHTML = sorted.map(s => {
+    const colorClass = s.status==='danger'?'text-danger':s.status==='warn'?'text-warn':'text-ok';
+    const barW = Math.min(100, (s.p99/500)*100);
+    return `
+      <div class="flex items-center gap-3 cursor-pointer group" onclick="switchView('table')">
+        <span class="font-mono text-[11px] text-data-light w-32 truncate group-hover:text-signal transition-colors">${s.service}</span>
+        <div class="flex-1 bg-inset rounded-full h-1.5 overflow-hidden">
+          <div class="h-full rounded-full ${s.status==='danger'?'bg-danger':s.status==='warn'?'bg-warn':'bg-ok'} transition-all" style="width:${barW}%"></div>
+        </div>
+        <span class="font-mono text-[11px] ${colorClass} w-14 text-right">${s.p99}ms</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRecentAlerts() {
+  const el = document.getElementById('recent-alerts');
+  if (ALERTS.length === 0) {
+    el.innerHTML = `<p class="font-mono text-xs text-ok py-2">✓ 当前无告警</p>`;
+    return;
+  }
+  el.innerHTML = ALERTS.slice(0,3).map(a => `
+    <div class="flex items-center gap-3 py-1.5 border-b border-grid-line last:border-0">
+      <span class="w-1.5 h-1.5 rounded-full ${a.level==='danger'?'bg-danger':'bg-warn'} shrink-0 animate-pulse"></span>
+      <span class="font-mono text-xs text-data-light flex-1 truncate">${a.service}</span>
+      <span class="font-mono text-[10px] text-data">${a.time}</span>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════
+// KPI NUMBER ANIMATION
+// ═══════════════════════════════════════════════
+function animateKPINumbers() {
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const isFloat = el.dataset.target.includes('.');
+    let current = 0;
+    const duration = 800;
+    const start = performance.now();
+    function update(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      current = target * eased;
+      const display = isFloat ? current.toFixed(1) : Math.round(current);
+      el.childNodes[0].textContent = display;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// MINI CHART (SVG)
+// ═══════════════════════════════════════════════
+function initMiniChart() {
+  const canvas = document.getElementById('mini-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth;
+  const H = 120;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const data = SERIES.throughput.data;
+  const step = W / (data.length - 1);
+  const maxV = Math.max(...data);
+  const minV = Math.min(...data);
+  const range = maxV - minV || 1;
+  const pad = 10;
+
+  // Grid
+  ctx.strokeStyle = '#1E1E28';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad + (H - 2*pad) * i / 3;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // Area fill
+  ctx.beginPath();
+  data.forEach((v,i) => {
+    const x = i * step;
+    const y = pad + (H-2*pad) * (1-(v-minV)/range);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.lineTo((data.length-1)*step, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, 'rgba(245,158,11,0.18)');
+  grad.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line (animated draw-on)
+  let progress = 0;
+  function drawLine() {
+    ctx.clearRect(0,0,W,H);
+    // Re-draw grid
+    ctx.strokeStyle = '#1E1E28'; ctx.lineWidth=1;
+    for(let i=0;i<=3;i++){const y=pad+(H-2*pad)*i/3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    // Area
+    ctx.beginPath();
+    const end = Math.floor(data.length * progress);
+    for(let i=0;i<=end;i++){
+      const x=i*step; const y=pad+(H-2*pad)*(1-(data[i]-minV)/range);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.lineTo(end*step,H);ctx.lineTo(0,H);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+    // Line
+    ctx.beginPath();ctx.strokeStyle='#F59E0B';ctx.lineWidth=1.5;ctx.lineJoin='round';
+    for(let i=0;i<=end;i++){
+      const x=i*step;const y=pad+(H-2*pad)*(1-(data[i]-minV)/range);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    progress = Math.min(1, progress + 0.018);
+    if(progress < 1) requestAnimationFrame(drawLine);
+  }
+  drawLine();
+}
+
+// ═══════════════════════════════════════════════
+// SVG BAR CHART
+// ═══════════════════════════════════════════════
+function initSVGBarChart() {
+  const container = document.getElementById('svg-bar-chart');
+  const sorted = [...SERVICES].sort((a,b) => b.errorRate - a.errorRate).slice(0,8);
+  const maxV = Math.max(...sorted.map(s=>s.errorRate));
+  const W = container.offsetWidth || 400;
+  const H = 110;
+  const barW = Math.floor((W - (sorted.length-1)*6) / sorted.length);
+
+  const bars = sorted.map((s,i) => {
+    const h = (s.errorRate / maxV) * 80;
+    const x = i * (barW + 6);
+    const y = 80 - h;
+    const color = s.status==='danger'?'#EF4444':s.status==='warn'?'#EAB308':'#22C55E';
+    return `
+      <g class="bar-group" style="cursor:pointer" onclick="filterTableByService('${s.service}')">
+        <rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" opacity="0.75" rx="1" style="transition:opacity 0.15s">
+          <animate attributeName="height" from="0" to="${h}" dur="0.6s" fill="freeze" calcMode="spline" keySplines="0.16 1 0.3 1"/>
+          <animate attributeName="y" from="80" to="${y}" dur="0.6s" fill="freeze" calcMode="spline" keySplines="0.16 1 0.3 1"/>
+        </rect>
+        <title>${s.service}: ${s.errorRate}%</title>
+        <text x="${x + barW/2}" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B" transform="">${s.service.slice(0,6)}</text>
+        <text x="${x + barW/2}" y="${Math.max(y-4,10)}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="${color}">${s.errorRate}</text>
+      </g>`;
+  }).join('');
+
+  container.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">${bars}</svg>`;
+}
+
+function filterTableByService(service) {
+  state.tableFilterText = service;
+  document.getElementById('table-search').value = service;
+  filterTable();
+  switchView('table');
+  showToast('筛选已应用', `已筛选服务: ${service}`, 'info');
+}
+
+// ═══════════════════════════════════════════════
+// CANVAS METRICS (Oscillation Waveform)
+// ═══════════════════════════════════════════════
+let canvasCtx, canvasEl, canvasW, canvasH, drawProgress=0, animFrameId;
+
+function initCanvasMetrics() {
+  canvasEl = document.getElementById('canvas-metrics');
+  canvasCtx = canvasEl.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  setupCanvasInteraction();
+}
+
+function resizeCanvas() {
+  if (!canvasEl) return;
+  const parent = canvasEl.parentElement;
+  canvasW = parent.offsetWidth;
+  canvasH = 280;
+  canvasEl.width = canvasW * window.devicePixelRatio;
+  canvasEl.height = canvasH * window.devicePixelRatio;
+  canvasEl.style.width = canvasW + 'px';
+  canvasEl.style.height = canvasH + 'px';
+  canvasCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  drawProgress = 0;
+  if(animFrameId) cancelAnimationFrame(animFrameId);
+  animateCanvas();
+}
+
+function animateCanvas() {
+  drawProgress = Math.min(1, drawProgress + 0.012);
+  drawCanvasFrame(drawProgress);
+  if(drawProgress < 1) {
+    animFrameId = requestAnimationFrame(animateCanvas);
+  }
+}
+
+function drawCanvasFrame(progress, crosshairX=null) {
+  const ctx = canvasCtx;
+  const W = canvasW, H = canvasH;
+  ctx.clearRect(0,0,W,H);
+
+  const pad = { top:16, bottom:28, left:48, right:16 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  // Grid
+  ctx.strokeStyle = '#1E1E28';
+  ctx.lineWidth = 1;
+  const gridRows = 5, gridCols = 10;
+  for(let i=0;i<=gridRows;i++){
+    const y = pad.top + plotH*i/gridRows;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W-pad.right, y); ctx.stroke();
+    const label = Math.round(100 - 100*i/gridRows);
+    ctx.fillStyle = '#475569'; ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'right'; ctx.fillText(label+'%', pad.left-4, y+3);
+  }
+  for(let i=0;i<=gridCols;i++){
+    const x = pad.left + plotW*i/gridCols;
+    ctx.beginPath(); ctx.moveTo(x,pad.top); ctx.lineTo(x, H-pad.bottom); ctx.stroke();
+  }
+
+  // Anomaly region (60-70% of data = shaded)
+  const anomalyStart = pad.left + plotW * 0.5;
+  const anomalyEnd = pad.left + plotW * 0.6;
+  ctx.fillStyle = 'rgba(245,158,11,0.06)';
+  ctx.fillRect(anomalyStart, pad.top, anomalyEnd-anomalyStart, plotH);
+  ctx.strokeStyle = 'rgba(245,158,11,0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(anomalyStart, pad.top); ctx.lineTo(anomalyStart, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(anomalyEnd, pad.top); ctx.lineTo(anomalyEnd, H-pad.bottom); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(245,158,11,0.7)'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('SPIKE', (anomalyStart+anomalyEnd)/2, pad.top+12);
+
+  // Draw metric lines
+  const metricKeys = ['cpu','mem','throughput','latency'];
+  metricKeys.forEach(key => {
+    if(!state.activeMetrics.has(key)) return;
+    const series = SERIES[key];
+    const data = getZoomedData(series.data);
+    const endIdx = Math.floor(data.length * progress);
+    if(endIdx < 2) return;
+
+    const maxV = series.max;
+    ctx.beginPath();
+    ctx.strokeStyle = series.color;
+    ctx.lineWidth = 1.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    // Glow for active metrics (danger/signal)
+    if(key === 'latency' || key === 'cpu') {
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = series.color;
+    } else {
+      ctx.shadowBlur = 0;
+    }
+
+    for(let i=0;i<=endIdx;i++){
+      const x = pad.left + plotW * i / (data.length-1);
+      const v = Math.min(data[i], maxV);
+      const y = pad.top + plotH * (1 - v/maxV);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  });
+
+  // Crosshair
+  if(crosshairX !== null && crosshairX >= pad.left && crosshairX <= W-pad.right) {
+    ctx.strokeStyle = 'rgba(148,163,184,0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(crosshairX, pad.top); ctx.lineTo(crosshairX, H-pad.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dots on each line
+    const dataIdx = Math.round((crosshairX - pad.left) / plotW * (SERIES.cpu.data.length - 1));
+    const clampedIdx = Math.max(0, Math.min(SERIES.cpu.data.length-1, dataIdx));
+    metricKeys.forEach(key => {
+      if(!state.activeMetrics.has(key)) return;
+      const series = SERIES[key];
+      const data = getZoomedData(series.data);
+      const idx = Math.min(clampedIdx, data.length-1);
+      const v = data[idx];
+      const y = pad.top + plotH * (1 - Math.min(v, series.max)/series.max);
+      ctx.beginPath();
+      ctx.arc(crosshairX, y, 3, 0, Math.PI*2);
+      ctx.fillStyle = series.color;
+      ctx.fill();
+    });
+  }
+
+  // Time axis labels
+  ctx.fillStyle = '#475569'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+  const now = new Date();
+  const labels = ['1h ago','45m','30m','15m','now'];
+  labels.forEach((l,i) => {
+    const x = pad.left + plotW * i / (labels.length-1);
+    ctx.fillText(l, x, H-6);
+  });
+}
+
+function getZoomedData(data) {
+  const zoom = state.canvasZoom;
+  const pan = state.canvasPan;
+  const total = data.length;
+  const visibleCount = Math.max(20, Math.floor(total / zoom));
+  const startIdx = Math.max(0, Math.min(total - visibleCount, Math.floor(pan)));
+  return data.slice(startIdx, startIdx + visibleCount);
+}
+
+function setupCanvasInteraction() {
+  const canvas = canvasEl;
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    drawCanvasFrame(1, x);
+    showCanvasTooltip(e, x);
+  });
+  canvas.addEventListener('mouseleave', () => {
+    drawCanvasFrame(1);
+    document.getElementById('canvas-tooltip').classList.add('hidden');
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.canvasZoom = Math.max(1, Math.min(5, state.canvasZoom + (e.deltaY > 0 ? -0.2 : 0.2)));
+    state.canvasZoom = Math.round(state.canvasZoom * 10) / 10;
+    drawCanvasFrame(1);
+    showToast('时间轴', `缩放 ×${state.canvasZoom}`, 'info');
+  }, {passive:false});
+  canvas.addEventListener('mousedown', e => {
+    state.isDragging = true; state.dragStartX = e.clientX; state.dragStartPan = state.canvasPan;
+  });
+  canvas.addEventListener('mousemove', e => {
+    if(!state.isDragging) return;
+    const dx = (state.dragStartX - e.clientX) * 0.5;
+    state.canvasPan = Math.max(0, state.dragStartPan + dx);
+    drawCanvasFrame(1);
+  });
+  canvas.addEventListener('mouseup', () => { state.isDragging = false; });
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const padLeft = 48;
+    const plotW = canvasW - padLeft - 16;
+    if(x < padLeft || x > canvasW - 16) return;
+    // Map x to time range and filter table
+    const frac = (x - padLeft) / plotW;
+    state.tableTimeFilter = frac;
+    switchView('table');
+    filterTable();
+    document.getElementById('table-filter-hint').classList.remove('hidden');
+    showToast('图表联动', '已联动到对应时间段', 'success');
+  });
+}
+
+function showCanvasTooltip(e, x) {
+  const padLeft = 48;
+  const plotW = canvasW - padLeft - 16;
+  if(x < padLeft) return;
+  const frac = Math.max(0, Math.min(1, (x-padLeft)/plotW));
+  const tooltip = document.getElementById('canvas-tooltip');
+  const dataIdx = Math.floor(frac * (SERIES.cpu.data.length-1));
+
+  let html = '';
+  ['cpu','mem','throughput','latency'].forEach(key => {
+    if(!state.activeMetrics.has(key)) return;
+    const s = SERIES[key];
+    const data = getZoomedData(s.data);
+    const idx = Math.min(dataIdx, data.length-1);
+    html += `<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full inline-block" style="background:${s.color}"></span><span class="font-mono text-[10px] text-data-light">${s.label}:</span><span class="font-mono text-[10px] text-slate-200">${data[idx].toFixed(1)}</span></div>`;
+  });
+
+  document.getElementById('tooltip-time').textContent = `t-${Math.round((1-frac)*60)}m`;
+  document.getElementById('tooltip-values').innerHTML = html;
+  tooltip.classList.remove('hidden');
+  const rect = canvasEl.getBoundingClientRect();
+  let tx = e.clientX - rect.left + 12;
+  if(tx + 150 > canvasW) tx = e.clientX - rect.left - 155;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = (e.clientY - rect.top - 20) + 'px';
+}
+
+// ═══════════════════════════════════════════════
+// METRIC FILTERS
+// ═══════════════════════════════════════════════
+function toggleMetric(key) {
+  if(state.activeMetrics.has(key)) {
+    if(state.activeMetrics.size > 1) state.activeMetrics.delete(key);
+  } else {
+    state.activeMetrics.add(key);
+  }
+  document.querySelectorAll('.metric-filter').forEach(btn => {
+    const active = state.activeMetrics.has(btn.dataset.metric);
+    btn.classList.toggle('border-signal/40', active);
+    btn.classList.toggle('text-signal', active);
+    btn.classList.toggle('bg-signal/10', active);
+    btn.classList.toggle('border-grid-line', !active);
+    btn.classList.toggle('text-data', !active);
+  });
+  drawCanvasFrame(1);
+}
+
+function setTimeRange(r) {
+  state.timeRange = r;
+  document.querySelectorAll('.time-range-btn').forEach(btn => {
+    const active = btn.dataset.range === r;
+    btn.classList.toggle('border-signal/40', active);
+    btn.classList.toggle('text-signal', active);
+    btn.classList.toggle('bg-signal/10', active);
+    btn.classList.toggle('border-grid-line', !active);
+    btn.classList.toggle('text-data', !active);
+  });
+  // Adjust zoom/data range
+  const zoomMap = {'1h':1,'6h':2,'24h':4};
+  state.canvasZoom = zoomMap[r];
+  state.canvasPan = 0;
+  drawCanvasFrame(1);
+  showToast('时间范围', `已切换为 ${r}`, 'info');
+}
+
+// ═══════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════
+function renderTableBody() {
+  document.getElementById('table-loading').classList.remove('hidden');
+  document.getElementById('table-body').innerHTML = '';
+  setTimeout(() => {
+    document.getElementById('table-loading').classList.add('hidden');
+    updateTableBody();
+  }, 600);
+}
+
+function getFilteredSorted() {
+  let data = [...SERVICES];
+  if(state.tableFilterText) {
+    const q = state.tableFilterText.toLowerCase();
+    data = data.filter(r => r.service.toLowerCase().includes(q));
+  }
+  if(state.tableStatusFilter !== 'all') {
+    data = data.filter(r => r.status === state.tableStatusFilter);
+  }
+  if(state.tableTimeFilter !== null) {
+    // Simulate: filter some rows based on time frac
+    const frac = state.tableTimeFilter;
+    data = data.filter((_, i) => {
+      const rowFrac = i / SERVICES.length;
+      return Math.abs(rowFrac - frac) < 0.4;
+    });
+  }
+  // Sort
+  const col = state.tableSortCol;
+  const dir = state.tableSortDir === 'asc' ? 1 : -1;
+  data.sort((a,b) => {
+    if(typeof a[col] === 'string') return dir * a[col].localeCompare(b[col]);
+    return dir * (a[col] - b[col]);
+  });
+  return data;
+}
+
+function updateTableBody() {
+  const data = getFilteredSorted();
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('table-empty');
+  const countEl = document.getElementById('table-count');
+  countEl.textContent = `共 ${data.length} 条`;
+
+  if(data.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  // Virtual scroll: only render visible (simplified, render all up to 50)
+  const visible = data.slice(0, 50);
+  tbody.innerHTML = visible.map(r => {
+    const isDanger = r.status === 'danger';
+    const isWarn = r.status === 'warn';
+    const rowClass = isDanger
+      ? 'animate-pulse-danger border-l-2 border-danger'
+      : isWarn ? 'border-l-2 border-warn/50' : 'border-l-2 border-transparent';
+    const errorColor = r.errorRate > 1 ? 'text-danger' : r.errorRate > 0.5 ? 'text-warn' : 'text-ok';
+    const p99Color = r.p99 > 200 ? 'text-danger' : r.p99 > 100 ? 'text-warn' : 'text-ok';
+    const statusBadge = isDanger
+      ? '<span class="bg-danger/10 text-danger border border-danger/30 px-1.5 py-0.5 rounded-sm text-[9px] font-600">DANGER</span>'
+      : isWarn
+      ? '<span class="bg-warn/10 text-warn border border-warn/30 px-1.5 py-0.5 rounded-sm text-[9px] font-600">WARN</span>'
+      : '<span class="bg-ok/10 text-ok border border-ok/30 px-1.5 py-0.5 rounded-sm text-[9px] font-600">OK</span>';
+
+    return `<tr class="hover:bg-border-active/20 transition-colors cursor-pointer ${rowClass}" onclick="showRowDetail(${r.id})">
+      <td class="px-4 py-2.5 font-mono text-xs text-slate-200">${r.service}</td>
+      <td class="px-4 py-2.5 font-mono text-xs text-right ${p99Color}">${r.p99} ms</td>
+      <td class="px-4 py-2.5 font-mono text-xs text-right text-data-light hidden sm:table-cell">${r.throughput.toLocaleString()}</td>
+      <td class="px-4 py-2.5 font-mono text-xs text-right ${errorColor}">${r.errorRate}%</td>
+      <td class="px-4 py-2.5 text-center">${statusBadge}</td>
+      <td class="px-4 py-2.5 font-mono text-[10px] text-data hidden md:table-cell">${r.ts.split(' ')[1]}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  state.tableFilterText = document.getElementById('table-search').value;
+  state.tableStatusFilter = document.getElementById('status-filter').value;
+  updateTableBody();
+}
+
+function sortTable(col) {
+  if(state.tableSortCol === col) {
+    state.tableSortDir = state.tableSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.tableSortCol = col;
+    state.tableSortDir = 'desc';
+  }
+  document.querySelectorAll('.sort-indicator').forEach(el => {
+    el.textContent = el.dataset.col === col ? (state.tableSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+  });
+  updateTableBody();
+  showToast('排序已更新', `按 ${col} ${state.tableSortDir}`, 'info');
+}
+
+function clearTableFilters() {
+  state.tableFilterText = '';
+  state.tableStatusFilter = 'all';
+  state.tableTimeFilter = null;
+  document.getElementById('table-search').value = '';
+  document.getElementById('status-filter').value = 'all';
+  document.getElementById('table-filter-hint').classList.add('hidden');
+  updateTableBody();
+  showToast('已清除筛选', '显示全部记录', 'info');
+}
+
+function showRowDetail(id) {
+  const r = SERVICES.find(s => s.id === id);
+  if(!r) return;
+  showToast(r.service, `P99: ${r.p99}ms | 错误率: ${r.errorRate}% | 吞吐: ${r.throughput} RPS`, r.status);
+}
+
+// ═══════════════════════════════════════════════
+// QUERY CONSOLE
+// ═══════════════════════════════════════════════
+function renderPresetQueries() {
+  const container = document.getElementById('preset-query-list');
+  container.innerHTML = PRESET_QUERIES.map(p => `
+    <button onclick="usePreset('${p.q.replace(/'/g,"\\'")}', '${p.label}')" class="w-full text-left px-3 py-2 bg-inset border border-grid-line hover:border-border-active rounded-sm transition-all group">
+      <div class="font-mono text-[10px] uppercase tracking-wider text-signal mb-0.5">${p.label}</div>
+      <div class="font-mono text-[11px] text-data group-hover:text-data-light transition-colors truncate">${p.q}</div>
+    </button>
+  `).join('');
+}
+
+function usePreset(q, label) {
+  document.getElementById('query-input').value = q;
+  parseQueryTokens();
+  showToast('预设已填充', label, 'info');
+}
+
+function parseQueryTokens() {
+  const input = document.getElementById('query-input').value;
+  const tokenDisplay = document.getElementById('token-display');
+  const keywords = ['P99', 'P95', '延迟', '错误率', '吞吐', 'CPU', '内存', '1小时', '过去', '最高', '最低', '超过', '低于', 'ms', 'RPS', '%'];
+  const found = keywords.filter(k => input.includes(k));
+  if(found.length > 0) {
+    tokenDisplay.classList.remove('hidden');
+    tokenDisplay.innerHTML = found.map(k => `<span class="tag-token">${k}</span>`).join('');
+  } else {
+    tokenDisplay.classList.add('hidden');
+  }
+}
+
+function executeQuery() {
+  const input = document.getElementById('query-input').value.trim();
+  if(!input) { showToast('查询为空', '请输入查询内容', 'warn'); return; }
+  const btn = document.getElementById('query-submit');
+  const btnText = document.getElementById('query-btn-text');
+  const spinner = document.getElementById('query-spinner');
+  btn.disabled = true;
+  btnText.textContent = '查询中...';
+  spinner.classList.remove('hidden');
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btnText.textContent = '执行查询';
+    spinner.classList.add('hidden');
+
+    // Simulate result
+    const resultData = SERVICES.filter(s => s.status !== 'normal').slice(0,4);
+    const resultEl = document.getElementById('query-result');
+    document.getElementById('query-result-count').textContent = `找到 ${resultData.length} 条`;
+    document.getElementById('query-result-summary').innerHTML = resultData.map(s =>
+      `<div class="flex gap-3 py-1 border-b border-grid-line last:border-0"><span class="text-signal">${s.service}</span><span class="text-data ml-auto">P99: ${s.p99}ms</span><span class="${s.errorRate>1?'text-danger':'text-warn'}">${s.errorRate}%</span></div>`
+    ).join('');
+    resultEl.classList.remove('hidden');
+
+    // Add to history
+    state.queryHistory.unshift({ q: input, time: new Date().toTimeString().slice(0,8), count: resultData.length });
+    renderQueryHistory();
+
+    // Update table filter
+    switchView('table');
+    state.tableStatusFilter = 'danger';
+    document.getElementById('status-filter').value = 'danger';
+    updateTableBody();
+    showToast('查询完成', `返回 ${resultData.length} 条结果`, 'success');
+  }, 1200);
+}
+
+function renderQueryHistory() {
+  const container = document.getElementById('query-history');
+  if(state.queryHistory.length === 0) {
+    container.innerHTML = `<p class="font-mono text-[10px] text-data">暂无记录</p>`;
+    return;
+  }
+  container.innerHTML = state.queryHistory.slice(0,5).map(h => `
+    <button onclick="document.getElementById('query-input').value='${h.q.replace(/'/g,"\\'")}';parseQueryTokens()" class="w-full text-left group py-1 border-b border-grid-line/50 last:border-0">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-[10px] text-data group-hover:text-data-light truncate flex-1 transition-colors">${h.q.slice(0,28)}${h.q.length>28?'…':''}</span>
+        <span class="font-mono text-[9px] text-data-light/50 ml-2 shrink-0">${h.time}</span>
+      </div>
+    </button>
+  `).join('');
+}
+
+let voiceInterval = null;
+function toggleVoice() {
+  state.voiceActive = !state.voiceActive;
+  const btn = document.getElementById('voice-btn');
+  const status = document.getElementById('voice-status');
+  if(state.voiceActive) {
+    btn.classList.add('border-signal/40','text-signal');
+    status.textContent = '识别中...';
+    voiceInterval = setInterval(() => {
+      const dots = status.textContent.endsWith('...') ? '.' : status.textContent + '.';
+      status.textContent = dots.startsWith('识') ? '识别中.' : dots;
+    }, 500);
+    setTimeout(() => {
+      clearInterval(voiceInterval);
+      state.voiceActive = false;
+      btn.classList.remove('border-signal/40','text-signal');
+      status.textContent = '语音输入';
+      document.getElementById('query-input').value = '找出过去 1 小时 P99 延迟最高的服务';
+      parseQueryTokens();
+      showToast('语音识别', '已转写查询内容', 'success');
+    }, 3000);
+  } else {
+    clearInterval(voiceInterval);
+    btn.classList.remove('border-signal/40','text-signal');
+    status.textContent = '语音输入';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function showToast(title, msg, type='info') {
+  const container = document.getElementById('toast-container');
+  const colors = { success:'border-ok text-ok', danger:'border-danger text-danger', warn:'border-warn text-warn', info:'border-signal/40 text-signal', normal:'border-data' };
+  const c = colors[type] || colors.info;
+  const id = 'toast-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = `toast-item bg-surface border-l-2 border ${c.split(' ')[0]} rounded-r px-3 py-2.5 shadow-panel opacity-0 translate-x-6 transition-all duration-[280ms] ease-expo`;
+  el.innerHTML = `<div class="flex items-start justify-between gap-3">
+    <div>
+      <div class="font-mono text-[10px] font-600 ${c.split(' ')[1]} mb-0.5">${title}</div>
+      <div class="font-mono text-[11px] text-data-light">${msg}</div>
+    </div>
+    <button onclick="removeToast('${id}')" class="text-data hover:text-slate-200 transition-colors text-base leading-none shrink-0">×</button>
+  </div>`;
+  container.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateX(0)';
+  });
+  setTimeout(() => removeToast(id), 4000);
+  // Max 3 toasts
+  const toasts = container.querySelectorAll('.toast-item');
+  if(toasts.length > 3) removeToast(toasts[0].id);
+}
+
+function removeToast(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.opacity = '0';
+  el.style.transform = 'translateX(16px)';
+  setTimeout(() => el.remove(), 300);
+}
+
+// ═══════════════════════════════════════════════
+// INTERSECTION OBSERVER (entrance animations)
+// ═══════════════════════════════════════════════
+function initIntersectionObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if(entry.isIntersecting) {
+        const el = entry.target;
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(14px)';
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, i * 50);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.bg-surface').forEach((el, i) => {
+    el.style.opacity = '0';
+    observer.observe(el);
+  });
+}
+
+function refreshData() {
+  showToast('数据刷新', '正在获取最新指标...', 'info');
+  // Re-animate KPIs
+  animateKPINumbers();
+  setTimeout(() => showToast('刷新完成', '数据已更新', 'success'), 800);
+}
+
+// Preload table on load
+setTimeout(() => { renderTableBody(); }, 100);
+</script>
+</body>
+</html>

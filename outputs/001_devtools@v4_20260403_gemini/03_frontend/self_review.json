@@ -1,0 +1,62 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+    "https://cdn.jsdelivr.net/npm/chart.js",
+    "https://cdn.tailwindcss.com"
+  ],
+  "browser_runnable": true,
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "基于 WebGL 的数据渲染引擎",
+      "status": "met",
+      "evidence": "index.html 中引入 Three.js 并实现了渲染海量性能节点的 Particle System，支持拖拽缩放与悬停交互，并在状态上映射颜色。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "动态 SVG 图表",
+      "status": "met",
+      "evidence": "引入 Chart.js 绘制了 CPU 和 Memory 的资源占用折线面积图，支持平滑入场动画和悬停高亮 tooltip。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "语音/自然语言查询接口",
+      "status": "met",
+      "evidence": "提供了一个深陷式新拟态搜索框。通过 JS setTimeout 模拟了 AI 解析加载过程 (扫光动画)，然后联动更新数据表格与 WebGL 视角。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "高性能数据表格",
+      "status": "met",
+      "evidence": "使用等宽字体 Fira Code 排版数据，构建了一个带内部滚动的详尽数据表格，并在表格行上实现了微悬停效果。支持点击行联动搜索框。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M05",
+      "feature": "新拟态 (Neumorphism) UI",
+      "status": "met",
+      "evidence": "通过 Tailwind 配置 custom box-shadow 实现了 'neumorph-up' 和 'neumorph-down' 两种在极致黑底色上的克制新拟态样式。",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+  "interaction_completeness": {
+    "navigation": "实现了全局头部，未设置传统导航，因为全为单页操作仪表盘。",
+    "filtering": "搜索框输入和筛选按钮（Warnings）均联动过滤底层 Table 数据。在 Three.js 中点击节点也可以过滤并更新搜索框。",
+    "forms": "无传统表单，搜索框支持 input 防抖。",
+    "animation": "初始加载通过 Tailwind keyframes 实现了交错式 (staggered) 的 fadeInUp 入场动画。按钮具有纯 CSS 的新拟态阴影切换与 scale 反馈。",
+    "empty_error_states": "当无过滤结果时，表格内部会显示空状态文本。"
+  },
+  "visual_effects_notes": "采用 Three.js 粒子系统构建了深海星空般的三维拓扑图；采用新拟态软阴影设计凸起/凹陷面板；利用 CSS glow 打造操作焦点（搜索框聚焦、错误节点）。",
+  "known_gaps": [],
+  "next_fix_candidates": []
+}

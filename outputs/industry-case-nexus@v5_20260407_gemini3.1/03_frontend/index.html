@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-void text-mill-white antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Industry Case Nexus | Smart Manufacturing</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            void: '#0B0B0F',
+            gunmetal: '#1B1F23',
+            concrete: '#3A3F47',
+            acid: '#39FF14',
+            'mill-white': '#EDF0F4',
+            steel: '#30363D',
+            alert: '#FF6B6B'
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"DM Sans"', 'sans-serif'],
+          },
+          boxShadow: {
+            'hard': '4px 4px 0px 0px rgba(57, 255, 20, 1)',
+            'hard-sm': '2px 2px 0px 0px rgba(57, 255, 20, 1)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar for Dashboard */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0B0F; }
+    ::-webkit-scrollbar-thumb { background: #30363D; }
+    ::-webkit-scrollbar-thumb:hover { background: #3A3F47; }
+    
+    .hotspot-tooltip {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      opacity: 0;
+      z-index: 50;
+    }
+    
+    .hotspot-tooltip.visible {
+      opacity: 1;
+    }
+    
+    /* Neon glow effects */
+    .glow-text {
+      text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+    }
+    
+    /* Hide uncompiled vue/content */
+    [v-cloak] { display: none; }
+  </style>
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col lg:flex-row font-sans text-mill-white bg-void selection:bg-acid selection:text-void">
+
+  <!-- 3D Canvas Area (Fixed on Desktop, Top on Mobile) -->
+  <div class="relative w-full h-[40vh] lg:h-full lg:w-7/12 bg-void z-0 shrink-0" id="canvas-container">
+    
+    <div class="absolute top-4 left-4 lg:top-8 lg:left-8 z-10 pointer-events-none gsap-reveal">
+      <h1 class="font-mono text-2xl lg:text-5xl font-extrabold uppercase tracking-tighter text-mill-white leading-tight">
+        Industry<br>
+        <span class="text-acid glow-text">Case_Nexus</span>
+      </h1>
+      <p class="mt-2 lg:mt-4 text-gray font-mono text-[10px] lg:text-sm max-w-xs uppercase tracking-widest border-l-2 border-acid pl-3">
+        Interactive 3D Blueprint &<br>Performance Dashboard
+      </p>
+    </div>
+    
+    <!-- Custom 3D Tooltip -->
+    <div id="hotspot-tooltip" class="hotspot-tooltip font-mono text-xs bg-gunmetal border border-acid text-acid px-3 py-1 uppercase tracking-wider shadow-hard-sm">
+      NODE
+    </div>
+    
+    <!-- Controls Overlay -->
+    <div class="absolute bottom-4 left-4 lg:bottom-8 lg:left-8 z-10 pointer-events-none gsap-reveal">
+      <div class="flex items-center gap-2 lg:gap-3 text-[10px] lg:text-xs font-mono text-gray">
+        <span class="inline-block w-2 h-2 bg-acid animate-pulse"></span>
+        SYSTEM_ONLINE // DRAG TO ROTATE // CLICK NODES
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Area (Scrollable right pane) -->
+  <div class="relative w-full flex-1 lg:h-full lg:w-5/12 overflow-y-auto border-t lg:border-t-0 lg:border-l border-steel bg-gunmetal/30 z-10 p-4 lg:p-8 flex flex-col gap-6" id="dashboard-container">
+    
+    <!-- Industry Selector -->
+    <div class="bento-panel border border-steel bg-gunmetal p-4 gsap-reveal hover:border-concrete transition-colors">
+      <h2 class="font-mono text-[10px] lg:text-xs text-gray uppercase mb-3 tracking-widest">// SELECT_INDUSTRY_CASE</h2>
+      <div class="flex flex-wrap gap-2" id="industry-tabs">
+        <button data-id="automotive" class="tab-btn font-mono text-[10px] lg:text-xs font-bold uppercase px-3 py-2 border border-acid bg-acid/10 text-acid transition-all hover:bg-acid/20 shadow-hard-sm">Automotive</button>
+        <button data-id="aerospace" class="tab-btn font-mono text-[10px] lg:text-xs font-bold uppercase px-3 py-2 border border-steel text-gray hover:border-mill-white hover:text-mill-white transition-all">Aerospace</button>
+        <button data-id="electronics" class="tab-btn font-mono text-[10px] lg:text-xs font-bold uppercase px-3 py-2 border border-steel text-gray hover:border-mill-white hover:text-mill-white transition-all">Electronics</button>
+      </div>
+    </div>
+    
+    <!-- Active Case Summary -->
+    <div class="bento-panel border border-steel bg-gunmetal p-5 gsap-reveal relative overflow-hidden group hover:border-acid transition-colors duration-300">
+      <div class="absolute top-0 left-0 w-1 h-full bg-acid scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300"></div>
+      <h2 class="font-mono text-[10px] lg:text-xs text-gray uppercase mb-2 tracking-widest">// CASE_BRIEF</h2>
+      <h3 class="font-sans text-lg lg:text-2xl font-bold mb-2 text-mill-white leading-snug" id="case-title">Predictive Maintenance for Assembly Arms</h3>
+      <p class="text-xs lg:text-sm text-gray leading-relaxed mb-4 min-h-[60px]" id="case-desc">Implementing IoT sensors and ML algorithms to predict servo motor failures before they halt the production line, achieving near-zero unplanned downtime.</p>
+      
+      <div class="grid grid-cols-2 gap-4 border-t border-steel pt-4 mt-2">
+        <div>
+          <div class="font-mono text-[10px] text-gray uppercase mb-1 tracking-widest">Status</div>
+          <div class="font-mono text-xs lg:text-sm text-acid glow-text font-bold">OPTIMIZED</div>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] text-gray uppercase mb-1 tracking-widest">Key Tech</div>
+          <div class="font-mono text-xs lg:text-sm text-mill-white font-bold" id="case-tech">IoT + Scikit-Learn</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Impact Dashboard (Echarts) -->
+    <div class="bento-panel border border-steel bg-gunmetal p-5 gsap-reveal flex-grow min-h-[250px] lg:min-h-[300px] flex flex-col group hover:border-acid transition-colors duration-300">
+      <div class="flex justify-between items-start mb-2">
+        <h2 class="font-mono text-[10px] lg:text-xs text-gray uppercase tracking-widest">// IMPACT_COMPARISON</h2>
+        <div class="font-mono text-[8px] lg:text-[10px] text-acid border border-acid/30 bg-acid/10 px-2 py-1 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 bg-acid rounded-full animate-pulse"></span> LIVE
+        </div>
+      </div>
+      <div id="chart-container" class="w-full flex-grow relative -ml-2"></div>
+    </div>
+    
+    <!-- ROI Estimator -->
+    <div class="bento-panel border border-acid bg-gunmetal p-5 lg:p-6 gsap-reveal shadow-hard relative mt-2">
+      <div class="absolute top-0 right-0 w-8 h-8 border-l border-b border-acid/30"></div>
+      <h2 class="font-mono text-xs lg:text-sm text-acid uppercase mb-4 flex items-center gap-2 font-bold tracking-wider">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-acid"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        ROI_ESTIMATOR
+      </h2>
+      
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div>
+          <label class="block font-mono text-[10px] text-gray uppercase mb-1 tracking-wider">Downtime (Hrs/Mo)</label>
+          <input type="number" id="input-downtime" value="120" min="0" class="w-full bg-void border border-steel text-mill-white font-mono text-sm p-2 focus:outline-none focus:border-acid focus:shadow-hard-sm transition-all placeholder-steel" placeholder="0">
+        </div>
+        <div>
+          <label class="block font-mono text-[10px] text-gray uppercase mb-1 tracking-wider">Cost per Hour ($)</label>
+          <input type="number" id="input-cost" value="5000" min="0" class="w-full bg-void border border-steel text-mill-white font-mono text-sm p-2 focus:outline-none focus:border-acid focus:shadow-hard-sm transition-all placeholder-steel" placeholder="0">
+        </div>
+      </div>
+      
+      <div class="border-t border-steel pt-4 flex flex-col items-center justify-center bg-void p-4 border border-steel">
+        <div class="font-mono text-[10px] text-gray uppercase mb-1 tracking-widest">Projected Monthly Savings</div>
+        <div class="font-mono text-3xl lg:text-4xl font-extrabold text-acid glow-text truncate w-full text-center" id="roi-result">$0</div>
+        
+        <button id="calc-btn" class="mt-4 w-full bg-concrete hover:bg-acid hover:text-void text-mill-white hover:font-bold font-mono text-xs uppercase py-2.5 border border-steel hover:border-acid transition-all duration-300 tracking-widest">
+          RECALCULATE_YIELD
+        </button>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    // --- Data Store ---
+    const caseData = {
+      automotive: {
+        title: "Predictive Maintenance for Assembly Arms",
+        desc: "Implementing IoT sensors and ML algorithms to predict servo motor failures before they halt the production line, achieving near-zero unplanned downtime.",
+        tech: "IoT + Scikit-Learn",
+        improvementRate: 0.85, // 85% reduction in cost equivalent
+        chartData: {
+          categories: ['Downtime (h)', 'Defects (%)', 'Energy (MWh)'],
+          baseline: [120, 4.5, 850],
+          optimized: [18, 1.2, 710]
+        },
+        nodeId: 'automotive'
+      },
+      aerospace: {
+        title: "Digital Twin Quality Inspection",
+        desc: "Using high-fidelity digital twins to simulate and verify turbine blade tolerances in real-time, eliminating manual QA bottlenecks and drastically reducing rework.",
+        tech: "Computer Vision + 3D Twin",
+        improvementRate: 0.70, // 70% savings
+        chartData: {
+          categories: ['QA Time (h)', 'Rework (%)', 'WIP (Units)'],
+          baseline: [45, 8.2, 120],
+          optimized: [14, 2.1, 40]
+        },
+        nodeId: 'aerospace'
+      },
+      electronics: {
+        title: "Lean Six Sigma Automated Routing",
+        desc: "Dynamic AGV routing algorithm based on Lean Six Sigma principles to minimize work-in-progress inventory and optimize material flow across the factory floor.",
+        tech: "AGV Fleet + Pathfinding",
+        improvementRate: 0.60, // 60% savings
+        chartData: {
+          categories: ['Transit (m)', 'Idle (h)', 'Errors (ppm)'],
+          baseline: [24, 85, 300],
+          optimized: [11, 12, 45]
+        },
+        nodeId: 'electronics'
+      }
+    };
+
+    let currentState = 'automotive';
+    let chart;
+    let camera, scene, renderer, controls;
+    let hotspots = [];
+    const ids = ['automotive', 'aerospace', 'electronics'];
+
+    // --- 1. Three.js Initialization ---
+    function initThreeJS() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x0B0B0F, 0.025);
+
+      camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+      // Start high up for entrance animation
+      camera.position.set(0, 30, 30);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // optimize performance
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent dipping fully below ground
+      controls.minDistance = 5;
+      controls.maxDistance = 50;
+      controls.target.set(0, 2, 0);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
+      scene.add(ambientLight);
+      
+      const dirLight = new THREE.DirectionalLight(0x39FF14, 0.8);
+      dirLight.position.set(10, 20, 10);
+      scene.add(dirLight);
+
+      const blueLight = new THREE.DirectionalLight(0x4DA8DA, 0.3);
+      blueLight.position.set(-10, 10, -10);
+      scene.add(blueLight);
+
+      // Grid Floor
+      const grid = new THREE.GridHelper(60, 60, 0x30363D, 0x1B1F23);
+      grid.position.y = -0.1;
+      scene.add(grid);
+
+      // Materials
+      const wireMaterial = new THREE.MeshBasicMaterial({ color: 0x30363D, wireframe: true, transparent: true, opacity: 0.4 });
+      const solidMaterial = new THREE.MeshPhongMaterial({ color: 0x1B1F23, flatShading: true, shininess: 10 });
+      const hotspotMaterial = new THREE.MeshBasicMaterial({ color: 0x39FF14 });
+
+      // Factory Conveyor
+      const lineGeom = new THREE.BoxGeometry(40, 0.2, 3);
+      const lineMesh = new THREE.Mesh(lineGeom, solidMaterial);
+      scene.add(lineMesh);
+
+      // Abstract Machines & Nodes
+      const machineGeom = new THREE.BoxGeometry(2.5, 4, 2.5);
+      const labels = ['ASSEMBLY_ARM_01', 'QA_SCANNER_V2', 'AGV_ROUTER_HUB'];
+      
+      for(let i=0; i<3; i++) {
+        const x = (i - 1) * 10;
+        
+        // Solid core
+        const mesh = new THREE.Mesh(machineGeom, solidMaterial);
+        mesh.position.set(x, 2, 0);
+        scene.add(mesh);
+        
+        // Wireframe shell (slightly larger)
+        const wire = new THREE.Mesh(new THREE.BoxGeometry(2.8, 4.3, 2.8), wireMaterial);
+        mesh.add(wire);
+        
+        // Glowing Hotspot
+        const hsGeom = new THREE.SphereGeometry(0.6, 16, 16);
+        const hotspot = new THREE.Mesh(hsGeom, hotspotMaterial);
+        hotspot.position.set(x, 5.5, 0);
+        hotspot.userData = { id: ids[i], label: labels[i], baseScale: 1 };
+        scene.add(hotspot);
+        hotspots.push(hotspot);
+        
+        // Connecting beam
+        const beamGeom = new THREE.CylinderGeometry(0.05, 0.05, 1.5);
+        const beamMat = new THREE.MeshBasicMaterial({color: 0x39FF14, transparent: true, opacity: 0.5});
+        const beam = new THREE.Mesh(beamGeom, beamMat);
+        beam.position.set(x, 4.5, 0);
+        scene.add(beam);
+      }
+
+      // Background Particles (Data flow representation)
+      const particleGeom = new THREE.BufferGeometry();
+      const particleCount = 400;
+      const posArray = new Float32Array(particleCount * 3);
+      for(let i=0; i<particleCount*3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 50;
+        // Keep particles mostly above ground
+        if(i % 3 === 1 && posArray[i] < 0) posArray[i] = Math.abs(posArray[i]); 
+      }
+      particleGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      const particleMat = new THREE.PointsMaterial({ size: 0.15, color: 0x39FF14, transparent: true, opacity: 0.3 });
+      const particles = new THREE.Points(particleGeom, particleMat);
+      scene.add(particles);
+
+      // Interactions
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const tooltip = document.getElementById('hotspot-tooltip');
+
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(hotspots);
+        
+        if(intersects.length > 0) {
+          document.body.style.cursor = 'crosshair';
+          const hs = intersects[0].object;
+          
+          // Position tooltip
+          const vector = hs.position.clone();
+          vector.project(camera);
+          const x = (vector.x * .5 + .5) * rect.width;
+          const y = (vector.y * -.5 + .5) * rect.height;
+          
+          tooltip.style.left = (x + 20) + 'px';
+          tooltip.style.top = (y - 20) + 'px';
+          tooltip.textContent = hs.userData.label;
+          tooltip.classList.add('visible');
+          
+          // Hover scale
+          gsap.to(hs.scale, { x: 1.4, y: 1.4, z: 1.4, duration: 0.2 });
+        } else {
+          document.body.style.cursor = 'default';
+          tooltip.classList.remove('visible');
+          hotspots.forEach(h => {
+            gsap.to(h.scale, { x: 1, y: 1, z: 1, duration: 0.3 });
+          });
+        }
+      });
+
+      container.addEventListener('click', () => {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(hotspots);
+        if(intersects.length > 0) {
+          const id = intersects[0].object.userData.id;
+          updateState(id);
+        }
+      });
+
+      // Render Loop
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+        
+        // Gentle rotation of particles
+        particles.rotation.y = t * 0.02;
+        
+        // Floating animation for hotspots
+        hotspots.forEach((h, i) => {
+          h.position.y = 5.5 + Math.sin(t * 2.5 + i) * 0.2;
+        });
+        
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Handle Resize
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+    }
+
+    // --- 2. ECharts Initialization ---
+    function initChart() {
+      chart = echarts.init(document.getElementById('chart-container'));
+      updateChart(currentState);
+      window.addEventListener('resize', () => chart.resize());
+    }
+
+    function updateChart(id) {
+      if(!chart) return;
+      const data = caseData[id].chartData;
+      
+      const option = {
+        backgroundColor: 'transparent',
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: '#1B1F23',
+          borderColor: '#39FF14',
+          borderWidth: 1,
+          textStyle: { color: '#EDF0F4', fontFamily: 'JetBrains Mono', fontSize: 11 },
+          axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(27, 31, 35, 0.5)' } }
+        },
+        legend: {
+          data: ['Baseline', 'Optimized'],
+          textStyle: { color: '#8B949E', fontFamily: 'JetBrains Mono', fontSize: 10 },
+          bottom: 0,
+          itemWidth: 10,
+          itemHeight: 10,
+          icon: 'rect'
+        },
+        grid: { top: 25, right: 15, bottom: 40, left: 40, containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: data.categories,
+          axisLine: { lineStyle: { color: '#30363D' } },
+          axisTick: { show: false },
+          axisLabel: { color: '#8B949E', fontFamily: 'JetBrains Mono', fontSize: 9, margin: 12 }
+        },
+        yAxis: {
+          type: 'value',
+          splitLine: { lineStyle: { color: '#30363D', type: 'dashed' } },
+          axisLabel: { color: '#8B949E', fontFamily: 'JetBrains Mono', fontSize: 9 }
+        },
+        series: [
+          {
+            name: 'Baseline',
+            type: 'bar',
+            barGap: '10%',
+            barCategoryGap: '30%',
+            data: data.baseline,
+            itemStyle: { color: '#3A3F47' },
+            animationDuration: 1000,
+            animationEasing: 'cubicOut'
+          },
+          {
+            name: 'Optimized',
+            type: 'bar',
+            data: data.optimized,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(57, 255, 20, 0.9)' },
+                { offset: 1, color: 'rgba(57, 255, 20, 0.1)' }
+              ]),
+              borderWidth: 1,
+              borderColor: '#39FF14'
+            },
+            label: {
+              show: true,
+              position: 'top',
+              color: '#39FF14',
+              fontFamily: 'JetBrains Mono',
+              fontSize: 10,
+              fontWeight: 'bold'
+            },
+            animationDuration: 1000,
+            animationEasing: 'cubicOut'
+          }
+        ]
+      };
+      chart.setOption(option);
+    }
+
+    // --- 3. App State & Logic ---
+    function focusCameraOnNode(id) {
+      if(!camera || !controls || hotspots.length === 0) return;
+      const index = ids.indexOf(id);
+      if(index !== -1) {
+        const hsPos = hotspots[index].position;
+        
+        // Determine viewing angle
+        const camX = hsPos.x + 8;
+        const camY = hsPos.y + 6;
+        const camZ = hsPos.z + 12;
+
+        gsap.to(camera.position, {
+          x: camX, y: camY, z: camZ,
+          duration: 1.5,
+          ease: 'power3.inOut'
+        });
+        
+        gsap.to(controls.target, {
+          x: hsPos.x, y: hsPos.y - 2, z: hsPos.z, // Look slightly below the hotspot at the machine
+          duration: 1.5,
+          ease: 'power3.inOut'
+        });
+      }
+    }
+
+    function updateState(id) {
+      if (currentState === id) return;
+      currentState = id;
+      
+      // Update Tab Buttons UI
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if(btn.dataset.id === id) {
+          btn.className = 'tab-btn font-mono text-[10px] lg:text-xs font-bold uppercase px-3 py-2 border border-acid bg-acid/10 text-acid transition-all shadow-hard-sm';
+        } else {
+          btn.className = 'tab-btn font-mono text-[10px] lg:text-xs font-bold uppercase px-3 py-2 border border-steel text-gray hover:border-mill-white hover:text-mill-white transition-all';
+        }
+      });
+      
+      // GSAP Text Stagger Update
+      const texts = ['#case-title', '#case-desc', '#case-tech'];
+      gsap.to(texts, {
+        opacity: 0,
+        y: 10,
+        duration: 0.2,
+        stagger: 0.05,
+        onComplete: () => {
+          document.getElementById('case-title').textContent = caseData[id].title;
+          document.getElementById('case-desc').textContent = caseData[id].desc;
+          document.getElementById('case-tech').textContent = caseData[id].tech;
+          gsap.to(texts, { opacity: 1, y: 0, duration: 0.3, stagger: 0.05 });
+        }
+      });
+      
+      // Update UI Dependencies
+      updateChart(id);
+      calculateROI();
+      focusCameraOnNode(id);
+    }
+
+    // Scramble text effect for ROI
+    function scrambleText(element, finalValue) {
+      const chars = '0123456789$%,.';
+      let iterations = 0;
+      const maxIterations = 20;
+      
+      clearInterval(element.dataset.intervalId); // clear previous if any
+      
+      const interval = setInterval(() => {
+        let randomStr = '$';
+        for(let i=0; i<finalValue.length-1; i++) {
+          randomStr += chars[Math.floor(Math.random() * chars.length)];
+        }
+        element.textContent = randomStr;
+        iterations++;
+        
+        if(iterations >= maxIterations) {
+          clearInterval(interval);
+          element.textContent = finalValue;
+        }
+      }, 30);
+      
+      element.dataset.intervalId = interval;
+    }
+
+    function calculateROI() {
+      const dtInput = document.getElementById('input-downtime').value;
+      const costInput = document.getElementById('input-cost').value;
+      
+      // Basic validation and fallback
+      const dt = dtInput === '' ? 0 : parseFloat(dtInput);
+      const cost = costInput === '' ? 0 : parseFloat(costInput);
+      
+      const rate = caseData[currentState].improvementRate;
+      const savings = Math.round(dt * cost * rate);
+      const formatted = '$' + savings.toLocaleString();
+      
+      const resultEl = document.getElementById('roi-result');
+      scrambleText(resultEl, formatted);
+    }
+
+    // --- 4. Event Bindings & Init ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Init Modules
+      initThreeJS();
+      initChart();
+      calculateROI();
+      
+      // Tab Events
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          updateState(e.target.dataset.id);
+        });
+      });
+
+      // ROI Estimator Events
+      const calcBtn = document.getElementById('calc-btn');
+      const inputDt = document.getElementById('input-downtime');
+      const inputCost = document.getElementById('input-cost');
+      
+      calcBtn.addEventListener('click', calculateROI);
+      inputDt.addEventListener('input', calculateROI);
+      inputCost.addEventListener('input', calculateROI);
+
+      // Entrance Animations
+      gsap.from('.gsap-reveal', {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'power3.out',
+        delay: 0.2
+      });
+      
+      // Camera swooping in from high angle
+      gsap.to(camera.position, {
+        x: 12, y: 8, z: 18,
+        duration: 2.5,
+        ease: 'power3.out',
+        delay: 0.5,
+        onComplete: () => {
+           // Move to default automotive node smoothly
+           focusCameraOnNode('automotive');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

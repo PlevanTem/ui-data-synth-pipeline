@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VantageView — Themed Virtual Open House Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'void': '#0A0907',
+            'surface': '#14120E',
+            'panel': '#1C1914',
+            'panel-h': '#242018',
+            'border-s': '#2C2820',
+            'border-m': '#3E3830',
+            'tp': '#F2EADB',
+            'ts': '#9E9080',
+            'tt': '#5E5548',
+            'gold': '#C8924A',
+            'goldb': '#E5B870',
+            'goldd': '#7A5830',
+          },
+          fontFamily: {
+            'display': ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            'mono': ['"DM Mono"', '"Courier New"', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ta: #C8924A;
+      --ta-rgb: 200, 146, 74;
+      --tg: rgba(200, 146, 74, 0.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color-scheme: dark; scroll-behavior: smooth; }
+    body { background: #0A0907; color: #F2EADB; font-family: 'Cormorant Garamond', Georgia, serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #14120E; }
+    ::-webkit-scrollbar-thumb { background: #3E3830; border-radius: 2px; }
+
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active {
+      display: block;
+      animation: vFadeIn 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes vFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Nav tab ── */
+    .nav-tab {
+      padding: 5px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: #5E5548;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+    .nav-tab:hover { color: #9E9080; border-color: #2C2820; }
+    .nav-tab.active {
+      color: #F2EADB;
+      border-color: var(--ta);
+      background: rgba(var(--ta-rgb), 0.08);
+    }
+
+    /* ── Range slider ── */
+    input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 1.5px; background: #3E3830; border-radius: 1px; outline: none; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--ta);
+      box-shadow: 0 0 0 5px rgba(var(--ta-rgb), 0.14), 0 2px 10px rgba(0,0,0,0.6);
+      cursor: grab;
+      transition: box-shadow 150ms;
+    }
+    input[type=range]::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      box-shadow: 0 0 0 9px rgba(var(--ta-rgb), 0.18), 0 2px 10px rgba(0,0,0,0.6);
+    }
+    input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--ta); border: none; cursor: grab; }
+
+    /* ── Theme card ── */
+    .theme-card {
+      flex: 1; min-width: 140px;
+      border: 1px solid #2C2820;
+      border-radius: 10px;
+      padding: 14px;
+      background: #1C1914;
+      cursor: pointer;
+      transition: transform 260ms cubic-bezier(0.25,0.46,0.45,0.94),
+                  box-shadow 260ms cubic-bezier(0.25,0.46,0.45,0.94),
+                  border-color 260ms;
+      position: relative;
+      overflow: hidden;
+    }
+    .theme-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.45); border-color: #3E3830; }
+    .theme-card.sel { border-color: var(--ta); box-shadow: 0 0 0 1px var(--ta) inset, 0 8px 32px rgba(0,0,0,0.4); }
+    .theme-card.sel::before { content: ''; position: absolute; inset: 0; background: var(--tg); pointer-events: none; }
+
+    /* ── Calendar ── */
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 160ms, border-color 160ms;
+      position: relative;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      color: #F2EADB;
+    }
+    .cal-cell:hover:not(.other):not(.empty-cell) { background: #1C1914; }
+    .cal-cell.other { color: #3E3830; cursor: default; pointer-events: none; }
+    .cal-cell.today .day-num { color: #E5B870; font-weight: 600; }
+    .cal-cell.sel-day { background: #1C1914; border-color: var(--ta) !important; }
+    .event-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
+
+    /* ── Fade-in util ── */
+    .fi { opacity: 0; transform: translateY(14px); transition: opacity 480ms cubic-bezier(0.16,1,0.3,1), transform 480ms cubic-bezier(0.16,1,0.3,1); }
+    .fi.in { opacity: 1; transform: none; }
+
+    /* ── Toast ── */
+    #toasts { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      min-width: 250px; padding: 11px 16px;
+      background: #1C1914; border: 1px solid var(--ta);
+      border-radius: 6px;
+      font-family: 'DM Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; color: #F2EADB;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.65);
+      transform: translateX(115%); transition: transform 320ms cubic-bezier(0.16,1,0.3,1);
+      display: flex; align-items: center; gap: 9px;
+    }
+    .toast.in { transform: translateX(0); }
+    .toast .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .toast.ok .dot { background: #2E7D4F; }
+    .toast.err .dot { background: #C8252D; }
+
+    /* ── Filter tab ── */
+    .ftab {
+      padding: 4px 11px;
+      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #5E5548; border: 1px solid #2C2820; border-radius: 3px;
+      background: transparent; cursor: pointer; transition: all 140ms;
+    }
+    .ftab:hover { color: #9E9080; border-color: #3E3830; }
+    .ftab.active { color: #F2EADB; background: rgba(var(--ta-rgb), 0.12); border-color: var(--ta); }
+
+    /* ── Panel theme btn ── */
+    .ptheme-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 7px; border: 1px solid #2C2820;
+      background: transparent; cursor: pointer; transition: all 160ms;
+      text-align: left;
+    }
+    .ptheme-btn:hover { border-color: #3E3830; background: #1C1914; }
+    .ptheme-btn.sel-ptheme { border-color: var(--ta); background: rgba(var(--ta-rgb), 0.06); }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      .dsk-only { display: none !important; }
+      .mob-show { display: flex !important; }
+    }
+    @media (min-width: 768px) {
+      .mob-only { display: none !important; }
+    }
+
+    /* ── Canvas ── */
+    #atm-canvas { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     NAVIGATION
+═══════════════════════════════════════════ -->
+<nav class="fixed top-0 inset-x-0 z-50 h-16 flex items-center justify-between border-b border-border-s bg-void/96 backdrop-blur-md px-6 md:px-10">
+
+  <!-- Logo -->
+  <div class="flex items-center gap-2.5">
+    <div class="w-[14px] h-[14px] border border-gold/70 rotate-45 flex-shrink-0" style="border-color: var(--ta)"></div>
+    <span class="font-display text-lg tracking-[0.18em] text-tp uppercase">VantageView</span>
+  </div>
+
+  <!-- Desktop tabs -->
+  <div class="dsk-only items-center gap-1">
+    <button class="nav-tab active" data-v="preview">Preview</button>
+    <button class="nav-tab" data-v="schedule">Schedule</button>
+    <button class="nav-tab" data-v="analytics">Analytics</button>
+  </div>
+
+  <!-- Desktop user -->
+  <div class="dsk-only items-center gap-3">
+    <div class="w-7 h-7 rounded-full border border-border-m bg-panel flex items-center justify-center">
+      <span class="font-mono text-[10px] text-ts">SM</span>
+    </div>
+    <span class="font-mono text-[10px] text-tt tracking-widest uppercase">Sarah M.</span>
+  </div>
+
+  <!-- Mobile burger -->
+  <button id="mob-btn" class="mob-only flex-col gap-[5px] p-1.5 cursor-pointer" aria-label="Menu">
+    <span class="mline block w-5 h-px bg-ts transition-all duration-300 origin-center"></span>
+    <span class="mline block w-5 h-px bg-ts transition-all duration-300 origin-center"></span>
+  </button>
+</nav>
+
+<!-- Mobile overlay menu -->
+<div id="mob-menu" class="fixed inset-0 z-40 bg-void/98 hidden flex-col items-center justify-center gap-6">
+  <button class="mob-nav font-mono text-sm tracking-widest uppercase text-ts hover:text-tp transition-colors py-2 cursor-pointer" data-v="preview">Preview</button>
+  <button class="mob-nav font-mono text-sm tracking-widest uppercase text-ts hover:text-tp transition-colors py-2 cursor-pointer" data-v="schedule">Schedule</button>
+  <button class="mob-nav font-mono text-sm tracking-widest uppercase text-ts hover:text-tp transition-colors py-2 cursor-pointer" data-v="analytics">Analytics</button>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════ -->
+<main class="pt-16 min-h-screen">
+
+  <!-- ─────────── PREVIEW VIEW ─────────── -->
+  <div id="view-preview" class="view active">
+
+    <!-- Atmosphere Canvas -->
+    <div class="relative overflow-hidden" id="canvas-wrap">
+      <canvas id="atm-canvas"></canvas>
+      <!-- Overlays -->
+      <div class="absolute bottom-0 inset-x-0 h-20" style="background: linear-gradient(to top, #0A0907, transparent)"></div>
+      <div class="absolute bottom-5 left-7 z-10">
+        <div class="font-mono text-[10px] text-tt tracking-widest uppercase mb-1">Current Time</div>
+        <div id="time-disp" class="font-display text-5xl md:text-6xl text-tp leading-none" style="text-shadow: 0 4px 30px rgba(0,0,0,0.9)">4:00 PM</div>
+      </div>
+      <div class="absolute bottom-5 right-7 z-10 text-right">
+        <div class="font-mono text-[10px] text-tt tracking-widest uppercase mb-1">Suggested Theme</div>
+        <div id="sug-theme" class="font-display text-2xl leading-none" style="color: var(--ta); text-shadow: 0 2px 20px rgba(0,0,0,0.9)">Golden Hour</div>
+      </div>
+    </div>
+
+    <!-- Slider section -->
+    <div class="bg-surface border-b border-border-s px-6 md:px-10 py-7">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <h2 class="font-display text-xl text-tp">Atmosphere Slider</h2>
+            <p class="font-mono text-[10px] text-tt tracking-wide mt-0.5">Drag to preview property lighting — 6:00 AM through 10:00 PM</p>
+          </div>
+          <div id="slider-badge" class="font-mono text-[10px] text-ts tracking-widest border border-border-m rounded-full px-3 py-1.5 flex-shrink-0 ml-4">4:00 PM</div>
+        </div>
+        <input type="range" id="tslider" min="0" max="100" value="62">
+        <div class="flex justify-between mt-2.5">
+          <span class="font-mono text-[9px] text-tt">6 AM</span>
+          <span class="font-mono text-[9px] text-tt">9</span>
+          <span class="font-mono text-[9px] text-tt">12 PM</span>
+          <span class="font-mono text-[9px] text-tt">3</span>
+          <span class="font-mono text-[9px] text-tt">6 PM</span>
+          <span class="font-mono text-[9px] text-tt">9</span>
+          <span class="font-mono text-[9px] text-tt">10 PM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme cards -->
+    <div class="px-6 md:px-10 py-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-display text-xl md:text-2xl text-tp">Event Themes</h2>
+          <span class="font-mono text-[10px] text-tt tracking-widest uppercase hidden sm:block">Select to apply atmosphere</span>
+        </div>
+        <div id="theme-cards" class="flex flex-wrap md:flex-nowrap gap-3"></div>
+      </div>
+    </div>
+
+  </div><!-- /preview -->
+
+
+  <!-- ─────────── SCHEDULE VIEW ─────────── -->
+  <div id="view-schedule" class="view">
+    <div class="px-6 md:px-10 py-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl md:text-4xl text-tp">Open House Schedule</h1>
+          <p class="font-mono text-[10px] text-tt tracking-wide mt-1.5">Assign themes to upcoming event dates</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+          <!-- Calendar -->
+          <div class="lg:col-span-3 bg-surface border border-border-s rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+              <button id="cal-prev" class="w-8 h-8 flex items-center justify-center rounded-md border border-border-s text-ts hover:border-border-m hover:text-tp transition-all cursor-pointer font-mono text-base leading-none">‹</button>
+              <h3 id="cal-title" class="font-display text-xl text-tp"></h3>
+              <button id="cal-next" class="w-8 h-8 flex items-center justify-center rounded-md border border-border-s text-ts hover:border-border-m hover:text-tp transition-all cursor-pointer font-mono text-base leading-none">›</button>
+            </div>
+            <div class="grid grid-cols-7 mb-2">
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">M</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">T</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">W</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">T</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">F</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">S</div>
+              <div class="text-center font-mono text-[9px] text-tt tracking-widest uppercase py-1.5">S</div>
+            </div>
+            <div id="cal-grid" class="grid grid-cols-7 gap-1"></div>
+          </div>
+
+          <!-- Event Panel -->
+          <div id="ev-panel" class="lg:col-span-2 bg-surface border border-border-s rounded-xl p-6 flex flex-col min-h-80">
+            <div id="p-empty" class="flex-1 flex flex-col items-center justify-center text-center gap-4">
+              <div class="w-12 h-12 rounded-full border border-border-m flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E5548" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <p class="font-mono text-[10px] text-tt tracking-wide leading-loose">Select a date<br>to schedule an event</p>
+            </div>
+            <div id="p-edit" class="hidden flex-1 flex flex-col">
+              <div class="mb-4">
+                <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-1">Event Date</div>
+                <div id="p-date" class="font-display text-2xl text-tp"></div>
+              </div>
+              <div class="border-t border-border-s pt-4 mb-4 flex-1">
+                <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-3">Select Theme</div>
+                <div id="p-themes" class="flex flex-col gap-1.5"></div>
+              </div>
+              <div class="flex gap-2.5 pt-2">
+                <button id="p-save" class="flex-1 py-2.5 font-mono text-[10px] tracking-widest uppercase border border-gold text-gold hover:bg-gold/10 rounded-lg transition-colors cursor-pointer" style="border-color: var(--ta); color: var(--ta)">Save Event</button>
+                <button id="p-del" class="hidden py-2.5 px-4 font-mono text-[10px] tracking-widest uppercase border border-border-s text-tt hover:border-red-900/50 hover:text-red-400/80 rounded-lg transition-colors cursor-pointer">Remove</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div><!-- /schedule -->
+
+
+  <!-- ─────────── ANALYTICS VIEW ─────────── -->
+  <div id="view-analytics" class="view">
+    <div class="px-6 md:px-10 py-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-start justify-between mb-8">
+          <div>
+            <h1 class="font-display text-3xl md:text-4xl text-tp">Engagement Analytics</h1>
+            <p class="font-mono text-[10px] text-tt tracking-wide mt-1.5">30-day participant interest across themes & dates</p>
+          </div>
+          <span class="font-mono text-[9px] text-tt tracking-widest hidden md:block mt-2">Mar 9 — Apr 7, 2026</span>
+        </div>
+
+        <!-- KPI row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="fi bg-surface border border-border-s rounded-xl p-5" style="transition-delay:0ms">
+            <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-3">Total Views</div>
+            <div class="font-display text-4xl text-tp leading-none">4,820</div>
+            <div class="font-mono text-[9px] mt-2" style="color:#2E7D4F">↑ 18% vs prev month</div>
+          </div>
+          <div class="fi bg-surface border border-border-s rounded-xl p-5" style="transition-delay:80ms">
+            <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-3">Top Theme</div>
+            <div id="kpi-top" class="font-display text-2xl leading-none" style="color: var(--ta)">Golden Hour</div>
+            <div class="font-mono text-[9px] text-tt mt-2">38% of total views</div>
+          </div>
+          <div class="fi bg-surface border border-border-s rounded-xl p-5" style="transition-delay:160ms">
+            <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-3">Peak Day</div>
+            <div class="font-display text-2xl text-tp leading-none">Mar 22</div>
+            <div class="font-mono text-[9px] text-tt mt-2">286 participants</div>
+          </div>
+          <div class="fi bg-surface border border-border-s rounded-xl p-5" style="transition-delay:240ms">
+            <div class="font-mono text-[9px] text-tt tracking-widest uppercase mb-3">Events Hosted</div>
+            <div class="font-display text-4xl text-tp leading-none">7</div>
+            <div class="font-mono text-[9px] text-tt mt-2">Across 5 themes</div>
+          </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="flex flex-wrap gap-2 mb-6">
+          <button class="ftab active" data-f="all">All Themes</button>
+          <button class="ftab" data-f="golden-hour">Golden Hour</button>
+          <button class="ftab" data-f="sunset-soiree">Sunset Soirée</button>
+          <button class="ftab" data-f="midnight-modern">Midnight Modern</button>
+          <button class="ftab" data-f="festive">Festive</button>
+          <button class="ftab" data-f="holiday-home">Holiday Home</button>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="fi lg:col-span-2 bg-surface border border-border-s rounded-xl p-6" style="transition-delay:80ms">
+            <div class="mb-5">
+              <h3 class="font-display text-xl text-tp">Daily Participation Trend</h3>
+              <p class="font-mono text-[9px] text-tt mt-0.5 tracking-wide">Unique viewer sessions per day</p>
+            </div>
+            <canvas id="line-chart"></canvas>
+          </div>
+          <div class="fi bg-surface border border-border-s rounded-xl p-6" style="transition-delay:180ms">
+            <div class="mb-5">
+              <h3 class="font-display text-xl text-tp">Theme Performance</h3>
+              <p class="font-mono text-[9px] text-tt mt-0.5 tracking-wide">Cumulative views by theme</p>
+            </div>
+            <canvas id="bar-chart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /analytics -->
+
+</main>
+
+<!-- Toast container -->
+<div id="toasts"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA CONSTANTS
+// ═══════════════════════════════════════════════════════
+
+const THEMES = [
+  {
+    id: 'golden-hour',
+    name: 'Golden Hour',
+    kw: ['Warmth','Radiance','Luxury'],
+    t: 0.62,
+    accent: '#F4A32A', rgb: '244,163,42',
+    glow: 'rgba(244,163,42,0.10)',
+    sw: ['#1A0C00','#5C3500','#C88020','#F4A32A','#FFD580'],
+    desc: 'Late afternoon sun bathes every surface in liquid gold.'
+  },
+  {
+    id: 'midnight-modern',
+    name: 'Midnight Modern',
+    kw: ['Drama','Depth','Exclusivity'],
+    t: 1.0,
+    accent: '#5B7ABF', rgb: '91,122,191',
+    glow: 'rgba(91,122,191,0.10)',
+    sw: ['#04060F','#0E1830','#1E3060','#3B5998','#7090D0'],
+    desc: 'Architectural precision meets moonlit atmosphere.'
+  },
+  {
+    id: 'festive',
+    name: 'Festive',
+    kw: ['Joy','Celebration','Energy'],
+    t: 0.50,
+    accent: '#C8252D', rgb: '200,37,45',
+    glow: 'rgba(200,37,45,0.08)',
+    sw: ['#100203','#3A0608','#901018','#C8252D','#F07070'],
+    desc: 'Warm celebration light transforms every room.'
+  },
+  {
+    id: 'sunset-soiree',
+    name: 'Sunset Soirée',
+    kw: ['Romance','Warmth','Elegance'],
+    t: 0.75,
+    accent: '#E8622A', rgb: '232,98,42',
+    glow: 'rgba(232,98,42,0.08)',
+    sw: ['#120500','#3C1208','#A03018','#E8622A','#FFB080'],
+    desc: 'Evening sun creates intimate gathering spaces.'
+  },
+  {
+    id: 'holiday-home',
+    name: 'Holiday Home',
+    kw: ['Comfort','Serenity','Nature'],
+    t: 0.30,
+    accent: '#2E7D4F', rgb: '46,125,79',
+    glow: 'rgba(46,125,79,0.08)',
+    sw: ['#040E08','#0C2814','#185530','#2E7D4F','#60C080'],
+    desc: 'Fresh morning light with seasonal botanical accents.'
+  }
+];
+
+function themeById(id) { return THEMES.find(t=>t.id===id)||THEMES[0]; }
+
+// Analytics data
+function genData() {
+  const rows = [];
+  for (let i = 0; i < 30; i++) {
+    const dow = (i+3)%7;
+    const wknd = dow===0||dow===6;
+    const base = wknd ? 188 : 122;
+    const n = Math.sin(i*1.47)*30 + Math.cos(i*2.31)*18;
+    const total = Math.max(55, Math.round(base + n + i*1.6));
+    rows.push({
+      lbl: `${new Date(2026,2,9+i).getMonth()+1}/${new Date(2026,2,9+i).getDate()}`,
+      total,
+      'golden-hour': Math.round(total*0.38*(1+Math.sin(i*0.4)*0.14)),
+      'sunset-soiree': Math.round(total*0.23*(1+Math.sin(i*0.55+1)*0.12)),
+      'midnight-modern': Math.round(total*0.16*(1+Math.sin(i*0.8+2)*0.10)),
+      'festive': Math.round(total*0.13),
+      'holiday-home': Math.round(total*0.10),
+    });
+  }
+  return rows;
+}
+const DATA = genData();
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+
+const S = {
+  view: 'preview',
+  theme: 'golden-hour',
+  time: 0.62,          // 0=6AM, 1=10PM
+  calY: 2026, calM: 3, // April=3 (0-indexed)
+  selDate: null,
+  panTheme: null,
+  events: {
+    '2026-04-05': 'golden-hour',
+    '2026-04-12': 'sunset-soiree',
+    '2026-04-15': 'midnight-modern',
+    '2026-04-18': 'festive',
+    '2026-04-19': 'holiday-home',
+    '2026-04-25': 'golden-hour',
+    '2026-04-26': 'sunset-soiree',
+  },
+  aFilter: 'all',
+  chartsReady: false,
+};
+
+// ═══════════════════════════════════════════════════════
+// CANVAS — ATMOSPHERE RENDERER
+// ═══════════════════════════════════════════════════════
+
+const STAGES = [
+  { h:6,    sky:[14,20,36],  lc:[155,182,215], ba:0.055, aa:0.018 },
+  { h:7,    sky:[26,18,10],  lc:[218,192,148], ba:0.16,  aa:0.06  },
+  { h:9,    sky:[30,20,9],   lc:[248,224,182], ba:0.26,  aa:0.10  },
+  { h:12,   sky:[20,15,7],   lc:[255,238,202], ba:0.33,  aa:0.13  },
+  { h:14,   sky:[17,12,6],   lc:[255,222,165], ba:0.37,  aa:0.13  },
+  { h:16,   sky:[15,9,4],    lc:[244,163,42],  ba:0.45,  aa:0.12  },
+  { h:17.5, sky:[13,7,3],    lc:[238,96,40],   ba:0.38,  aa:0.09  },
+  { h:19,   sky:[9,5,5],     lc:[188,68,36],   ba:0.22,  aa:0.07  },
+  { h:20.5, sky:[5,7,17],    lc:[52,78,142],   ba:0.12,  aa:0.04  },
+  { h:22,   sky:[3,3,9],     lc:[20,28,62],    ba:0.045, aa:0.018 },
+];
+
+function lerp(a,b,t){ return a+(b-a)*t; }
+function lerp3(a,b,t){ return [Math.round(lerp(a[0],b[0],t)), Math.round(lerp(a[1],b[1],t)), Math.round(lerp(a[2],b[2],t))]; }
+
+function drawAtm() {
+  const cv = document.getElementById('atm-canvas');
+  if(!cv) return;
+  const wrap = document.getElementById('canvas-wrap');
+  const W = wrap.clientWidth;
+  const H = Math.round(W * 0.40);
+  cv.width = W;
+  cv.height = H;
+  cv.style.height = H + 'px';
+
+  const ctx = cv.getContext('2d');
+  const t = S.time;
+  const hour = 6 + t*16;
+
+  // Find stage pair
+  let sA=STAGES[0], sB=STAGES[1], lt=0;
+  for(let i=0;i<STAGES.length-1;i++){
+    if(hour>=STAGES[i].h && hour<=STAGES[i+1].h){
+      sA=STAGES[i]; sB=STAGES[i+1];
+      lt=(hour-sA.h)/(sB.h-sA.h);
+      break;
+    }
+  }
+  const sky = lerp3(sA.sky,sB.sky,lt);
+  const lc  = lerp3(sA.lc, sB.lc, lt);
+  const ba  = lerp(sA.ba, sB.ba, lt);
+  const aa  = lerp(sA.aa, sB.aa, lt);
+
+  // ── 1. Base fill
+  ctx.fillStyle = '#0A0907';
+  ctx.fillRect(0,0,W,H);
+
+  // ── 2. Sky/wall gradient
+  const wg = ctx.createLinearGradient(0,0,0,H*0.7);
+  wg.addColorStop(0, `rgba(${sky},0.92)`);
+  wg.addColorStop(0.55,`rgba(${sky},0.48)`);
+  wg.addColorStop(1, `rgba(${sky},0)`);
+  ctx.fillStyle=wg; ctx.fillRect(0,0,W,H*0.7);
+
+  // ── 3. Diagonal light shaft (trapezoid)
+  const bCX = W*(0.1 + t*0.54);
+  const bW  = W*(0.28 + t*0.14);
+  const skew = (t-0.5)*W*0.22;
+  const tL  = bCX - bW*0.22 + skew;
+  const tR  = bCX + bW*0.22 + skew;
+  const bL  = bCX - bW*0.52 - skew;
+  const bR  = bCX + bW*0.52 - skew;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(tL,0); ctx.lineTo(tR,0);
+  ctx.lineTo(bR,H); ctx.lineTo(bL,H);
+  ctx.closePath();
+  const shG = ctx.createLinearGradient(bCX-bW,0,bCX+bW,0);
+  shG.addColorStop(0,'transparent');
+  shG.addColorStop(0.3,`rgba(${lc},${ba*0.35})`);
+  shG.addColorStop(0.5,`rgba(${lc},${ba})`);
+  shG.addColorStop(0.7,`rgba(${lc},${ba*0.35})`);
+  shG.addColorStop(1,'transparent');
+  ctx.fillStyle=shG; ctx.fill(); ctx.restore();
+
+  // ── 4. Radial ambient glow
+  const rg = ctx.createRadialGradient(bCX,0,0,bCX,0,H*0.75);
+  rg.addColorStop(0,`rgba(${lc},${ba*0.14})`);
+  rg.addColorStop(1,'transparent');
+  ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+
+  // ── 5. Window frame lines
+  const flY = H*0.70;
+  ctx.strokeStyle=`rgba(${lc},${ba*0.55})`; ctx.lineWidth=0.8;
+  const fLines = [bCX-bW*0.07+skew*0.4, bCX+bW*0.07+skew*0.4];
+  fLines.forEach(x=>{
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x-skew*0.5,flY*0.95); ctx.stroke();
+  });
+  ctx.beginPath();
+  ctx.moveTo(tL+bW*0.12, H*0.20); ctx.lineTo(tR-bW*0.12, H*0.20); ctx.stroke();
+
+  // ── 6. Floor line + reflection
+  ctx.strokeStyle=`rgba(${lc},${ba*0.28})`; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(0,flY); ctx.lineTo(W,flY); ctx.stroke();
+  const fG = ctx.createLinearGradient(0,flY,0,H);
+  fG.addColorStop(0,`rgba(${lc},${ba*0.13})`);
+  fG.addColorStop(1,'rgba(10,9,7,0)');
+  ctx.fillStyle=fG; ctx.fillRect(0,flY,W,H-flY);
+
+  // ── 7. Dust particles (deterministic seeded positions)
+  for(let i=0;i<720;i++){
+    const sx = Math.abs(Math.sin(i*127.1+1));
+    const sy = Math.abs(Math.sin(i*311.7+2));
+    const sz = Math.abs(Math.sin(i*74.3+3));
+    const px = sx*W;
+    const py = sy*flY*0.95;
+    const localRatio = py/H;
+    const bLoc = tL+(bL-tL)*localRatio;
+    const bRoc = tR+(bR-tR)*localRatio;
+    const inBeam = px>=bLoc && px<=bRoc;
+    const al = inBeam ? Math.min(aa*3.0,0.38) : Math.min(aa*0.55,0.06);
+    ctx.beginPath();
+    ctx.arc(px,py,sz*0.75+0.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${lc},${al})`;
+    ctx.fill();
+  }
+
+  // ── 8. Vignette
+  const vg = ctx.createRadialGradient(W/2,H/2,H*0.18,W/2,H/2,Math.max(W,H)*0.82);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.75)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+}
+
+// ═══════════════════════════════════════════════════════
+// TIME HELPERS
+// ═══════════════════════════════════════════════════════
+
+function timeStr(t){
+  const tm = Math.round(t*16*60);
+  const h = 6+Math.floor(tm/60);
+  const m = tm%60;
+  const ap = h>=12?'PM':'AM';
+  const h12 = h>12?h-12:(h===0?12:h);
+  return `${h12}:${m.toString().padStart(2,'0')} ${ap}`;
+}
+
+function bestTheme(t){
+  let best=THEMES[0], bd=99;
+  THEMES.forEach(th=>{ const d=Math.abs(th.t-t); if(d<bd){bd=d;best=th;} });
+  return best;
+}
+
+function updateTimeUI(t){
+  const s = timeStr(t);
+  const el1=document.getElementById('time-disp');
+  const el2=document.getElementById('slider-badge');
+  if(el1) el1.textContent=s;
+  if(el2) el2.textContent=s;
+  const bt = bestTheme(t);
+  const sug=document.getElementById('sug-theme');
+  if(sug){ sug.textContent=bt.name; sug.style.color=bt.accent; }
+}
+
+// ═══════════════════════════════════════════════════════
+// THEME APPLICATION
+// ═══════════════════════════════════════════════════════
+
+function applyTheme(id){
+  const th = themeById(id);
+  const r = document.documentElement.style;
+  r.setProperty('--ta', th.accent);
+  r.setProperty('--ta-rgb', th.rgb);
+  r.setProperty('--tg', th.glow);
+  S.theme = id;
+
+  // Update cards UI
+  document.querySelectorAll('.theme-card').forEach(c=>{
+    c.classList.toggle('sel', c.dataset.id===id);
+  });
+
+  // Update kpi top theme
+  const kpiTop=document.getElementById('kpi-top');
+  if(kpiTop){ kpiTop.textContent=th.name; kpiTop.style.color=th.accent; }
+
+  // Nav tab active border color reflow
+  document.querySelectorAll('.nav-tab.active').forEach(el=>el.style.borderColor=th.accent);
+}
+
+// ═══════════════════════════════════════════════════════
+// THEME CARDS RENDER
+// ═══════════════════════════════════════════════════════
+
+function renderCards(){
+  const wrap=document.getElementById('theme-cards');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  THEMES.forEach((th,i)=>{
+    const c=document.createElement('div');
+    c.className='theme-card'+(th.id===S.theme?' sel':'');
+    c.dataset.id=th.id;
+
+    const grad=`linear-gradient(135deg, ${th.sw.join(', ')})`;
+    c.innerHTML=`
+      <div class="h-10 rounded-md mb-3 relative overflow-hidden" style="background:${grad}">
+        <div class="absolute inset-0" style="background:linear-gradient(to bottom,transparent 30%,rgba(10,9,7,0.25) 100%)"></div>
+      </div>
+      <div class="font-display text-[15px] text-tp leading-tight mb-2">${th.name}</div>
+      <div class="flex flex-wrap gap-1 mb-2.5">
+        ${th.kw.map((k,j)=>`<span class="font-mono text-[9px] tracking-widest uppercase text-tt">${k}</span>${j<th.kw.length-1?'<span class="text-tt font-mono text-[9px] mx-0.5">·</span>':''}`).join('')}
+      </div>
+      <p class="font-display text-xs text-ts italic leading-relaxed hidden lg:block">${th.desc}</p>
+      <div class="mt-2.5 flex items-center gap-1.5 opacity-0 sel-ind transition-opacity duration-200" style="color:${th.accent}">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1.5,6 4.5,9 10.5,3"/></svg>
+        <span class="font-mono text-[9px] tracking-widest uppercase">Selected</span>
+      </div>
+    `;
+    c.addEventListener('click',()=>{
+      applyTheme(th.id);
+      S.time = th.t;
+      const sl=document.getElementById('tslider');
+      if(sl) sl.value=Math.round(th.t*100);
+      updateTimeUI(th.t);
+      drawAtm();
+    });
+    wrap.appendChild(c);
+  });
+  syncCardInds();
+}
+
+function syncCardInds(){
+  document.querySelectorAll('.theme-card').forEach(c=>{
+    const ind=c.querySelector('.sel-ind');
+    if(ind) ind.style.opacity=c.classList.contains('sel')?'1':'0';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════════
+
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCal(){
+  const title=document.getElementById('cal-title');
+  const grid=document.getElementById('cal-grid');
+  if(!title||!grid) return;
+
+  title.textContent=`${MONTHS[S.calM]} ${S.calY}`;
+  const first=new Date(S.calY,S.calM,1);
+  const last=new Date(S.calY,S.calM+1,0);
+  const today=new Date(2026,3,7); // April 7 2026
+
+  let startDow=first.getDay()-1; // Mon=0
+  if(startDow<0) startDow=6;
+
+  const cells=Math.ceil((startDow+last.getDate())/7)*7;
+  grid.innerHTML='';
+
+  for(let i=0;i<cells;i++){
+    const d=i-startDow+1;
+    const cell=document.createElement('div');
+    cell.className='cal-cell';
+
+    if(d<1||d>last.getDate()){
+      cell.classList.add('other');
+      const od=d<1?new Date(S.calY,S.calM,d):new Date(S.calY,S.calM+1,d-last.getDate());
+      cell.innerHTML=`<span class="day-num">${od.getDate()}</span>`;
+    } else {
+      const dk=`${S.calY}-${String(S.calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday=d===today.getDate()&&S.calM===today.getMonth()&&S.calY===today.getFullYear();
+      const isSel=S.selDate===dk;
+      const ev=S.events[dk];
+
+      if(isToday) cell.classList.add('today');
+      if(isSel) cell.classList.add('sel-day');
+
+      const dot=ev?`<div class="event-dot" style="background:${themeById(ev).accent}"></div>`:'';
+      cell.innerHTML=`<span class="day-num text-sm">${d}</span>${dot}`;
+      cell.dataset.dk=dk;
+      cell.addEventListener('click',()=>selDate(dk,d));
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function selDate(dk,d){
+  S.selDate=dk;
+  S.panTheme=S.events[dk]||null;
+  renderCal();
+  renderPanel(dk);
+}
+
+function renderPanel(dk){
+  const emp=document.getElementById('p-empty');
+  const edit=document.getElementById('p-edit');
+  const pDate=document.getElementById('p-date');
+  const pThemes=document.getElementById('p-themes');
+  const pDel=document.getElementById('p-del');
+
+  if(emp) emp.classList.add('hidden');
+  if(edit) edit.classList.remove('hidden');
+
+  if(pDate){
+    const [y,m,d]=dk.split('-').map(Number);
+    const dt=new Date(y,m-1,d);
+    pDate.textContent=dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  }
+
+  if(pThemes){
+    pThemes.innerHTML='';
+    THEMES.forEach(th=>{
+      const isSel=S.panTheme===th.id;
+      const btn=document.createElement('button');
+      btn.className='ptheme-btn'+(isSel?' sel-ptheme':'');
+      btn.innerHTML=`
+        <div class="w-3.5 h-3.5 rounded-full flex-shrink-0" style="background:${th.accent}"></div>
+        <span class="font-display text-sm text-tp flex-1 text-left">${th.name}</span>
+        ${isSel?`<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="${th.accent}" stroke-width="2" stroke-linecap="round"><polyline points="1.5,6 4.5,9 10.5,3"/></svg>`:''}
+      `;
+      btn.addEventListener('click',()=>{ S.panTheme=th.id; renderPanel(dk); });
+      pThemes.appendChild(btn);
+    });
+  }
+
+  if(pDel) pDel.classList.toggle('hidden', !S.events[dk]);
+}
+
+function resetPanel(){
+  const emp=document.getElementById('p-empty');
+  const edit=document.getElementById('p-edit');
+  if(emp) emp.classList.remove('hidden');
+  if(edit) edit.classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+// ANALYTICS CHARTS
+// ═══════════════════════════════════════════════════════
+
+let lChart=null, bChart=null;
+
+function initCharts(){
+  if(S.chartsReady) return;
+  const lCtx=document.getElementById('line-chart');
+  const bCtx=document.getElementById('bar-chart');
+  if(!lCtx||!bCtx) return;
+
+  Chart.defaults.color='#5E5548';
+  Chart.defaults.font.family='"DM Mono",monospace';
+  Chart.defaults.font.size=9;
+
+  const col=themeById(S.theme).accent;
+  const rgb=themeById(S.theme).rgb;
+
+  lChart=new Chart(lCtx,{
+    type:'line',
+    data:{
+      labels:DATA.map(d=>d.lbl),
+      datasets:[{
+        data:DATA.map(d=>d[S.aFilter==='all'?'total':S.aFilter]||0),
+        borderColor:col,
+        backgroundColor:`rgba(${rgb},0.07)`,
+        borderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:4,
+        pointHoverBackgroundColor:col,
+        fill:true, tension:0.4,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      animation:{duration:550,easing:'easeOutQuart'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1C1914',borderColor:'#3E3830',borderWidth:1,
+          titleColor:'#9E9080',bodyColor:'#F2EADB',
+          padding:10,
+          callbacks:{label:ctx=>` ${ctx.parsed.y} participants`}
+        }
+      },
+      scales:{
+        x:{grid:{color:'#2C2820',lineWidth:0.5},ticks:{maxTicksLimit:8,color:'#5E5548'},border:{color:'#2C2820'}},
+        y:{grid:{color:'#2C2820',lineWidth:0.5},ticks:{color:'#5E5548'},border:{color:'#2C2820'}}
+      }
+    }
+  });
+
+  const thLabels=THEMES.map(t=>t.name);
+  const thTotals=THEMES.map(th=>DATA.reduce((s,d)=>s+(d[th.id]||0),0));
+  const thColors=THEMES.map(t=>t.accent);
+
+  bChart=new Chart(bCtx,{
+    type:'bar',
+    data:{
+      labels:thLabels,
+      datasets:[{
+        data:thTotals,
+        backgroundColor:thColors.map(c=>c+'28'),
+        borderColor:thColors,
+        borderWidth:1,
+        borderRadius:3,
+        hoverBackgroundColor:thColors.map(c=>c+'55'),
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      animation:{duration:550,easing:'easeOutQuart',delay:120},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1C1914',borderColor:'#3E3830',borderWidth:1,
+          titleColor:'#9E9080',bodyColor:'#F2EADB',padding:10,
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#5E5548',maxRotation:25},border:{color:'#2C2820'}},
+        y:{grid:{color:'#2C2820',lineWidth:0.5},ticks:{color:'#5E5548'},border:{color:'#2C2820'}}
+      }
+    }
+  });
+
+  S.chartsReady=true;
+}
+
+function updateLineChart(filter){
+  if(!lChart) return;
+  const th=THEMES.find(t=>t.id===filter);
+  const col=th?th.accent:'#C8924A';
+  const rgb=th?th.rgb:'200,146,74';
+  lChart.data.datasets[0].data=DATA.map(d=>d[filter==='all'?'total':filter]||0);
+  lChart.data.datasets[0].borderColor=col;
+  lChart.data.datasets[0].backgroundColor=`rgba(${rgb},0.07)`;
+  lChart.update();
+}
+
+// ═══════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════════════
+
+function switchView(v){
+  ['preview','schedule','analytics'].forEach(id=>{
+    const el=document.getElementById('view-'+id);
+    if(!el) return;
+    if(id===v){
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  S.view=v;
+
+  if(v==='analytics'){
+    setTimeout(()=>{ initCharts(); triggerFI(); },80);
+  }
+  if(v==='schedule'){
+    setTimeout(()=>renderCal(),50);
+  }
+  if(v==='preview'){
+    setTimeout(()=>drawAtm(),50);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+
+function toast(msg,type='ok'){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<div class="dot"></div><span>${msg}</span>`;
+  c.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
+  setTimeout(()=>{
+    el.classList.remove('in');
+    setTimeout(()=>el.remove(),350);
+  },3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// FADE-IN UTILITY
+// ═══════════════════════════════════════════════════════
+
+function triggerFI(){
+  document.querySelectorAll('.fi:not(.in)').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('in'), i*80);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MOBILE MENU
+// ═══════════════════════════════════════════════════════
+
+let mobOpen=false;
+function toggleMob(){
+  mobOpen=!mobOpen;
+  const m=document.getElementById('mob-menu');
+  const lines=document.querySelectorAll('.mline');
+  if(mobOpen){
+    m.classList.remove('hidden'); m.classList.add('flex');
+    lines[0].style.transform='rotate(45deg) translate(3px,3px)';
+    lines[1].style.transform='rotate(-45deg) translate(3px,-3px)';
+  } else {
+    m.classList.add('hidden'); m.classList.remove('flex');
+    lines[0].style.transform='';
+    lines[1].style.transform='';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// EVENT BINDINGS
+// ═══════════════════════════════════════════════════════
+
+function bind(){
+  // Nav
+  document.querySelectorAll('.nav-tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.v)));
+  document.getElementById('mob-btn')?.addEventListener('click',toggleMob);
+  document.querySelectorAll('.mob-nav').forEach(b=>b.addEventListener('click',()=>{switchView(b.dataset.v);toggleMob();}));
+
+  // Slider
+  const sl=document.getElementById('tslider');
+  if(sl){
+    sl.addEventListener('input',e=>{
+      S.time=parseInt(e.target.value)/100;
+      updateTimeUI(S.time);
+      drawAtm();
+    });
+  }
+
+  // Calendar nav
+  document.getElementById('cal-prev')?.addEventListener('click',()=>{
+    if(--S.calM<0){S.calM=11;S.calY--;}
+    S.selDate=null; renderCal(); resetPanel();
+  });
+  document.getElementById('cal-next')?.addEventListener('click',()=>{
+    if(++S.calM>11){S.calM=0;S.calY++;}
+    S.selDate=null; renderCal(); resetPanel();
+  });
+
+  // Save event
+  document.getElementById('p-save')?.addEventListener('click',()=>{
+    if(!S.selDate){toast('Select a date first','err');return;}
+    if(!S.panTheme){toast('Please select a theme','err');return;}
+    S.events[S.selDate]=S.panTheme;
+    renderCal();
+    const th=themeById(S.panTheme);
+    toast(`${th.name} event saved`,'ok');
+    const pDel=document.getElementById('p-del');
+    if(pDel) pDel.classList.remove('hidden');
+    renderPanel(S.selDate);
+  });
+
+  // Delete event
+  document.getElementById('p-del')?.addEventListener('click',()=>{
+    if(!S.selDate) return;
+    delete S.events[S.selDate];
+    S.panTheme=null;
+    renderCal(); resetPanel(); S.selDate=null;
+    toast('Event removed','err');
+  });
+
+  // Analytics filters
+  document.querySelectorAll('.ftab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const f=b.dataset.f;
+      S.aFilter=f;
+      document.querySelectorAll('.ftab').forEach(t=>t.classList.toggle('active',t.dataset.f===f));
+      updateLineChart(f);
+    });
+  });
+
+  // Resize
+  window.addEventListener('resize',()=>{ if(S.view==='preview') drawAtm(); });
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded',()=>{
+  applyTheme(S.theme);
+  renderCards();
+  updateTimeUI(S.time);
+  drawAtm();
+  bind();
+
+  // Trigger initial view visible
+  const pv=document.getElementById('view-preview');
+  if(pv) pv.classList.add('active');
+
+  // Intersection Observer for fi elements
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }});
+  },{threshold:0.08});
+  document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+});
+</script>
+</body>
+</html>

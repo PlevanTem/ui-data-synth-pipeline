@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForensicAppraise - Volume Analytics</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: '#0B0E14',
+            surface: 'rgba(15, 23, 42, 0.6)',
+            divider: '#1E293B',
+            primary: '#38BDF8',
+            danger: '#EF4444',
+            warning: '#FBBF24',
+            success: '#10B981'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-danger': '0 0 20px rgba(239, 68, 68, 0.4)',
+            'glow-primary': '0 0 20px rgba(56, 189, 248, 0.3)',
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { background-color: #0B0E14; color: #F8FAFC; margin: 0; overflow-x: hidden; }
+    .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid #1E293B; border-radius: 0.75rem; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }
+    
+    .fade-up { opacity: 0; transform: translateY(20px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    
+    .data-huge { font-size: 3rem; font-weight: 500; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; line-height: 1; }
+    
+    .pulse-danger { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); animation: pulse-danger-anim 3s infinite; border-color: rgba(239, 68, 68, 0.5); }
+    @keyframes pulse-danger-anim { 0% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); } 50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); } 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); } }
+
+    .injury-item { transition: opacity 0.3s ease, transform 0.2s ease, border-color 0.3s ease; cursor: pointer; }
+    .injury-item.dimmed { opacity: 0.3; }
+    
+    .terminal-input { background: transparent; border: none; border-bottom: 1px solid #1E293B; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; outline: none; width: 100%; transition: border-color 0.3s; padding-bottom: 4px; }
+    .terminal-input:focus { border-bottom-color: #38BDF8; }
+    .terminal-input::placeholder { color: #1E293B; }
+    
+    .btn-terminal { border: 1px solid #38BDF8; color: #38BDF8; background: transparent; transition: all 0.3s; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; }
+    .btn-terminal:hover { background: rgba(56, 189, 248, 0.1); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+    .btn-terminal:disabled { opacity: 0.5; cursor: not-allowed; border-color: #1E293B; color: #94A3B8; box-shadow: none; background: transparent; }
+  </style>
+</head>
+<body class="flex flex-col p-4 md:p-8 gap-6 max-w-screen-2xl mx-auto w-full">
+
+  <!-- Nav -->
+  <nav class="flex justify-between items-center py-4 px-6 glass-panel fade-up mb-2 sticky top-4 z-50">
+    <div class="font-mono text-primary font-bold tracking-tight text-lg">ForensicAppraise</div>
+    
+    <div class="hidden md:flex gap-8 text-xs text-secondary font-medium uppercase tracking-widest">
+      <a href="#metrics" class="hover:text-primary transition-colors">Metrics</a>
+      <a href="#insights" class="hover:text-primary transition-colors">Insights</a>
+      <a href="#pipeline" class="hover:text-primary transition-colors">Pipeline</a>
+      <a href="#estimator" class="hover:text-primary transition-colors">Estimator</a>
+    </div>
+    
+    <button id="mobile-menu-btn" class="md:hidden text-primary focus:outline-none">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed inset-0 bg-base z-40 transform translate-x-full transition-transform duration-300 flex flex-col pt-24 px-8 gap-8 md:hidden">
+    <a href="#metrics" class="mobile-link text-xl text-primary font-mono uppercase border-b border-divider pb-4">Metrics</a>
+    <a href="#insights" class="mobile-link text-xl text-primary font-mono uppercase border-b border-divider pb-4">Insights</a>
+    <a href="#pipeline" class="mobile-link text-xl text-primary font-mono uppercase border-b border-divider pb-4">Pipeline</a>
+    <a href="#estimator" class="mobile-link text-xl text-primary font-mono uppercase border-b border-divider pb-4">Estimator</a>
+  </div>
+
+  <!-- Header / Metrics -->
+  <header id="metrics" class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 fade-up">
+    <div>
+      <h1 class="text-3xl font-semibold tracking-tight text-primary font-sans">Global Status</h1>
+      <p class="text-sm text-secondary uppercase tracking-wider mt-1">Real-time load & resources</p>
+    </div>
+    
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-auto">
+      <div class="glass-panel p-5 flex flex-col justify-between min-w-[160px]">
+        <span class="text-xs text-secondary uppercase tracking-wider">Total Active Cases</span>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span class="data-huge text-primary" data-count="142">0</span>
+          <span class="text-xs text-success flex items-center">↑ 12%</span>
+        </div>
+      </div>
+      <div class="glass-panel p-5 flex flex-col justify-between min-w-[160px] pulse-danger" id="metric-exam">
+        <span class="text-xs text-secondary uppercase tracking-wider">In Med Exam</span>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span class="data-huge text-danger" data-count="58">0</span>
+          <span class="text-xs text-danger flex items-center bg-danger/10 px-1 rounded">! Overload</span>
+        </div>
+      </div>
+      <div class="glass-panel p-5 flex flex-col justify-between min-w-[160px]">
+        <span class="text-xs text-secondary uppercase tracking-wider">Avg Wait Time</span>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span class="data-huge text-primary" data-count="45">0</span>
+          <span class="text-xs text-secondary">mins</span>
+        </div>
+      </div>
+      <div class="glass-panel p-5 flex flex-col justify-between min-w-[160px]">
+        <span class="text-xs text-secondary uppercase tracking-wider">Equip Util</span>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span class="data-huge text-warning" data-count="85">0</span>
+          <span class="text-xs text-secondary">%</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grids -->
+  <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Left Column: Insights -->
+    <div id="insights" class="lg:col-span-4 flex flex-col gap-6">
+      
+      <!-- Chart -->
+      <div class="glass-panel p-6 flex flex-col fade-up h-[320px]">
+        <h2 class="text-xs font-medium uppercase tracking-widest text-secondary mb-4">Temporal Volume (7 Days)</h2>
+        <div class="relative flex-1 w-full">
+          <canvas id="volumeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Treemap -->
+      <div class="glass-panel p-6 flex flex-col fade-up h-[320px]">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xs font-medium uppercase tracking-widest text-secondary">Injury Distribution</h2>
+          <span class="text-[10px] text-secondary font-mono px-2 py-1 bg-divider rounded">Today</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 flex-1 h-full" id="injury-grid">
+          <div class="injury-item glass-panel p-4 flex flex-col justify-between bg-primary/10 border-primary/30 hover:border-primary/100 col-span-2 relative group" data-category="traffic">
+            <span class="text-xs text-primary font-medium tracking-wider uppercase z-10">Traffic Accidents</span>
+            <div class="flex items-end justify-between mt-4 z-10">
+              <span class="data-huge text-primary text-[2.5rem]" data-count="68">0</span>
+              <span class="text-sm text-secondary font-mono">48%</span>
+            </div>
+          </div>
+          <div class="injury-item glass-panel p-4 flex flex-col justify-between bg-warning/5 border-warning/30 hover:border-warning/100" data-category="medical">
+            <span class="text-[10px] text-warning font-medium uppercase">Med Malpractice</span>
+            <div class="flex items-end justify-between mt-4">
+              <span class="text-2xl font-mono text-warning" data-count="45">0</span>
+              <span class="text-xs text-secondary font-mono">32%</span>
+            </div>
+          </div>
+          <div class="injury-item glass-panel p-4 flex flex-col justify-between bg-success/5 border-success/30 hover:border-success/100" data-category="occupational">
+            <span class="text-[10px] text-success font-medium uppercase">Occupational</span>
+            <div class="flex items-end justify-between mt-4">
+              <span class="text-2xl font-mono text-success" data-count="29">0</span>
+              <span class="text-xs text-secondary font-mono">20%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Pipeline & Estimator -->
+    <div class="lg:col-span-8 flex flex-col gap-6">
+      
+      <!-- Pipeline Flow -->
+      <div id="pipeline" class="glass-panel p-0 relative overflow-hidden flex flex-col h-[400px] fade-up border-divider">
+        <canvas id="pipelineCanvas" class="absolute inset-0 z-0 w-full h-full"></canvas>
+        <div id="pipeline-fallback" class="hidden absolute inset-0 z-0 p-8 flex-col justify-center bg-base/80 backdrop-blur-sm">
+          <div class="w-full bg-divider h-1 rounded overflow-hidden">
+            <div class="h-full bg-danger w-[50%]"></div>
+          </div>
+          <p class="text-[10px] text-secondary mt-3 font-mono uppercase text-center tracking-widest">Sim paused (FPS < 30)</p>
+        </div>
+        
+        <div class="p-6 relative z-10 flex flex-col h-full pointer-events-none">
+          <h2 class="text-xs font-medium uppercase tracking-widest text-secondary mb-auto">Case Pipeline Flow</h2>
+          
+          <div class="flex items-center justify-between px-2 md:px-12 pb-8">
+            <div class="flex flex-col items-center gap-3">
+              <span class="text-[10px] uppercase tracking-widest text-primary">Registration</span>
+              <span class="data-huge text-primary" data-count="24">0</span>
+            </div>
+            
+            <div class="flex-1 h-px bg-divider mx-4 md:mx-8 relative">
+               <div class="absolute inset-y-0 left-0 bg-primary opacity-50 blur-[2px] animate-[pulse_2s_infinite] w-full"></div>
+            </div>
+            
+            <div class="flex flex-col items-center gap-3">
+              <span class="text-[10px] uppercase tracking-widest text-danger flex flex-col items-center gap-1">
+                <span>Medical Exam</span>
+                <span class="bg-danger/20 border border-danger/40 text-danger px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(239,68,68,0.5)]">Bottleneck</span>
+              </span>
+              <span class="data-huge text-danger" data-count="58">0</span>
+            </div>
+            
+            <div class="flex-1 h-px bg-divider mx-4 md:mx-8 relative">
+               <div class="absolute inset-y-0 left-0 bg-danger opacity-50 blur-[2px] animate-[pulse_3s_infinite] w-full"></div>
+            </div>
+
+            <div class="flex flex-col items-center gap-3">
+              <span class="text-[10px] uppercase tracking-widest text-success">Report Issuance</span>
+              <span class="data-huge text-success" data-count="60">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estimator -->
+      <div id="estimator" class="glass-panel p-6 flex flex-col md:flex-row items-center gap-8 fade-up h-[224px]">
+        <div class="flex-1 w-full h-full flex flex-col justify-center">
+          <h2 class="text-xs font-medium uppercase tracking-widest text-secondary mb-6">Timeline Estimator</h2>
+          <form id="estimator-form" class="flex flex-col gap-6">
+            <div class="flex gap-6">
+              <div class="flex-1">
+                <label class="text-[10px] text-secondary font-mono mb-2 block">> QUEUE_SIZE</label>
+                <input type="number" id="est-queue" class="terminal-input" placeholder="e.g. 15">
+              </div>
+              <div class="flex-1">
+                <label class="text-[10px] text-secondary font-mono mb-2 flex justify-between">
+                  <span>> COMPLEXITY</span>
+                  <span id="complex-val" class="text-primary">1.0x</span>
+                </label>
+                <input type="range" id="est-complex" min="0.5" max="3.0" step="0.1" value="1.0" class="w-full h-0.5 bg-divider rounded-lg appearance-none cursor-pointer mt-3 outline-none hover:bg-primary/50 transition-colors">
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="btn-terminal px-6 py-2 font-mono hover:bg-primary/10">
+                > EXECUTE
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="w-px h-32 bg-divider hidden md:block"></div>
+        
+        <div class="md:w-1/3 w-full flex flex-col items-center justify-center bg-base/30 rounded-lg p-6 border border-divider/50 h-full transition-transform duration-300" id="result-container">
+          <span class="text-[10px] text-secondary font-mono mb-3">ESTIMATED_COMPLETION</span>
+          <div class="flex items-baseline gap-2">
+            <span class="data-huge text-primary" id="est-result">--</span>
+            <span class="text-sm text-secondary font-mono">hrs</span>
+          </div>
+          <div class="mt-4 text-[10px] text-secondary font-mono h-4 transition-colors" id="est-status">READY_FOR_INPUT</div>
+        </div>
+      </div>
+      
+    </div>
+  </main>
+
+  <script>
+    // --- 1. Interaction & Animations ---
+    
+    // Mobile Nav
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    let menuOpen = false;
+    menuBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('translate-x-full');
+    });
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        menuOpen = false;
+        mobileMenu.classList.add('translate-x-full');
+      });
+    });
+
+    // Staggered Fade Up
+    document.addEventListener('DOMContentLoaded', () => {
+      const els = document.querySelectorAll('.fade-up');
+      els.forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 150);
+      });
+    });
+
+    // CountUp Logic
+    function countUp(el, end, duration) {
+      let start = 0, startTime = null;
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const p = Math.min((timestamp - startTime) / duration, 1);
+        const val = Math.floor((1 - Math.pow(1 - p, 4)) * end);
+        el.innerText = val;
+        if (p < 1) requestAnimationFrame(step);
+        else el.innerText = end;
+      }
+      requestAnimationFrame(step);
+    }
+    document.querySelectorAll('[data-count]').forEach(el => {
+      setTimeout(() => {
+        countUp(el, parseInt(el.getAttribute('data-count')), 2000);
+      }, 500);
+    });
+
+    // Injury Distribution Click
+    const injuryItems = document.querySelectorAll('.injury-item');
+    injuryItems.forEach(item => {
+      item.addEventListener('click', () => {
+        if (item.classList.contains('selected')) {
+          injuryItems.forEach(el => el.classList.remove('dimmed', 'selected'));
+        } else {
+          injuryItems.forEach(el => {
+            if (el === item) {
+              el.classList.remove('dimmed');
+              el.classList.add('selected');
+            } else {
+              el.classList.add('dimmed');
+              el.classList.remove('selected');
+            }
+          });
+        }
+      });
+    });
+
+    // Estimator Form
+    const complexSlider = document.getElementById('est-complex');
+    const complexVal = document.getElementById('complex-val');
+    complexSlider.addEventListener('input', (e) => {
+      complexVal.innerText = parseFloat(e.target.value).toFixed(1) + 'x';
+    });
+
+    const form = document.getElementById('estimator-form');
+    const estStatus = document.getElementById('est-status');
+    const estResult = document.getElementById('est-result');
+    const qInput = document.getElementById('est-queue');
+    const resContainer = document.getElementById('result-container');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = parseInt(qInput.value, 10);
+      const c = parseFloat(complexSlider.value);
+      
+      if (isNaN(q) || q <= 0) {
+        qInput.classList.add('border-danger', 'text-danger');
+        estStatus.innerText = 'ERR: INVALID_INPUT';
+        estStatus.classList.add('text-danger');
+        setTimeout(() => {
+          qInput.classList.remove('border-danger', 'text-danger');
+          estStatus.classList.remove('text-danger');
+          estStatus.innerText = 'READY_FOR_INPUT';
+        }, 2000);
+        return;
+      }
+
+      estStatus.innerText = 'CALCULATING_VECTORS...';
+      estStatus.classList.remove('text-danger', 'text-success');
+      estStatus.classList.add('animate-pulse', 'text-warning');
+      form.querySelectorAll('input, button').forEach(el => el.disabled = true);
+      
+      const finalTime = Math.round(q * c * 1.5);
+      
+      setTimeout(() => {
+        estStatus.innerText = 'CALCULATION_COMPLETE';
+        estStatus.classList.remove('animate-pulse', 'text-warning');
+        estStatus.classList.add('text-success');
+        
+        resContainer.classList.add('scale-105', 'border-primary');
+        setTimeout(() => resContainer.classList.remove('scale-105', 'border-primary'), 300);
+        
+        countUp(estResult, finalTime, 800);
+        form.querySelectorAll('input, button').forEach(el => el.disabled = false);
+      }, 1000);
+    });
+
+    // --- 2. Chart.js ---
+    const crosshairPlugin = {
+      id: 'crosshair',
+      afterDraw: chart => {
+        if (chart.tooltip?._active?.length) {
+          const x = chart.tooltip._active[0].element.x;
+          const yAxis = chart.scales.y;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x, yAxis.top);
+          ctx.lineTo(x, yAxis.bottom);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    };
+    Chart.register(crosshairPlugin);
+
+    const ctxChart = document.getElementById('volumeChart').getContext('2d');
+    new Chart(ctxChart, {
+      type: 'line',
+      data: {
+        labels: ['01', '02', '03', '04', '05', '06', '07'],
+        datasets: [{
+          data: [42, 58, 49, 85, 62, 38, 25],
+          borderColor: '#38BDF8',
+          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#0B0E14',
+          pointHoverBorderColor: '#38BDF8',
+          pointHoverBorderWidth: 2,
+          hitRadius: 20
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#94A3B8',
+            bodyColor: '#F8FAFC',
+            bodyFont: { family: 'JetBrains Mono', size: 14 },
+            titleFont: { family: 'Inter', size: 10, weight: 'bold' },
+            borderColor: '#1E293B',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              title: (items) => 'DAY ' + items[0].label,
+              label: (item) => 'VOL: ' + item.raw
+            }
+          }
+        },
+        scales: {
+          x: { 
+            grid: { display: false }, 
+            ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 } },
+            border: { display: false }
+          },
+          y: { 
+            grid: { color: '#1E293B', borderDash: [4, 4] }, 
+            ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 }, stepSize: 20, padding: 10 },
+            border: { display: false },
+            beginAtZero: true 
+          }
+        }
+      }
+    });
+
+    // --- 3. Generative UI: Pipeline Particle Flow (Canvas 2D) ---
+    const canvas = document.getElementById('pipelineCanvas');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let particles = [];
+    const pConfig = {
+      primary: '#38BDF8',
+      danger: '#EF4444',
+      success: '#10B981',
+      regX: 0.15,
+      examX: 0.5,
+      repX: 0.85
+    };
+
+    function resize() {
+      w = canvas.width = canvas.parentElement.clientWidth;
+      h = canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() { this.reset(true); }
+      reset(init = false) {
+        this.x = init ? Math.random() * w : -10;
+        this.y = h / 2 + (Math.random() - 0.5) * (h * 0.4);
+        this.vx = 1.5 + Math.random();
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.size = Math.random() * 1.5 + 1;
+        this.color = pConfig.primary;
+        this.stuckTime = 0;
+      }
+      update() {
+        const txExam = w * pConfig.examX;
+        const txRep = w * pConfig.repX;
+        
+        // Zone 1: Approach Exam
+        if (this.x < txExam - 80) {
+          this.vx = 2.0 + Math.random() * 0.5;
+          this.color = pConfig.primary;
+        } 
+        // Zone 2: Bottleneck (Exam)
+        else if (this.x >= txExam - 80 && this.x < txExam + 60) {
+          this.vx = 0.15 + (Math.random() - 0.5) * 0.4;
+          this.vy += (Math.random() - 0.5) * 0.3; // Brownian motion
+          this.color = pConfig.danger;
+          this.stuckTime++;
+          
+          // Slowly escape the bottleneck
+          if (this.stuckTime > 120 && Math.random() < 0.02) {
+            this.x = txExam + 65;
+            this.stuckTime = 0;
+          }
+        }
+        // Zone 3: To Report
+        else {
+          this.vx = 2.5 + Math.random();
+          this.vy *= 0.9; // Flatten out
+          this.color = pConfig.success;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Keep inside vertical bounds
+        if (this.y < h*0.2 || this.y > h*0.8) this.vy *= -1;
+        
+        if (this.x > w + 10) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+      }
+    }
+
+    for(let i=0; i<300; i++) particles.push(new Particle());
+
+    let lastTime = performance.now();
+    let frames = 0;
+    let isDegraded = false;
+    
+    function animateFPS(timestamp) {
+      if (isDegraded) return;
+      
+      frames++;
+      if (timestamp - lastTime >= 1000) {
+        if (frames < 30 && lastTime > 3000) { // Check after 3s to allow initial load
+          isDegraded = true;
+          canvas.style.display = 'none';
+          document.getElementById('pipeline-fallback').style.display = 'flex';
+          console.warn('Performance degraded: FPS < 30. Canvas hidden.');
+          return;
+        }
+        frames = 0; lastTime = timestamp;
+      }
+      
+      ctx.fillStyle = 'rgba(11, 14, 20, 0.3)'; // Trail effect
+      ctx.fillRect(0, 0, w, h);
+      
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateFPS);
+    }
+    requestAnimationFrame(animateFPS);
+
+  </script>
+</body>
+</html>

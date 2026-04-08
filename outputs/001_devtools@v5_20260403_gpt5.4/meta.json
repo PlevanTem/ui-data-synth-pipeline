@@ -1,0 +1,18 @@
+{
+  "case_id": "001_devtools",
+  "pipeline_version": "v5",
+  "generated_date": "20260403",
+  "source_type": "test_file",
+  "input_summary": "DevTools app for addressing system performance bottlenecks with WebGL rendering, dynamic SVG charts, voice/NL query, high-performance dark data table, and neumorphic UI.",
+  "domain": "开发者工具 (DevTools)",
+  "delivery_mode": "single-file",
+  "stack": "html-tailwind-js",
+  "cdn_libs_used": [
+    "tailwindcss-cdn",
+    "three@0.164.1",
+    "google-fonts"
+  ],
+  "uses_visual_effects": true,
+  "interaction_completeness": "full",
+  "created_at": "2026-04-03T00:00:00"
+}

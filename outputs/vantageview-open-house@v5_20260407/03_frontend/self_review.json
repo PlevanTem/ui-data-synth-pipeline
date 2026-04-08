@@ -1,0 +1,77 @@
+{
+  "stack": "html-tailwind-js",
+  "delivery_mode": "single-file",
+  "cdn_libs_used": [
+    "https://cdn.tailwindcss.com",
+    "https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js",
+    "https://fonts.googleapis.com/css2?family=Cormorant+Garamond&family=DM+Mono"
+  ],
+  "browser_runnable": true,
+
+  "contract_compliance": [
+    {
+      "contract_id": "M01",
+      "feature": "主题开放日日历排期",
+      "status": "met",
+      "evidence": "renderCal() 生成月历，点击日期触发 selDate() 打开右侧面板；五种主题可选；已排期日期显示主题色圆点；保存/删除事件逻辑完整；Toast确认反馈",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M02",
+      "feature": "Atmosphere Slider 时段预览",
+      "status": "met",
+      "evidence": "drawAtm() 实现了10个色温插值阶段；Canvas 2D绘制底层、天空墙面渐变、对角光柱梯形、窗框线条、地板反射、700个尘埃粒子、Vignette；实时input事件驱动重绘；光柱位置随时间从左移到右",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M03",
+      "feature": "参与热度分析面板",
+      "status": "met",
+      "evidence": "Chart.js Line Chart（30天趋势）+ Bar Chart（5主题对比）；6个筛选标签实时切换折线图数据集+颜色；KPI cards 4个；IntersectionObserver触发入场动画",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M04",
+      "feature": "主题选择与预览切换",
+      "status": "met",
+      "evidence": "applyTheme() 通过 CSS custom properties (--ta, --ta-rgb, --tg) 联动全局配色；Canvas drawAtm() 随时间/主题变化；主题卡片选中视觉状态+钩标指示；点击主题卡片自动更新时间轴到推荐时段",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    },
+    {
+      "contract_id": "M05",
+      "feature": "导航与多视图切换",
+      "status": "met",
+      "evidence": "switchView() 切换 display active 类，CSS keyframe animation vFadeIn (480ms easeOutExpo)；三个视图互斥激活；移动端Hamburger menu完整实现",
+      "fail_condition_triggered": false,
+      "deviation_reason": ""
+    }
+  ],
+
+  "interaction_completeness": {
+    "navigation": "三视图切换 + 导航高亮指示 + 移动端菜单打开/关闭 + 视图淡入动效",
+    "filtering": "Analytics筛选标签实时更新折线图数据+颜色；Calendar月份前后翻页",
+    "forms": "排期面板：主题选择按钮高亮 + 保存验证（未选主题时toast error）+ 保存成功toast + 删除确认；表单状态（empty / editing）完整",
+    "animation": "CSS viewFadeIn视图入场 + 主题卡片hover上移+阴影 + IntersectionObserver .fi入场 + Toast滑入/滑出 + Canvas实时重绘 + 日历事件圆点 + Chart.js动效入场",
+    "empty_error_states": "日历面板空状态图标（未选日期时）；Toast error 用于：未选主题/未选日期 两种校验场景；Analytics加载前charts延迟初始化"
+  },
+
+  "visual_effects_notes": "Canvas 2D 多层渲染：(1) 深色底层 #0A0907 (2) 天空/墙面线性渐变随色温变化 (3) 对角梯形光柱含软边渐变 (4) 辐射式环境光晕 (5) 窗框投影线条 (6) 地板线+反射渐变 (7) 720个确定性伪随机尘埃粒子（波束内外不同透明度） (8) 径向Vignette; 10段色温阶段从冷蓝晨光过渡到暖金午后到橙红落日再到深蓝夜晚",
+
+  "design_direction": "Temporal Architecture — 深色暖黑底色(#0A0907) + Cormorant Garamond衬线字体(建筑事务所感) + DM Mono等宽数据字体 + 动态主题色CSS变量(5主题各有accent) + 编辑排版布局；刻意避开紫蓝渐变/玻璃拟态/居中三栏卡片",
+
+  "known_gaps": [
+    "Canvas不使用device pixel ratio缩放，在高DPI屏幕上不是最清晰；可通过 window.devicePixelRatio 优化",
+    "Analytics图表在极小屏幕下可能溢出；已设 maintainAspectRatio:true 但responsive精度有限",
+    "日历月份切换时已排期事件跨月存储正常，但月份连跳时selectedDate未自动清理（已在切换时resetPanel处理）"
+  ],
+  "next_fix_candidates": [
+    "Canvas DPR支持（window.devicePixelRatio 缩放）",
+    "月历legend图例显示已排期主题汇总",
+    "Atmosphere Slider加入键盘可访问性（arrow key）",
+    "Analytics增加日期范围选择器"
+  ]
+}

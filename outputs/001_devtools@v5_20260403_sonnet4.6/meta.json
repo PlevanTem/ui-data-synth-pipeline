@@ -1,0 +1,20 @@
+{
+  "case_id": "001_devtools@v5_20260403_sonnet4.6",
+  "pipeline_version": "v5",
+  "generated_date": "20260403",
+  "source_type": "test_file",
+  "input_summary": "开发者工具 - 系统性能瓶颈：WebGL 渲染引擎、SVG 图表微交互、语音查询接口、高性能数据表格、Neumorphism 风格",
+  "domain": "开发者工具 (DevTools)",
+  "delivery_mode": "single-file",
+  "stack": "html-tailwind-js",
+  "cdn_libs_used": [
+    "tailwind CDN",
+    "Google Fonts: JetBrains Mono + Inter"
+  ],
+  "uses_visual_effects": true,
+  "visual_effects_summary": "Canvas 2D 振荡波形引擎（Industrial Blueprint 风格）：工业坐标纸背景、amber/slate/ok/danger 多线振荡、异常区段标注、draw-on 入场动画、十字准线+tooltip、鼠标缩放平移；SVG 柱状图 animate；Neumorphism 局部指标卡",
+  "design_direction": "Industrial Blueprint — amber signal + charcoal base + JetBrains Mono dominant + schematic grid aesthetic",
+  "interaction_completeness": "full",
+  "model": "claude-4.6-sonnet-medium-thinking",
+  "created_at": "2026-04-03T14:32:00Z"
+}

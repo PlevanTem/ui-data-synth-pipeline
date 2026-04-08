@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>性能透视 · DevTools Canvas</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            shell: "#0c1728",
+            base: "#07111f",
+            surface: "#101d31",
+            elevated: "#16253d",
+            overlay: "#1b2d47",
+            line: "#21324c",
+            stroke: "#2b4260",
+            "stroke-strong": "#4d87c7",
+            primary: "#6fd3ff",
+            secondary: "#7a8cff",
+            success: "#4ade80",
+            warning: "#fbbf24",
+            danger: "#fb7185",
+            "text-main": "#e8f1ff",
+            "text-soft": "#9bb0cc",
+            "text-dim": "#6e85a7"
+          },
+          fontFamily: {
+            sans: ["IBM Plex Sans", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          },
+          boxShadow: {
+            raised: "10px 10px 22px rgba(2,8,18,0.48), -10px -10px 22px rgba(22,42,68,0.36)",
+            pressed: "inset 7px 7px 14px rgba(3,9,18,0.55), inset -7px -7px 14px rgba(28,47,73,0.28)",
+            glow: "0 0 0 1px rgba(111,211,255,0.22), 0 0 26px rgba(111,211,255,0.12)"
+          },
+          borderRadius: {
+            sm: "10px",
+            md: "16px",
+            lg: "24px",
+            pill: "999px"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
+  <style>
+    :root {
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-fast: 140ms;
+      --dur-mid: 280ms;
+      --dur-slow: 640ms;
+    }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .motion-safe { animation: none !important; transition: opacity var(--dur-fast) var(--ease-out) !important; }
+    }
+    body {
+      font-size: 15px;
+      line-height: 1.6;
+      background: #07111f;
+      color: #e8f1ff;
+    }
+    h1 { font-size: 40px; font-weight: 700; line-height: 1.08; }
+    h2 { font-size: 26px; font-weight: 600; line-height: 1.2; }
+    h3 { font-size: 18px; font-weight: 600; line-height: 1.3; }
+    .neo-control {
+      box-shadow: 10px 10px 22px rgba(2,8,18,0.48), -10px -10px 22px rgba(22,42,68,0.36);
+      transition: box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+    }
+    .neo-control:active, .neo-pressed {
+      box-shadow: inset 7px 7px 14px rgba(3,9,18,0.55), inset -7px -7px 14px rgba(28,47,73,0.28);
+    }
+    .neo-input {
+      box-shadow: inset 5px 5px 12px rgba(3,9,18,0.45), inset -4px -4px 10px rgba(28,47,73,0.2);
+    }
+    .reveal-io {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+    }
+    .reveal-io.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-io { transform: none; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, #16253d 0%, #1b2d47 50%, #16253d 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .shimmer { animation: none; opacity: 0.7; }
+    }
+    .status-pulse {
+      animation: statusPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .status-pulse { animation: none; opacity: 0.85; }
+    }
+    .toast-enter {
+      animation: toastIn var(--dur-mid) var(--ease-out) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .toast-enter { animation: none; opacity: 1; }
+    }
+    #gl-wrap { position: relative; }
+    #gl-fallback { display: none; }
+    .drawer-open { transform: translateX(0) !important; }
+    .nav-link.active { color: #6fd3ff; box-shadow: 0 0 0 1px rgba(111,211,255,0.22), 0 0 26px rgba(111,211,255,0.12); }
+    .table-scroll { max-height: min(52vh, 560px); overflow: auto; }
+    th.sticky-col, td.sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #101d31;
+      box-shadow: 1px 0 0 #21324c;
+    }
+    thead th.sticky-col { z-index: 3; background: #16253d; }
+    tr.row-highlight { outline: 1px solid rgba(111,211,255,0.35); }
+    .selection-rect {
+      position: absolute;
+      border: 1px dashed rgba(111,211,255,0.7);
+      background: rgba(111,211,255,0.08);
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-base text-text-main font-sans min-h-screen">
+  <div id="error-banner" class="hidden fixed top-0 inset-x-0 z-[100] px-4 py-3 flex items-center justify-between gap-4 bg-overlay border-b border-danger/40 text-sm" role="alert">
+    <span id="error-banner-text" class="text-text-soft"></span>
+    <div class="flex gap-2 shrink-0">
+      <button type="button" id="btn-banner-retry" class="neo-control px-3 py-1.5 rounded-sm bg-elevated border border-stroke text-text-main text-xs font-medium">重试</button>
+      <button type="button" id="btn-banner-degrade" class="neo-control px-3 py-1.5 rounded-sm bg-elevated border border-stroke text-text-main text-xs font-medium">简化视图</button>
+      <button type="button" id="btn-banner-dismiss" class="text-text-dim hover:text-text-main text-xs underline">关闭</button>
+    </div>
+  </div>
+
+  <header class="sticky top-0 z-50 border-b border-line bg-shell/95 backdrop-blur-md">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-3 justify-between">
+      <div class="flex items-center gap-3 min-w-0">
+        <button type="button" id="btn-mobile-nav" class="lg:hidden neo-control w-10 h-10 rounded-md flex items-center justify-center border border-stroke bg-surface shrink-0" aria-expanded="false" aria-controls="mobile-nav-panel">
+          <span class="sr-only">打开导航</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold text-text-main truncate">性能透视</h1>
+          <p class="text-caption text-text-dim text-xs font-mono truncate">DevTools Canvas · <span id="freshness-label">—</span></p>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center gap-2 flex-wrap" id="desktop-nav">
+        <a href="#section-overview" class="nav-link neo-control px-3 py-1.5 rounded-pill text-xs border border-transparent bg-surface text-text-soft hover:text-text-main">总览</a>
+        <a href="#section-canvas" class="nav-link neo-control px-3 py-1.5 rounded-pill text-xs border border-transparent bg-surface text-text-soft hover:text-text-main">态势</a>
+        <a href="#section-charts" class="nav-link neo-control px-3 py-1.5 rounded-pill text-xs border border-transparent bg-surface text-text-soft hover:text-text-main">剖析</a>
+        <a href="#section-query" class="nav-link neo-control px-3 py-1.5 rounded-pill text-xs border border-transparent bg-surface text-text-soft hover:text-text-main">查询</a>
+        <a href="#section-table" class="nav-link neo-control px-3 py-1.5 rounded-pill text-xs border border-transparent bg-surface text-text-soft hover:text-text-main">证据表</a>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap justify-end">
+        <label class="text-xs text-text-dim hidden sm:inline">环境</label>
+        <select id="select-env" class="neo-input bg-elevated border border-stroke rounded-sm px-2 py-1.5 text-xs font-mono text-text-main min-w-[100px]">
+          <option value="prod">生产</option>
+          <option value="staging">预发</option>
+          <option value="sandbox">沙箱</option>
+        </select>
+        <label class="text-xs text-text-dim hidden sm:inline">时间窗</label>
+        <select id="select-time" class="neo-input bg-elevated border border-stroke rounded-sm px-2 py-1.5 text-xs font-mono text-text-main min-w-[88px]">
+          <option value="1h">近 1 小时</option>
+          <option value="6h">近 6 小时</option>
+          <option value="24h">近 24 小时</option>
+        </select>
+        <button type="button" id="btn-refresh" class="neo-control px-3 py-1.5 rounded-sm bg-surface border border-stroke text-xs font-medium text-text-soft hover:text-primary">刷新</button>
+        <button type="button" id="btn-share" class="neo-control px-3 py-1.5 rounded-sm bg-surface border border-stroke text-xs font-medium text-text-soft hover:text-primary">分享状态</button>
+      </div>
+    </div>
+    <div id="mobile-nav-panel" class="lg:hidden hidden border-t border-line bg-shell overflow-hidden transition-[max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-h-0" aria-hidden="true">
+      <nav class="flex flex-col p-4 gap-2">
+        <a href="#section-overview" class="mobile-nav-link neo-control px-4 py-3 rounded-md bg-surface border border-stroke text-sm">总览</a>
+        <a href="#section-canvas" class="mobile-nav-link neo-control px-4 py-3 rounded-md bg-surface border border-stroke text-sm">态势</a>
+        <a href="#section-charts" class="mobile-nav-link neo-control px-4 py-3 rounded-md bg-surface border border-stroke text-sm">剖析</a>
+        <a href="#section-query" class="mobile-nav-link neo-control px-4 py-3 rounded-md bg-surface border border-stroke text-sm">查询</a>
+        <a href="#section-table" class="mobile-nav-link neo-control px-4 py-3 rounded-md bg-surface border border-stroke text-sm">证据表</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 space-y-8 pb-32">
+    <section id="section-overview" class="reveal-io space-y-4">
+      <h2 class="text-text-main">工作区总览</h2>
+      <div id="kpi-skeleton" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 hidden">
+        <div class="h-24 rounded-md shimmer border border-line"></div>
+        <div class="h-24 rounded-md shimmer border border-line"></div>
+        <div class="h-24 rounded-md shimmer border border-line"></div>
+        <div class="h-24 rounded-md shimmer border border-line"></div>
+      </div>
+      <div id="kpi-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <p id="context-hint" class="text-xs text-text-dim font-mono"></p>
+    </section>
+
+    <section id="section-canvas" class="reveal-io">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
+        <div>
+          <h2 class="text-text-main">WebGL 态势层</h2>
+          <p class="text-xs text-text-dim mt-1">点击簇过滤 · <kbd class="font-mono text-text-soft">Shift</kbd> 拖拽框选 · 右侧重置</p>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center text-xs font-mono text-text-dim">
+          <span id="gl-status-chip" class="px-2 py-1 rounded-sm border border-line bg-surface">初始化…</span>
+          <span id="gl-lod-label" class="px-2 py-1 rounded-sm border border-line bg-surface">LOD —</span>
+          <button type="button" id="btn-gl-reset" class="neo-control px-3 py-1 rounded-sm bg-surface border border-stroke text-text-main">重置视图</button>
+        </div>
+      </div>
+      <div id="gl-wrap" class="relative rounded-lg border border-line bg-surface overflow-hidden min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]">
+        <div class="absolute inset-0 bg-gradient-to-b from-base/80 via-transparent to-base/90 pointer-events-none z-[1]"></div>
+        <canvas id="gl-canvas" class="absolute inset-0 w-full h-full block cursor-crosshair"></canvas>
+        <canvas id="gl-fallback" class="absolute inset-0 w-full h-full block"></canvas>
+        <div id="gl-overlay-hint" class="absolute bottom-3 left-3 right-3 z-[2] flex flex-wrap gap-2 text-[11px] font-mono text-text-dim pointer-events-none"></div>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs text-text-dim" id="gl-legend"></div>
+    </section>
+
+    <section id="section-charts" class="reveal-io grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div class="rounded-lg border border-line bg-shell p-4">
+        <div class="flex justify-between items-start gap-2 mb-2">
+          <h3 class="text-text-main">延迟趋势 <span class="text-text-dim font-normal text-sm">(p50 / p95 / p99 ms)</span></h3>
+          <span id="line-chart-meta" class="text-[11px] font-mono text-text-dim"></span>
+        </div>
+        <div class="relative">
+          <svg id="svg-line" class="w-full h-[220px] text-text-soft" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet" role="img" aria-label="延迟折线图"></svg>
+          <div id="line-tooltip" class="hidden absolute z-20 px-2 py-1 rounded-sm bg-overlay border border-stroke text-[11px] font-mono text-text-main pointer-events-none shadow-glow"></div>
+        </div>
+        <div id="line-legend" class="flex flex-wrap gap-3 mt-2 text-xs"></div>
+      </div>
+      <div class="rounded-lg border border-line bg-shell p-4">
+        <div class="flex justify-between items-start gap-2 mb-2">
+          <h3 class="text-text-main">服务请求分布</h3>
+          <span id="bar-chart-meta" class="text-[11px] font-mono text-text-dim"></span>
+        </div>
+        <svg id="svg-bar" class="w-full h-[220px]" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet" role="img" aria-label="服务条形图"></svg>
+        <p class="text-[11px] text-text-dim mt-2">点击条形按服务筛选表格；与折线图、点云选择共享同一状态源。</p>
+      </div>
+    </section>
+
+    <section id="section-query" class="reveal-io rounded-lg border border-line bg-shell p-4 sm:p-6 space-y-4">
+      <h2 class="text-text-main">自然语言查询</h2>
+      <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex-1 space-y-2">
+          <label for="nl-input" class="text-xs text-text-dim">描述筛选意图（服务名、百分位、时间等）</label>
+          <textarea id="nl-input" rows="3" class="neo-input w-full rounded-md bg-elevated border border-stroke px-3 py-2 text-sm font-mono text-text-main placeholder:text-text-dim resize-y min-h-[88px]" placeholder="例如：只看支付服务 p99 高于 200ms 的慢请求"></textarea>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="btn-query-submit" class="neo-control px-4 py-2 rounded-md bg-surface border border-stroke-strong text-sm font-medium text-primary">编译查询</button>
+            <button type="button" id="btn-voice" class="neo-control px-4 py-2 rounded-md bg-surface border border-stroke text-sm font-medium text-text-soft">语音录入</button>
+            <button type="button" id="btn-query-clear" class="text-xs text-text-dim underline">清空</button>
+          </div>
+          <p id="voice-fallback" class="hidden text-xs text-warning"></p>
+          <div id="suggestions" class="flex flex-wrap gap-2"></div>
+        </div>
+        <div class="lg:w-[320px] space-y-3 shrink-0">
+          <div class="rounded-md border border-line bg-surface p-3">
+            <p class="text-xs text-text-dim mb-1">解析摘要（机器可读结构）</p>
+            <pre id="parsed-json" class="text-[11px] font-mono text-primary whitespace-pre-wrap break-all min-h-[72px]">{}</pre>
+          </div>
+          <div class="rounded-md border border-line bg-elevated p-3">
+            <p class="text-xs text-text-dim mb-2">查询状态条</p>
+            <div id="query-status-bar" class="h-2 rounded-pill bg-line overflow-hidden">
+              <div id="query-status-fill" class="h-full w-0 bg-gradient-to-r from-secondary to-primary transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] status-pulse"></div>
+            </div>
+            <p id="query-status-text" class="text-xs font-mono text-text-soft mt-2">idle</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-table" class="reveal-io space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 class="text-text-main">结构化证据表</h2>
+        <div class="flex flex-wrap gap-2 items-center">
+          <input type="search" id="table-search" class="neo-input flex-1 min-w-[160px] rounded-sm bg-elevated border border-stroke px-3 py-1.5 text-xs font-mono text-text-main" placeholder="搜索 trace / 服务…" />
+          <button type="button" id="btn-load-demo" class="neo-control px-3 py-1.5 rounded-sm bg-surface border border-stroke text-xs">载入演示数据</button>
+          <button type="button" id="btn-empty-sim" class="neo-control px-3 py-1.5 rounded-sm bg-surface border border-stroke text-xs text-warning">模拟无结果</button>
+          <button type="button" id="btn-permission-sim" class="neo-control px-3 py-1.5 rounded-sm bg-surface border border-stroke text-xs text-danger">模拟无权限</button>
+        </div>
+      </div>
+      <div id="table-empty" class="hidden rounded-lg border border-dashed border-stroke bg-surface p-8 text-center space-y-3">
+        <p id="table-empty-title" class="text-text-main font-medium"></p>
+        <p id="table-empty-desc" class="text-sm text-text-dim max-w-md mx-auto"></p>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button type="button" class="neo-control px-4 py-2 rounded-md bg-elevated border border-stroke text-sm empty-action-reset">重置筛选</button>
+          <button type="button" class="neo-control px-4 py-2 rounded-md bg-elevated border border-stroke text-sm empty-action-demo">载入演示数据</button>
+        </div>
+      </div>
+      <div id="table-loading" class="hidden rounded-lg border border-line p-6 shimmer min-h-[120px]"></div>
+      <div class="rounded-lg border border-line bg-shell overflow-hidden">
+        <div class="table-scroll">
+          <table class="w-full text-left text-xs sm:text-sm border-collapse">
+            <thead class="bg-elevated text-text-dim font-mono uppercase tracking-wide text-[10px] sm:text-xs">
+              <tr id="table-head-row"></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="text-xs text-text-dim font-mono" id="table-foot-note"></p>
+    </section>
+
+    <section class="reveal-io rounded-lg border border-line bg-surface p-4">
+      <h3 class="text-sm text-text-soft mb-2">诊断反馈（演示）</h3>
+      <p class="text-xs text-text-dim mb-3">用于验收错误恢复路径，不影响主状态源逻辑。</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="sim-timeout" class="neo-control px-3 py-1.5 rounded-sm border border-stroke text-xs">模拟网络超时</button>
+        <button type="button" id="sim-403" class="neo-control px-3 py-1.5 rounded-sm border border-stroke text-xs">模拟 403</button>
+        <button type="button" id="sim-500" class="neo-control px-3 py-1.5 rounded-sm border border-stroke text-xs">模拟 500</button>
+        <button type="button" id="sim-gl-lost" class="neo-control px-3 py-1.5 rounded-sm border border-stroke text-xs">模拟 WebGL 丢失</button>
+      </div>
+    </section>
+  </main>
+
+  <aside id="detail-drawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-overlay border-l border-line shadow-raised z-[90] transform translate-x-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-y-auto" aria-hidden="true">
+    <div class="p-4 border-b border-line flex justify-between items-center sticky top-0 bg-overlay/95 backdrop-blur">
+      <h3 class="text-lg font-semibold">Trace 详情</h3>
+      <button type="button" id="btn-drawer-close" class="neo-control w-9 h-9 rounded-md border border-stroke flex items-center justify-center text-text-soft" aria-label="关闭抽屉">×</button>
+    </div>
+    <div id="drawer-content" class="p-4 font-mono text-xs space-y-3 text-text-soft"></div>
+    <div class="p-4 border-t border-line flex gap-2">
+      <button type="button" id="btn-copy-row" class="neo-control flex-1 py-2 rounded-md border border-stroke text-sm">复制摘要</button>
+    </div>
+  </aside>
+  <div id="drawer-scrim" class="fixed inset-0 bg-black/50 z-[85] hidden lg:hidden"></div>
+
+  <div id="toast-stack" class="fixed bottom-6 right-4 z-[95] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+  <script>
+(function () {
+  'use strict';
+
+  const SERVICES = ['checkout', 'payments', 'search', 'recommend', 'auth', 'inventory', 'notify'];
+  const CLUSTER_NAMES = ['checkout+payments', 'search+rec', 'auth', 'inventory', 'notify+edge'];
+
+  const state = {
+    env: 'prod',
+    timeWindow: '1h',
+    clusterIds: [],
+    serviceFilter: null,
+    nlDraft: '',
+    parsed: { ok: true, filters: {}, raw: '' },
+    tableSearch: '',
+    sortKey: 'ts',
+    sortDir: 'desc',
+    selectedRowId: null,
+    chartHoverIndex: null,
+    lineSeriesHidden: { p50: false, p95: false, p99: false },
+    webglMode: 'loading',
+    webglSimplified: false,
+    reducedMotion: false,
+    mobileNavOpen: false,
+    globalLoading: false,
+    queryLoading: false,
+    emptyMode: null,
+    permissionDenied: false,
+    lastError: null,
+    dataRevision: 0,
+    cancelToken: 0,
+    animationPriority: 'idle',
+    lastRefreshAt: null,
+    linePrevPaths: null,
+    barPrevHeights: null
+  };
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function mulberry32(a) {
+    return function () {
+      let t = (a += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function stateSignature() {
+    return [
+      state.env,
+      state.timeWindow,
+      state.clusterIds.slice().sort().join(','),
+      state.serviceFilter || '',
+      state.parsed.filters.service || '',
+      state.parsed.filters.minP99 || '',
+      state.parsed.filters.percentile || '',
+      state.tableSearch,
+      String(state.permissionDenied),
+      state.emptyMode || ''
+    ].join('|');
+  }
+
+  function buildDataset() {
+    const sig = stateSignature();
+    const seed = hashStr(sig);
+    const rnd = mulberry32(seed);
+    const mult = state.timeWindow === '1h' ? 1 : state.timeWindow === '6h' ? 0.85 : 0.7;
+    const envNoise = state.env === 'prod' ? 1 : state.env === 'staging' ? 1.12 : 1.25;
+    const rangeMs = state.timeWindow === '1h' ? 3600000 : state.timeWindow === '6h' ? 21600000 : 86400000;
+
+    let baseFilter = state.serviceFilter || state.parsed.filters.service || null;
+    if (state.clusterIds.length) {
+      const allowed = new Set();
+      state.clusterIds.forEach(function (cid) {
+        const svcs = CLUSTER_NAMES[cid].split('+');
+        svcs.forEach(function (s) { allowed.add(s); });
+      });
+      SERVICES.forEach(function (s) {
+        if (!allowed.has(s) && state.clusterIds.length) {
+          /* cluster filter narrows pool */
+        }
+      });
+    }
+
+    const rows = [];
+    const rowCount = state.permissionDenied ? 0 : state.emptyMode === 'no-results' ? 0 : 800;
+    const pointsPerCluster = state.webglSimplified ? 450 : (window.innerWidth < 768 ? 700 : window.innerWidth < 1024 ? 1400 : 2600);
+    const clusterPointCounts = CLUSTER_NAMES.map(function () { return pointsPerCluster; });
+
+    for (let i = 0; i < rowCount; i++) {
+      const svc = SERVICES[Math.floor(rnd() * SERVICES.length)];
+      if (baseFilter && svc !== baseFilter) continue;
+      if (state.clusterIds.length) {
+        const inCluster = state.clusterIds.some(function (cid) {
+          return CLUSTER_NAMES[cid].indexOf(svc) !== -1;
+        });
+        if (!inCluster) continue;
+      }
+      const ts = Date.now() - Math.floor(rnd() * rangeMs);
+      const p50 = 20 + rnd() * 80 * envNoise * mult;
+      const p95 = p50 + rnd() * 120 * envNoise;
+      const p99 = p95 + rnd() * 200 * envNoise;
+      const err = rnd() < 0.02 * envNoise;
+      rows.push({
+        id: 'tr-' + seed + '-' + i,
+        traceId: '1f' + (seed ^ i).toString(16).padStart(10, '0'),
+        service: svc,
+        ts: ts,
+        p50: p50,
+        p95: p95,
+        p99: p99,
+        err: err,
+        region: ['ap-1', 'eu-2', 'us-3'][Math.floor(rnd() * 3)]
+      });
+    }
+
+    if (state.parsed.filters.minP99) {
+      const thr = state.parsed.filters.minP99;
+      const filtered = rows.filter(function (r) { return r.p99 >= thr; });
+      rows.length = 0;
+      filtered.forEach(function (r) { rows.push(r); });
+    }
+
+    const search = state.tableSearch.trim().toLowerCase();
+    const visibleRows = search
+      ? rows.filter(function (r) {
+          return r.traceId.indexOf(search) !== -1 || r.service.indexOf(search) !== -1;
+        })
+      : rows;
+
+    visibleRows.sort(function (a, b) {
+      const k = state.sortKey;
+      const dir = state.sortDir === 'asc' ? 1 : -1;
+      if (k === 'ts') return (a.ts - b.ts) * dir;
+      if (k === 'p99') return (a.p99 - b.p99) * dir;
+      if (k === 'service') return a.service.localeCompare(b.service) * dir;
+      return 0;
+    });
+
+    const buckets = 24;
+    const bucketSize = Math.max(1, rangeMs / buckets);
+    const line = { p50: [], p95: [], p99: [] };
+    for (let b = 0; b < buckets; b++) {
+      let c50 = 0, c95 = 0, c99 = 0, n = 0;
+      visibleRows.forEach(function (r) {
+        const age = Math.max(0, Date.now() - r.ts);
+        const slot = Math.min(buckets - 1, Math.floor(age / bucketSize));
+        const normalizedSlot = buckets - 1 - slot;
+        if (normalizedSlot === b) {
+          c50 += r.p50; c95 += r.p95; c99 += r.p99; n++;
+        }
+      });
+      if (!n) n = 1;
+      line.p50.push(c50 / n);
+      line.p95.push(c95 / n);
+      line.p99.push(c99 / n);
+    }
+
+    const barCounts = {};
+    SERVICES.forEach(function (s) { barCounts[s] = 0; });
+    visibleRows.forEach(function (r) {
+      barCounts[r.service] = (barCounts[r.service] || 0) + 1;
+    });
+    const barMax = Math.max(1, Math.max.apply(null, Object.values(barCounts)));
+
+    return {
+      sig: sig,
+      seed: seed,
+      rangeMs: rangeMs,
+      bucketSize: bucketSize,
+      buckets: buckets,
+      rows: visibleRows,
+      line: line,
+      barCounts: barCounts,
+      barMax: barMax,
+      clusterPointCounts: clusterPointCounts,
+      rnd: rnd
+    };
+  }
+
+  let dataset = buildDataset();
+  let threeCtx = null;
+
+  function setState(partial) {
+    Object.assign(state, partial);
+    dataset = buildDataset();
+    state.dataRevision++;
+    render();
+  }
+
+  function pushToast(msg, type) {
+    type = type || 'info';
+    const el = document.createElement('div');
+    el.className = 'toast-enter pointer-events-auto rounded-md border px-3 py-2 text-xs font-mono shadow-raised ';
+    if (type === 'success') el.className += 'border-success/40 bg-elevated text-success';
+    else if (type === 'warning') el.className += 'border-warning/40 bg-elevated text-warning';
+    else if (type === 'error') el.className += 'border-danger/40 bg-elevated text-danger';
+    else el.className += 'border-stroke bg-overlay text-text-main';
+    el.textContent = msg;
+    const stack = document.getElementById('toast-stack');
+    stack.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.25s ease';
+      setTimeout(function () { el.remove(); }, 280);
+    }, 4200);
+  }
+
+  function showBanner(text, opts) {
+    opts = opts || {};
+    const b = document.getElementById('error-banner');
+    document.getElementById('error-banner-text').textContent = text;
+    b.classList.remove('hidden');
+    b.dataset.kind = opts.kind || 'error';
+    state.animationPriority = 'banner';
+  }
+
+  function hideBanner() {
+    document.getElementById('error-banner').classList.add('hidden');
+    state.animationPriority = 'idle';
+  }
+
+  function parseNaturalLanguage(text) {
+    const raw = (text || '').trim();
+    const filters = {};
+    let ok = true;
+    let errors = [];
+
+    if (!raw) {
+      ok = false;
+      errors.push('请输入查询内容');
+      return { ok: false, filters: filters, errors: errors, summary: '空输入' };
+    }
+    if (raw.length < 4) {
+      ok = false;
+      errors.push('描述过短，请补充服务名或指标条件');
+      return { ok: false, filters: filters, errors: errors, summary: '输入过短' };
+    }
+
+    const lower = raw.toLowerCase();
+    SERVICES.forEach(function (s) {
+      if (lower.indexOf(s) !== -1) filters.service = s;
+    });
+    const p99m = lower.match(/p99\s*(>|高于|大于|>=)\s*(\d+)/);
+    if (p99m) filters.minP99 = parseFloat(p99m[2], 10);
+    if (lower.indexOf('p95') !== -1) filters.percentile = 'p95';
+    else if (lower.indexOf('p99') !== -1) filters.percentile = 'p99';
+    else if (lower.indexOf('p50') !== -1) filters.percentile = 'p50';
+
+    if (lower.indexOf('生产') !== -1) filters.hintEnv = 'prod';
+    if (lower.indexOf('预发') !== -1) filters.hintEnv = 'staging';
+    if (lower.indexOf('沙箱') !== -1) filters.hintEnv = 'sandbox';
+
+    if (!filters.service && !filters.minP99 && !filters.percentile && !filters.hintEnv) {
+      ok = false;
+      errors.push('无法理解条件：请包含服务名（如 payments）或 p99 阈值（如 p99 > 200）');
+    }
+
+    const summary = ok
+      ? '已解析：' + JSON.stringify(filters)
+      : errors.join('；');
+    return { ok: ok, filters: filters, errors: errors, summary: summary, raw: raw };
+  }
+
+  function runQueryPipeline(text) {
+    const myToken = ++state.cancelToken;
+    const parsed = parseNaturalLanguage(text);
+    state.parsed = parsed;
+    if (!parsed.ok) {
+      document.getElementById('query-status-fill').style.width = '0%';
+      document.getElementById('query-status-text').textContent = 'error: ' + parsed.errors[0];
+      pushToast(parsed.errors[0], 'error');
+      render();
+      return;
+    }
+
+    state.queryLoading = true;
+    state.animationPriority = 'loading';
+    document.getElementById('query-status-text').textContent = 'validating…';
+    document.getElementById('query-status-fill').style.width = '15%';
+
+    setTimeout(function () {
+      if (myToken !== state.cancelToken) return;
+      document.getElementById('query-status-text').textContent = 'fetching mock…';
+      document.getElementById('query-status-fill').style.width = '45%';
+    }, 200);
+
+    setTimeout(function () {
+      if (myToken !== state.cancelToken) return;
+      document.getElementById('query-status-text').textContent = 'merging views…';
+      document.getElementById('query-status-fill').style.width = '78%';
+    }, 450);
+
+    setTimeout(function () {
+      if (myToken !== state.cancelToken) return;
+      if (parsed.filters.hintEnv) {
+        state.env = parsed.filters.hintEnv;
+        document.getElementById('select-env').value = state.env;
+      }
+      if (parsed.filters.service) state.serviceFilter = parsed.filters.service;
+      state.queryLoading = false;
+      state.animationPriority = 'idle';
+      document.getElementById('query-status-fill').style.width = '100%';
+      document.getElementById('query-status-text').textContent = 'done';
+      dataset = buildDataset();
+      state.dataRevision++;
+      updateThreePositions();
+      render();
+      pushToast('查询已应用并联动全部视图', 'success');
+      setTimeout(function () {
+        if (myToken === state.cancelToken) {
+          document.getElementById('query-status-fill').style.width = '0%';
+          document.getElementById('query-status-text').textContent = 'idle';
+        }
+      }, 900);
+    }, 900);
+  }
+
+  function initThree() {
+    const canvas = document.getElementById('gl-canvas');
+    const wrap = document.getElementById('gl-wrap');
+    if (!window.THREE || !canvas) return;
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    } catch (e) {
+      enableGlFallback('WebGL 初始化失败');
+      return;
+    }
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+    camera.position.set(0, 0, 14);
+
+    const clusters = [];
+    const group = new THREE.Group();
+    scene.add(group);
+
+    CLUSTER_NAMES.forEach(function (name, cid) {
+      const n = dataset.clusterPointCounts[cid] || 1000;
+      const pos = new Float32Array(n * 3);
+      const col = new Float32Array(n * 3);
+      const rnd = mulberry32(hashStr(name + '|' + dataset.seed + '|' + cid));
+      const angle0 = (cid / CLUSTER_NAMES.length) * Math.PI * 2;
+      const R = 3.2 + cid * 0.35;
+      for (let i = 0; i < n; i++) {
+        const t = (i / n) * Math.PI * 2 + rnd() * 0.8;
+        const r = R + (rnd() - 0.5) * 1.1;
+        pos[i * 3] = Math.cos(angle0 + t * 0.05) * r + (rnd() - 0.5) * 0.6;
+        pos[i * 3 + 1] = Math.sin(angle0 + t * 0.05) * r + (rnd() - 0.5) * 0.6;
+        pos[i * 3 + 2] = (rnd() - 0.5) * 1.2;
+        const risk = rnd();
+        let r0, g0, b0;
+        if (risk < 0.55) {
+          r0 = 0.45; g0 = 0.88; b0 = 1;
+        } else if (risk < 0.85) {
+          r0 = 0.55; g0 = 0.35; b0 = 0.96;
+        } else {
+          r0 = 1; g0 = 0.42; b0 = 0.54;
+        }
+        col[i * 3] = r0;
+        col[i * 3 + 1] = g0;
+        col[i * 3 + 2] = b0;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: window.innerWidth < 768 ? 0.045 : 0.032,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.82,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true
+      });
+      const pts = new THREE.Points(geo, mat);
+      pts.userData.clusterId = cid;
+      group.add(pts);
+      clusters.push(pts);
+    });
+
+    function resize() {
+      const w = wrap.clientWidth || 400;
+      const h = wrap.clientHeight || 300;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    let dragging = false;
+    let boxSelecting = false;
+    let boxStart = { x: 0, y: 0 };
+    let boxEl = null;
+
+    canvas.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault();
+      state.webglMode = 'context-lost';
+      showBanner('WebGL 上下文已丢失。可重试恢复或切换到简化聚合视图。', { kind: 'webgl' });
+      pushToast('WebGL context lost', 'error');
+    }, false);
+
+    canvas.addEventListener('webglcontextrestored', function () {
+      state.webglMode = 'ready';
+      hideBanner();
+      pushToast('WebGL 已恢复', 'success');
+    }, false);
+
+    canvas.addEventListener('mousedown', function (e) {
+      if (e.shiftKey) {
+        boxSelecting = true;
+        boxStart = { x: e.clientX, y: e.clientY };
+        if (!boxEl) {
+          boxEl = document.createElement('div');
+          boxEl.className = 'selection-rect';
+          wrap.appendChild(boxEl);
+        }
+        boxEl.style.display = 'block';
+        boxEl.style.left = e.offsetX + 'px';
+        boxEl.style.top = e.offsetY + 'px';
+        boxEl.style.width = '0';
+        boxEl.style.height = '0';
+      }
+    });
+
+    canvas.addEventListener('mousemove', function (e) {
+      if (boxSelecting && boxEl) {
+        const rect = wrap.getBoundingClientRect();
+        const x0 = Math.min(boxStart.x, e.clientX) - rect.left;
+        const y0 = Math.min(boxStart.y, e.clientY) - rect.top;
+        const w = Math.abs(e.clientX - boxStart.x);
+        const h = Math.abs(e.clientY - boxStart.y);
+        boxEl.style.left = x0 + 'px';
+        boxEl.style.top = y0 + 'px';
+        boxEl.style.width = w + 'px';
+        boxEl.style.height = h + 'px';
+      }
+    });
+
+    function projectToScreen(vector) {
+      const v = vector.clone();
+      v.project(camera);
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      return {
+        x: (v.x * 0.5 + 0.5) * w,
+        y: (-v.y * 0.5 + 0.5) * h
+      };
+    }
+
+    canvas.addEventListener('mouseup', function (e) {
+      if (boxSelecting) {
+        boxSelecting = false;
+        const rect = wrap.getBoundingClientRect();
+        const x1 = Math.min(boxStart.x, e.clientX) - rect.left;
+        const y1 = Math.min(boxStart.y, e.clientY) - rect.top;
+        const x2 = Math.max(boxStart.x, e.clientX) - rect.left;
+        const y2 = Math.max(boxStart.y, e.clientY) - rect.top;
+        if (boxEl) boxEl.style.display = 'none';
+        const picked = [];
+        clusters.forEach(function (pts) {
+          const pos = pts.geometry.attributes.position;
+          const mid = new THREE.Vector3(pos.getX(0), pos.getY(0), pos.getZ(0));
+          for (let i = 1; i < Math.min(pos.count, 40); i += 8) {
+            mid.x += pos.getX(i);
+            mid.y += pos.getY(i);
+            mid.z += pos.getZ(i);
+          }
+          const n = Math.min(pos.count, 40);
+          mid.multiplyScalar(1 / Math.ceil(n / 8));
+          group.localToWorld(mid);
+          const sp = projectToScreen(mid);
+          if (sp.x >= x1 && sp.x <= x2 && sp.y >= y1 && sp.y <= y2) {
+            picked.push(pts.userData.clusterId);
+          }
+        });
+        if (picked.length) {
+          state.clusterIds = picked;
+          setState({ clusterIds: picked });
+          pushToast('框选 ' + picked.length + ' 个簇', 'info');
+        }
+        return;
+      }
+
+      if (e.button !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const raycaster = new THREE.Raycaster();
+      raycaster.params.Points = { threshold: 0.08 };
+      raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+      const hits = raycaster.intersectObjects(clusters, false);
+      if (hits.length) {
+        const cid = hits[0].object.userData.clusterId;
+        state.clusterIds = [cid];
+        setState({ clusterIds: [cid] });
+        pushToast('已选簇：' + CLUSTER_NAMES[cid], 'info');
+      }
+    });
+
+    canvas.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 1.06 : 0.94;
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z * delta, 6, 28);
+    }, { passive: false });
+
+    let raf = 0;
+    let t0 = performance.now();
+    function tick(now) {
+      raf = requestAnimationFrame(tick);
+      const dt = (now - t0) * 0.001;
+      t0 = now;
+      if (!state.reducedMotion && state.webglMode === 'ready') {
+        group.rotation.z += dt * 0.045;
+      }
+      clusters.forEach(function (pts) {
+        const cid = pts.userData.clusterId;
+        const sel = state.clusterIds.indexOf(cid) !== -1;
+        pts.material.opacity = state.clusterIds.length && !sel ? 0.22 : 0.88;
+        pts.material.size = sel ? (window.innerWidth < 768 ? 0.055 : 0.042) : (window.innerWidth < 768 ? 0.045 : 0.032);
+      });
+      renderer.render(scene, camera);
+    }
+
+    threeCtx = {
+      renderer: renderer,
+      scene: scene,
+      camera: camera,
+      group: group,
+      clusters: clusters,
+      resize: resize,
+      raf: null,
+      stop: function () {
+        cancelAnimationFrame(raf);
+      },
+      start: function () {
+        t0 = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    state.webglMode = 'ready';
+    document.getElementById('gl-status-chip').textContent = 'WebGL · ready';
+    threeCtx.start();
+  }
+
+  function updateThreePositions() {
+    if (!threeCtx || !threeCtx.clusters) return;
+    /* 数据修订时更新颜色权重略：重建开销大，此处仅更新透明度由 tick 处理 */
+  }
+
+  function enableGlFallback(reason) {
+    if (threeCtx && threeCtx.stop) threeCtx.stop();
+    state.webglMode = 'degraded';
+    state.webglSimplified = true;
+    document.getElementById('gl-canvas').style.display = 'none';
+    const fb = document.getElementById('gl-fallback');
+    fb.style.display = 'block';
+    document.getElementById('gl-status-chip').textContent = '简化模式';
+    showBanner((reason || 'WebGL 不可用') + ' · 已切换静态 Canvas 聚合态势', { kind: 'degraded' });
+    drawFallbackCanvas();
+  }
+
+  function drawFallbackCanvas() {
+    const fb = document.getElementById('gl-fallback');
+    const wrap = document.getElementById('gl-wrap');
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    fb.width = w * (window.devicePixelRatio || 1);
+    fb.height = h * (window.devicePixelRatio || 1);
+    fb.style.width = w + 'px';
+    fb.style.height = h + 'px';
+    const ctx = fb.getContext('2d');
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    ctx.fillStyle = '#101d31';
+    ctx.fillRect(0, 0, w, h);
+    CLUSTER_NAMES.forEach(function (name, i) {
+      const cx = (i + 1) * (w / (CLUSTER_NAMES.length + 1));
+      const cy = h / 2;
+      const r = 22 + (dataset.barCounts[name.split('+')[0]] || 0) % 40;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = state.clusterIds.indexOf(i) !== -1 ? '#6fd3ff' : '#4d87c7';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(111,211,255,0.12)';
+      ctx.fill();
+      ctx.fillStyle = '#9bb0cc';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(i), cx, cy + 4);
+    });
+  }
+
+  function renderKpis() {
+    const grid = document.getElementById('kpi-grid');
+    const rows = dataset.rows;
+    const errN = rows.filter(function (r) { return r.err; }).length;
+    const avgP99 = rows.length ? rows.reduce(function (a, r) { return a + r.p99; }, 0) / rows.length : 0;
+    const kpis = [
+      { label: '可见 Trace', value: String(rows.length), sub: '当前筛选' },
+      { label: '异常采样', value: String(errN), sub: '错误标记' },
+      { label: '平均 p99', value: avgP99.toFixed(1) + ' ms', sub: '聚合' },
+      { label: '环境', value: state.env, sub: state.timeWindow }
+    ];
+    grid.innerHTML = kpis.map(function (k) {
+      return (
+        '<div class="rounded-md border border-line bg-surface p-4 neo-control hover:border-stroke-strong transition-colors duration-200">' +
+        '<p class="text-xs text-text-dim font-mono uppercase">' + k.label + '</p>' +
+        '<p class="text-2xl font-mono text-primary mt-1">' + k.value + '</p>' +
+        '<p class="text-[11px] text-text-dim mt-1">' + k.sub + '</p></div>'
+      );
+    }).join('');
+    document.getElementById('context-hint').textContent =
+      '状态签名：' + dataset.sig.slice(0, 64) + (dataset.sig.length > 64 ? '…' : '');
+    const t = new Date();
+    state.lastRefreshAt = t;
+    document.getElementById('freshness-label').textContent =
+      '上次刷新 ' + t.toLocaleTimeString('zh-CN', { hour12: false });
+  }
+
+  function svgLinePath(ys, ymin, ymax, height, width, pad) {
+    const n = ys.length;
+    const innerW = width - pad * 2;
+    const innerH = height - pad * 2;
+    let d = '';
+    for (let i = 0; i < n; i++) {
+      const x = pad + (i / (n - 1)) * innerW;
+      const t = (ys[i] - ymin) / (ymax - ymin || 1);
+      const y = pad + innerH * (1 - t);
+      d += (i === 0 ? 'M' : 'L') + x.toFixed(2) + ' ' + y.toFixed(2) + ' ';
+    }
+    return d;
+  }
+
+  let lineHoverRaf = null;
+
+  function renderCharts() {
+    const svg = document.getElementById('svg-line');
+    const W = 400, H = 220, pad = 36;
+    const line = dataset.line;
+    const series = [
+      { key: 'p50', color: '#6fd3ff', label: 'p50' },
+      { key: 'p95', color: '#7a8cff', label: 'p95' },
+      { key: 'p99', color: '#fb7185', label: 'p99' }
+    ];
+    let ymin = Infinity, ymax = -Infinity;
+    series.forEach(function (s) {
+      if (state.lineSeriesHidden[s.key]) return;
+      line[s.key].forEach(function (v) {
+        ymin = Math.min(ymin, v);
+        ymax = Math.max(ymax, v);
+      });
+    });
+    if (!isFinite(ymin)) {
+      ymin = 0; ymax = 100;
+    }
+    const padY = (ymax - ymin) * 0.08 || 8;
+    ymin -= padY;
+    ymax += padY;
+
+    let inner = '<rect width="' + W + '" height="' + H + '" fill="#0c1728"/>';
+    inner += '<g stroke="#21324c" stroke-width="1">';
+    for (let i = 0; i <= 4; i++) {
+      const y = pad + ((H - pad * 2) * i) / 4;
+      inner += '<line x1="' + pad + '" y1="' + y + '" x2="' + (W - pad) + '" y2="' + y + '"/>';
+    }
+    inner += '</g>';
+    series.forEach(function (s) {
+      if (state.lineSeriesHidden[s.key]) return;
+      const path = svgLinePath(line[s.key], ymin, ymax, H, W, pad);
+      const prev = state.linePrevPaths && state.linePrevPaths[s.key];
+      inner += '<path data-series="' + s.key + '" fill="none" stroke="' + s.color + '" stroke-width="2" opacity="0.95" d="' + path + '">';
+      inner += '</path>';
+    });
+    svg.innerHTML = inner;
+
+    series.forEach(function (s) {
+      const p = svg.querySelector('path[data-series="' + s.key + '"]');
+      if (!p) return;
+      p.addEventListener('mousemove', function (e) {
+        const rect = svg.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * W;
+        const idx = Math.round(((px - pad) / (W - pad * 2)) * (line.p50.length - 1));
+        const i = Math.max(0, Math.min(line.p50.length - 1, idx));
+        const tip = document.getElementById('line-tooltip');
+        tip.classList.remove('hidden');
+        tip.style.left = e.clientX - rect.left + 12 + 'px';
+        tip.style.top = e.clientY - rect.top + 12 + 'px';
+        tip.textContent =
+          'bucket ' + i +
+          ' · p50 ' + line.p50[i].toFixed(1) +
+          ' · p95 ' + line.p95[i].toFixed(1) +
+          ' · p99 ' + line.p99[i].toFixed(1);
+        state.chartHoverIndex = i;
+        if (!lineHoverRaf) {
+          lineHoverRaf = requestAnimationFrame(function () {
+            lineHoverRaf = null;
+            renderTable();
+          });
+        }
+      });
+      p.addEventListener('mouseleave', function () {
+        document.getElementById('line-tooltip').classList.add('hidden');
+        state.chartHoverIndex = null;
+        renderTable();
+      });
+      p.addEventListener('click', function () {
+        const idx = state.chartHoverIndex != null ? state.chartHoverIndex : 0;
+        const subset = dataset.rows.filter(function (row) {
+          const age = Math.max(0, Date.now() - row.ts);
+          const slot = Math.min(dataset.buckets - 1, Math.floor(age / dataset.bucketSize));
+          const normalizedSlot = dataset.buckets - 1 - slot;
+          return normalizedSlot === idx;
+        });
+        if (subset[0]) {
+          state.selectedRowId = subset[0].id;
+          openDrawer(subset[0]);
+        }
+      });
+    });
+
+    state.linePrevPaths = {
+      p50: svgLinePath(line.p50, ymin, ymax, H, W, pad),
+      p95: svgLinePath(line.p95, ymin, ymax, H, W, pad),
+      p99: svgLinePath(line.p99, ymin, ymax, H, W, pad)
+    };
+
+    document.getElementById('line-chart-meta').textContent =
+      'buckets=' + line.p50.length + ' · rev=' + state.dataRevision;
+
+    const leg = document.getElementById('line-legend');
+    leg.innerHTML = series.map(function (s) {
+      const off = state.lineSeriesHidden[s.key];
+      return (
+        '<button type="button" class="neo-control px-2 py-1 rounded-pill border text-[11px] font-mono ' +
+        (off ? 'border-line text-text-dim opacity-50' : 'border-stroke-strong text-text-main') +
+        '" data-series-toggle="' + s.key + '" style="border-color:' + (off ? '#21324c' : s.color) + '">' +
+        s.label + '</button>'
+      );
+    }).join('');
+    leg.querySelectorAll('[data-series-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const k = btn.getAttribute('data-series-toggle');
+        state.lineSeriesHidden[k] = !state.lineSeriesHidden[k];
+        render();
+      });
+    });
+
+    const svgBar = document.getElementById('svg-bar');
+    const BW = 400, BH = 220, bpad = 28;
+    const keys = SERVICES;
+    const max = dataset.barMax;
+    let barInner = '<rect width="' + BW + '" height="' + BH + '" fill="#0c1728"/>';
+    const barW = (BW - bpad * 2) / keys.length - 4;
+    keys.forEach(function (k, i) {
+      const v = dataset.barCounts[k] || 0;
+      const h = (v / max) * (BH - bpad * 2);
+      const x = bpad + i * (barW + 4) + 2;
+      const y = BH - bpad - h;
+      const active = !state.serviceFilter || state.serviceFilter === k;
+      barInner +=
+        '<rect data-svc="' + k + '" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h +
+        '" fill="' + (active ? '#6fd3ff' : '#2b4260') + '" opacity="' + (active ? 0.85 : 0.35) +
+        '" rx="4" style="transition: height 0.28s cubic-bezier(0.22,1,0.36,1), y 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.2s"/>';
+      barInner +=
+        '<text x="' + (x + barW / 2) + '" y="' + (BH - 8) + '" fill="#9bb0cc" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle">' +
+        k.slice(0, 4) + '</text>';
+    });
+    svgBar.innerHTML = barInner;
+    svgBar.querySelectorAll('rect[data-svc]').forEach(function (r) {
+      r.addEventListener('click', function () {
+        const svc = r.getAttribute('data-svc');
+        state.serviceFilter = state.serviceFilter === svc ? null : svc;
+        setState({ serviceFilter: state.serviceFilter });
+        pushToast('服务筛选：' + (state.serviceFilter || '全部'), 'info');
+      });
+    });
+    document.getElementById('bar-chart-meta').textContent = 'max=' + max;
+  }
+
+  function renderTable() {
+    const empty = document.getElementById('table-empty');
+    const loading = document.getElementById('table-loading');
+    const tbody = document.getElementById('table-body');
+    const thead = document.getElementById('table-head-row');
+
+    loading.classList.toggle('hidden', !state.globalLoading);
+    document.getElementById('kpi-skeleton').classList.toggle('hidden', !state.globalLoading);
+
+    const showEmpty =
+      state.permissionDenied ||
+      state.emptyMode === 'no-results' ||
+      (dataset.rows.length === 0 && !state.globalLoading);
+
+    if (state.permissionDenied) {
+      empty.classList.remove('hidden');
+      document.getElementById('table-empty-title').textContent = '无权限访问该数据源';
+      document.getElementById('table-empty-desc').textContent =
+        '当前租户策略禁止读取此环境指标。可切换到沙箱或联系数据源管理员。';
+    } else if (state.emptyMode === 'no-results' || (dataset.rows.length === 0 && !state.globalLoading)) {
+      empty.classList.remove('hidden');
+      document.getElementById('table-empty-title').textContent = '无查询结果';
+      document.getElementById('table-empty-desc').textContent =
+        '尝试放宽自然语言条件、扩大时间窗、重置点云筛选或载入演示数据。';
+    } else {
+      empty.classList.add('hidden');
+    }
+
+    const cols = [
+      { key: 'traceId', label: 'Trace' },
+      { key: 'service', label: '服务' },
+      { key: 'ts', label: '时间' },
+      { key: 'p99', label: 'p99' },
+      { key: 'err', label: '异常' }
+    ];
+    thead.innerHTML = cols
+      .map(function (c, idx) {
+        return (
+          '<th class="px-3 py-2 border-b border-line ' +
+          (idx === 0 ? 'sticky-col' : '') +
+          ' cursor-pointer neo-control select-none" data-sort="' +
+          c.key +
+          '">' +
+          c.label +
+          (state.sortKey === c.key ? (state.sortDir === 'asc' ? ' ↑' : ' ↓') : '') +
+          '</th>'
+        );
+      })
+      .join('');
+
+    tbody.innerHTML = '';
+    if (showEmpty) {
+      document.getElementById('table-foot-note').textContent = '';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    const maxRows = 200;
+    dataset.rows.slice(0, maxRows).forEach(function (r) {
+      const tr = document.createElement('tr');
+      tr.dataset.rowId = r.id;
+      const hi =
+        r.id === state.selectedRowId ||
+        (state.chartHoverIndex != null && dataset.rows.indexOf(r) % 7 === state.chartHoverIndex % 7);
+      tr.className =
+        'border-b border-line hover:bg-elevated/80 cursor-pointer transition-colors duration-200 ' +
+        (hi ? 'row-highlight bg-elevated/50' : '');
+      const tsStr = new Date(r.ts).toLocaleString('zh-CN', { hour12: false });
+      tr.innerHTML =
+        '<td class="sticky-col px-3 py-2 font-mono text-[11px] text-primary">' +
+        r.traceId +
+        '</td>' +
+        '<td class="px-3 py-2 font-mono">' +
+        r.service +
+        '</td>' +
+        '<td class="px-3 py-2 font-mono text-text-dim">' +
+        tsStr +
+        '</td>' +
+        '<td class="px-3 py-2 font-mono">' +
+        r.p99.toFixed(1) +
+        '</td>' +
+        '<td class="px-3 py-2">' +
+        (r.err ? '<span class="text-danger text-xs">ERR</span>' : '<span class="text-text-dim">—</span>') +
+        '</td>';
+      tr.addEventListener('click', function () {
+        state.selectedRowId = r.id;
+        openDrawer(r);
+        render();
+      });
+      frag.appendChild(tr);
+    });
+    tbody.appendChild(frag);
+    document.getElementById('table-foot-note').textContent =
+      '展示前 ' + Math.min(maxRows, dataset.rows.length) + ' / ' + dataset.rows.length + ' 行 · 排序 ' + state.sortKey + ' ' + state.sortDir;
+  }
+
+  function openDrawer(row) {
+    const d = document.getElementById('detail-drawer');
+    const scrim = document.getElementById('drawer-scrim');
+    document.getElementById('drawer-content').innerHTML =
+      '<p><span class="text-text-dim">traceId</span><br/><span class="text-primary">' +
+      row.traceId +
+      '</span></p>' +
+      '<p><span class="text-text-dim">service</span><br/>' +
+      row.service +
+      '</p>' +
+      '<p><span class="text-text-dim">region</span><br/>' +
+      row.region +
+      '</p>' +
+      '<p><span class="text-text-dim">latency</span><br/>p50 ' +
+      row.p50.toFixed(1) +
+      ' · p95 ' +
+      row.p95.toFixed(1) +
+      ' · p99 ' +
+      row.p99.toFixed(1) +
+      '</p>';
+    d.classList.add('drawer-open');
+    d.setAttribute('aria-hidden', 'false');
+    if (window.innerWidth < 1024) {
+      scrim.classList.remove('hidden');
+    }
+    document.getElementById('btn-copy-row').dataset.payload = JSON.stringify(row);
+  }
+
+  function closeDrawer() {
+    const d = document.getElementById('detail-drawer');
+    d.classList.remove('drawer-open');
+    d.setAttribute('aria-hidden', 'true');
+    document.getElementById('drawer-scrim').classList.add('hidden');
+  }
+
+  function renderGlHud() {
+    const totalPts = dataset.clusterPointCounts.reduce(function (a, b) { return a + b; }, 0);
+    document.getElementById('gl-lod-label').textContent =
+      'LOD · ' + totalPts + ' pts · simplified=' + (state.webglSimplified ? 'yes' : 'no');
+    document.getElementById('gl-legend').innerHTML =
+      CLUSTER_NAMES.map(function (n, i) {
+        return (
+          '<span class="px-2 py-1 rounded-sm border border-line bg-surface font-mono text-[11px]">' +
+          i +
+          ': ' +
+          n +
+          '</span>'
+        );
+      }).join('');
+    const hint = document.getElementById('gl-overlay-hint');
+    hint.innerHTML =
+      '<span class="px-2 py-0.5 rounded-sm bg-base/90 border border-line">异常度：青 → 紫 → 红</span>' +
+      '<span class="px-2 py-0.5 rounded-sm bg-base/90 border border-line">当前选中簇：' +
+      (state.clusterIds.length ? state.clusterIds.join(',') : '无') +
+      '</span>';
+  }
+
+  function renderSuggestions() {
+    const box = document.getElementById('suggestions');
+    const sug = [
+      'payments p99 > 200',
+      '只看 search 服务',
+      '预发环境 checkout 慢查询',
+      '沙箱 auth 错误率'
+    ];
+    box.innerHTML = sug
+      .map(function (s) {
+        return (
+          '<button type="button" class="neo-control suggestion-btn px-2 py-1 rounded-pill border border-stroke text-[11px] font-mono text-text-soft" data-sug="' +
+          s.replace(/"/g, '&quot;') +
+          '">' +
+          s +
+          '</button>'
+        );
+      })
+      .join('');
+    box.querySelectorAll('.suggestion-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.getElementById('nl-input').value = b.textContent;
+      });
+    });
+  }
+
+  function render() {
+    document.getElementById('parsed-json').textContent = JSON.stringify(
+      { ok: state.parsed.ok, filters: state.parsed.filters, raw: state.parsed.raw || '' },
+      null,
+      2
+    );
+    renderKpis();
+    renderCharts();
+    renderTable();
+    renderGlHud();
+    if (state.webglMode === 'degraded' || state.webglMode === 'context-lost') {
+      drawFallbackCanvas();
+    }
+  }
+
+  function refreshAll() {
+    state.globalLoading = true;
+    state.animationPriority = 'loading';
+    render();
+    setTimeout(function () {
+      state.globalLoading = false;
+      state.animationPriority = 'idle';
+      dataset = buildDataset();
+      state.dataRevision++;
+      if (threeCtx && threeCtx.resize) threeCtx.resize();
+      render();
+      pushToast('数据已刷新', 'info');
+    }, 650);
+  }
+
+  function setupNavScrollSpy() {
+    const links = document.querySelectorAll('.nav-link, .mobile-nav-link');
+    const sections = ['section-overview', 'section-canvas', 'section-charts', 'section-query', 'section-table'].map(function (id) {
+      return document.getElementById(id);
+    });
+    const obs = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          const id = en.target.id;
+          links.forEach(function (a) {
+            if (a.getAttribute('href') === '#' + id) a.classList.add('active');
+            else a.classList.remove('active');
+          });
+        });
+      },
+      { rootMargin: '-40% 0px -50% 0px', threshold: 0 }
+    );
+    sections.forEach(function (s) {
+      if (s) obs.observe(s);
+    });
+  }
+
+  function setupIoReveal() {
+    const els = document.querySelectorAll('.reveal-io');
+    const io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) en.target.classList.add('is-visible');
+        });
+      },
+      { threshold: 0.08 }
+    );
+    els.forEach(function (el) { io.observe(el); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    state.reducedMotion = prefersReducedMotion();
+    document.getElementById('nl-input').value = state.nlDraft;
+
+    document.getElementById('select-env').addEventListener('change', function (e) {
+      setState({ env: e.target.value });
+      pushToast('环境已切换：' + e.target.value, 'info');
+    });
+    document.getElementById('select-time').addEventListener('change', function (e) {
+      setState({ timeWindow: e.target.value });
+      pushToast('时间窗已更新', 'info');
+    });
+    document.getElementById('btn-refresh').addEventListener('click', refreshAll);
+    document.getElementById('btn-share').addEventListener('click', function () {
+      const snap = {
+        env: state.env,
+        timeWindow: state.timeWindow,
+        clusterIds: state.clusterIds,
+        serviceFilter: state.serviceFilter,
+        parsed: state.parsed.filters
+      };
+      const json = JSON.stringify(snap, null, 2);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(json).then(function () {
+          pushToast('视图状态已复制到剪贴板', 'success');
+        }).catch(function () {
+          pushToast('复制失败', 'error');
+        });
+      } else {
+        pushToast(json.slice(0, 120) + '…', 'info');
+      }
+    });
+
+    document.getElementById('btn-query-submit').addEventListener('click', function () {
+      const text = document.getElementById('nl-input').value;
+      runQueryPipeline(text);
+    });
+    document.getElementById('btn-query-clear').addEventListener('click', function () {
+      document.getElementById('nl-input').value = '';
+      state.parsed = { ok: true, filters: {}, raw: '' };
+      state.serviceFilter = null;
+      render();
+    });
+
+    document.getElementById('btn-voice').addEventListener('click', function () {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const vf = document.getElementById('voice-fallback');
+      if (!SR) {
+        vf.classList.remove('hidden');
+        vf.textContent = '当前浏览器不支持语音识别，请改用键盘输入或更换浏览器。';
+        pushToast('语音不可用：浏览器不支持', 'warning');
+        return;
+      }
+      vf.classList.add('hidden');
+      const rec = new SR();
+      rec.lang = 'zh-CN';
+      rec.onresult = function (ev) {
+        const t = ev.results[0][0].transcript;
+        document.getElementById('nl-input').value = t;
+        pushToast('语音已填入输入框', 'success');
+      };
+      rec.onerror = function () {
+        pushToast('语音识别失败或权限被拒绝', 'warning');
+      };
+      try {
+        rec.start();
+        pushToast('请开始说话…', 'info');
+      } catch (err) {
+        pushToast('无法启动语音识别', 'warning');
+      }
+    });
+
+    document.getElementById('table-head-row').addEventListener('click', function (e) {
+      const th = e.target.closest('[data-sort]');
+      if (!th) return;
+      const k = th.getAttribute('data-sort');
+      if (state.sortKey === k) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      else {
+        state.sortKey = k;
+        state.sortDir = k === 'service' ? 'asc' : 'desc';
+      }
+      setState({ sortKey: state.sortKey, sortDir: state.sortDir });
+    });
+
+    document.getElementById('table-search').addEventListener('input', function (e) {
+      state.tableSearch = e.target.value;
+      dataset = buildDataset();
+      state.dataRevision++;
+      render();
+    });
+
+    document.getElementById('btn-load-demo').addEventListener('click', function () {
+      setState({ emptyMode: null, permissionDenied: false, clusterIds: [], serviceFilter: null });
+      pushToast('已载入演示数据视图', 'success');
+    });
+    document.getElementById('btn-empty-sim').addEventListener('click', function () {
+      setState({ emptyMode: 'no-results' });
+      pushToast('已模拟无结果', 'warning');
+    });
+    document.getElementById('btn-permission-sim').addEventListener('click', function () {
+      setState({ permissionDenied: true });
+      pushToast('已模拟无权限', 'warning');
+    });
+    document.querySelectorAll('.empty-action-reset').forEach(function (b) {
+      b.addEventListener('click', function () {
+        setState({ emptyMode: null, permissionDenied: false, clusterIds: [], serviceFilter: null, tableSearch: '' });
+        document.getElementById('table-search').value = '';
+      });
+    });
+    document.querySelectorAll('.empty-action-demo').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.getElementById('btn-load-demo').click();
+      });
+    });
+
+    document.getElementById('btn-gl-reset').addEventListener('click', function () {
+      setState({ clusterIds: [] });
+      pushToast('已重置点云筛选', 'info');
+    });
+
+    document.getElementById('btn-drawer-close').addEventListener('click', closeDrawer);
+    document.getElementById('drawer-scrim').addEventListener('click', closeDrawer);
+    document.getElementById('btn-copy-row').addEventListener('click', function () {
+      const raw = document.getElementById('btn-copy-row').dataset.payload;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(raw).then(function () {
+          pushToast('已复制 JSON 摘要', 'success');
+        });
+      }
+    });
+
+    document.getElementById('btn-banner-retry').addEventListener('click', function () {
+      hideBanner();
+      if (state.webglMode === 'context-lost' || state.webglMode === 'degraded') {
+        location.reload();
+      } else {
+        refreshAll();
+      }
+    });
+    document.getElementById('btn-banner-degrade').addEventListener('click', function () {
+      hideBanner();
+      enableGlFallback('用户选择简化视图');
+    });
+    document.getElementById('btn-banner-dismiss').addEventListener('click', hideBanner);
+
+    document.getElementById('sim-timeout').addEventListener('click', function () {
+      showBanner('网络超时：遥测网关未在 30s 内响应。可重试或改用简化视图降低负载。', { kind: 'net' });
+      pushToast('模拟：请求超时', 'error');
+    });
+    document.getElementById('sim-403').addEventListener('click', function () {
+      showBanner('HTTP 403：当前凭证无权读取该环境指标（FORBIDDEN）。', { kind: 'http' });
+      pushToast('模拟：403', 'error');
+    });
+    document.getElementById('sim-500').addEventListener('click', function () {
+      showBanner('HTTP 500：上游聚合服务内部错误。建议稍后重试或导出当前查询条件。', { kind: 'http' });
+      pushToast('模拟：500', 'error');
+    });
+    document.getElementById('sim-gl-lost').addEventListener('click', function () {
+      const c = document.getElementById('gl-canvas');
+      const lose = c.getContext('webgl') || c.getContext('webgl2');
+      /* 部分浏览器需真实丢失事件；此处强制降级 */
+      enableGlFallback('模拟 WebGL 上下文丢失');
+    });
+
+    const mobileBtn = document.getElementById('btn-mobile-nav');
+    const mobilePanel = document.getElementById('mobile-nav-panel');
+    mobileBtn.addEventListener('click', function () {
+      state.mobileNavOpen = !state.mobileNavOpen;
+      mobileBtn.setAttribute('aria-expanded', state.mobileNavOpen ? 'true' : 'false');
+      mobilePanel.classList.toggle('hidden', !state.mobileNavOpen);
+      mobilePanel.style.maxHeight = state.mobileNavOpen ? '320px' : '0';
+      mobilePanel.setAttribute('aria-hidden', state.mobileNavOpen ? 'false' : 'true');
+    });
+    document.querySelectorAll('.mobile-nav-link').forEach(function (a) {
+      a.addEventListener('click', function () {
+        state.mobileNavOpen = false;
+        mobilePanel.classList.add('hidden');
+        mobilePanel.style.maxHeight = '0';
+        mobileBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    renderSuggestions();
+    setupNavScrollSpy();
+    setupIoReveal();
+    render();
+
+    try {
+      initThree();
+    } catch (err) {
+      enableGlFallback('Three.js 运行时异常');
+    }
+
+    window.addEventListener('resize', function () {
+      if (state.webglMode === 'degraded') drawFallbackCanvas();
+      if (threeCtx && threeCtx.resize) threeCtx.resize();
+    });
+
+    matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', function (e) {
+      state.reducedMotion = e.matches;
+    });
+  });
+})();
+  </script>
+</body>
+</html>
