@@ -55,15 +55,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
+        :root {
+            --color-base: #09090B;
+            --color-surface: #18181B;
+            --color-elevated: #27272A;
+            --color-subtle: #3F3F46;
+            --color-primary: #00FCED;
+            --color-secondary: #8B5CF6;
+            --color-success: #E3FC02;
+            --color-text-primary: #F5F5F7;
+            --color-text-secondary: #A1A1AA;
+            --font-sans: 'Inter', sans-serif;
+            --font-display: 'Space Grotesk', sans-serif;
+            --shadow-glow-primary: 0 0 20px rgba(0, 252, 237, 0.15);
+            --shadow-glow-success: 0 0 25px rgba(227, 252, 2, 0.25);
+            --easing-tech: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
         body {
-            background-color: theme('colors.base');
-            color: theme('colors.textPrimary');
-            font-family: theme('fontFamily.sans');
+            background-color: var(--color-base);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
             overflow-x: hidden;
         }
 
         h1, h2, h3, .display-font {
-            font-family: theme('fontFamily.display');
+            font-family: var(--font-display);
         }
 
         /* Custom Scrollbar */
@@ -72,27 +89,27 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: theme('colors.base');
+            background: var(--color-base);
         }
         ::-webkit-scrollbar-thumb {
-            background: theme('colors.subtle');
+            background: var(--color-subtle);
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: theme('colors.primary');
+            background: var(--color-primary);
         }
 
         /* Glass / Surface panels */
         .glass-panel {
-            background: theme('colors.surface');
-            border: 1px solid theme('colors.subtle');
+            background: var(--color-surface);
+            border: 1px solid var(--color-subtle);
             border-radius: 16px;
         }
 
         /* Drag and Drop utilities */
         .draggable-card {
             cursor: grab;
-            transition: all 150ms theme('transitionTimingFunction.tech');
+            transition: all 150ms var(--easing-tech);
         }
         .draggable-card:active {
             cursor: grabbing;
@@ -100,16 +117,16 @@
         .draggable-card.dragging {
             opacity: 0.8;
             transform: scale(0.95);
-            box-shadow: theme('boxShadow.glow-primary');
-            border-color: theme('colors.primary');
+            box-shadow: var(--shadow-glow-primary);
+            border-color: var(--color-primary);
         }
 
         .drop-zone {
-            transition: all 300ms theme('transitionTimingFunction.tech');
+            transition: all 300ms var(--easing-tech);
         }
         .drop-zone.drag-over {
-            border: 2px dashed theme('colors.primary');
-            box-shadow: theme('boxShadow.glow-primary');
+            border: 2px dashed var(--color-primary);
+            box-shadow: var(--shadow-glow-primary);
             background: rgba(0, 252, 237, 0.05);
         }
 

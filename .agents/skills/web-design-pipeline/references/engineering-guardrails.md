@@ -49,6 +49,40 @@
 - CDN Tailwind **不支持** `@theme` 指令（V4 原生语法），只能用 `tailwind.config` JS 对象
 - CDN Tailwind **不支持** `@import "tailwindcss"` 指令，不要写这行
 - 如需在 `<style>` 内使用 Tailwind，加 `type="text/tailwindcss"` 属性
+- 普通 `<style>` 里的 CSS **不能写** `theme('colors.xxx')`、`theme('fontFamily.xxx')`、`theme('boxShadow.xxx')` 这类构建期 helper；浏览器不会解析，样式会直接失效
+- 如果样式写在普通 `<style>` 中，必须改用原生 CSS 变量、十六进制颜色、标准字体栈、标准阴影值；不要误以为 Tailwind CDN 会替你展开 `theme()`
+
+**错误示例**：
+
+```html
+<style>
+  body {
+    background-color: theme('colors.base');
+    color: theme('colors.textPrimary');
+  }
+</style>
+```
+
+**正确示例**：
+
+```html
+<style>
+  :root {
+    --color-base: #09090b;
+    --color-text-primary: #f5f5f7;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-text-primary);
+  }
+</style>
+```
+
+**事故复盘**：
+- 本地直接打开单文件 HTML 时，`theme()` 不会被浏览器执行
+- 一旦 `body` 背景色和文字色这类基础样式失效，页面会回退成白底/黑字或局部配色错乱
+- Frontend Agent 在交付前必须全文搜索 `theme\(`，确认它没有出现在普通 `<style>` 中
 
 ---
 
