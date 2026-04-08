@@ -79,6 +79,32 @@ outputs/
 
 ---
 
+## v5 补丁（2026-04-08）
+
+**补丁代号**：美学导向强化 + 资产库配方扩充
+
+### PM Agent（pm-agent.md）
+
+- 思维链第一步「用户与场景」补充 **业务场景**、**页面类型**，与「谁在用、痛点、结果」并列，便于落地到具体页面形态。
+
+### Designer Agent（designer-agent.md）
+
+- 新增 **「美学设计」** 前置段落：明确强风格取向（极简/极繁、复古未来、编辑风等）、主色与强调色、差异化记忆点；鼓励情境化的非常规选择，避免多代输出趋同（如默认同一款展示字体）。
+- STEP 1 措辞微调：「翻译设计语言」→「翻译成设计语言」。
+- STEP 3（设计系统 Token）后补充 **版式与视觉纪律**：层次与分组、8pt 栅格、全局单一强调色策略、圆角一致性与连续曲率（Squircle 思路）、Major Third（1.25）字号阶梯与正文中性色等。
+- 文末补充：**实现复杂度需与美学愿景匹配**（极繁需足够动效与层次；极简需克制、精度与留白）。
+
+### Frontend Agent（frontend-agent.md）
+
+- 验收清单补充：**Canvas** 等核心可视化区块需随 DOM / 内容比例自适应。
+
+### uiux-asset-library
+
+- 新增生成式配方：`generative-recipes/canvas-interior-atmosphere-time-driven.md`
+- 新增风格配方：`style-recipes/dark-neumorphism-tech.md`、`soft-ops-canvas-devtools.md`、`temporal-architecture-luxury-property.md`
+
+---
+
 ## v4 补丁（2026-03-15）
 
 **补丁代号**：PM 重构 + 产品规格强化 + 表现力导向调整

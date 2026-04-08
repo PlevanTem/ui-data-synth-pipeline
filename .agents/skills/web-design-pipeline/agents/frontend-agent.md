@@ -153,3 +153,4 @@ document.addEventListener('DOMContentLoaded', () => { render(); /* 绑定事件 
 - `prd.md` 中每个 M 类契约都有对应实现证据
 - `design_brief.md` 中的页面交互清单全部实现
 - 视觉品质达到「值得截图分享」的水准
+- Canvas 等核心组件区块需要随着 DOM 自适应内容比例

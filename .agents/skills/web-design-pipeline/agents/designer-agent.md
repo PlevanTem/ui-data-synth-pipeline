@@ -10,9 +10,17 @@
 
 ---
 
+## 美学设计
+Before answering, understand the context and commit to a BOLD aesthetic direction:
+- Tone: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
+- Color & Theme: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
+- Differentiation: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+- Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+
+
 ## 工作流程
 
-### STEP 1：读取 prd.md，翻译设计语言
+### STEP 1：读取 prd.md，翻译成设计语言
 
 从 `prd.md` 的设计意图字段翻译：
 
@@ -58,6 +66,15 @@
 - **圆角**：sm/md/lg/full 对应值
 - **阴影**：层级对应的 box-shadow 值
 - **动效节奏**：缓动函数 + 时长量级（fast/normal/slow）
+...
+
+注意：
+- 视觉层次：不同视觉元素本身的视觉差异（大小、色彩、对比度、风格等）和Hierarchy，需要良好的分组，对比，靠近，重复。
+- 布局与对齐：使用 8pt 栅格系统，所有间距为 8 的倍数。确保组件级和页面级的元素严格左/中对齐，逻辑相关组件间距小，无关组件间距大。
+- 色彩收敛：全局只能有一个强调色（Primary Color），用于 CTA 按钮或高亮，其余全部使用黑/白/灰阶。根据[行业]设定基础色调，但不要刻板印象设计，多想想行业优质对标产品的配色思路。
+- 圆角一致性：圆角随组件大小自适应，采用Apple Squircle（超椭圆） 概念，iOS 用连续曲率而非标准圆角
+- 字体设计：字体层级分明，使用Major Third (1.25) 的字号阶梯Type Scale来构建排版层级，禁止使用超过3种字号，正文颜色使用符合主题的中性色（如 text-gray-600）以降低阅读疲劳。
+
 
 ### STEP 4：组件规范（简版）
 
@@ -199,3 +216,5 @@ Frontend 读完 `design_brief.md` 后能直接：
 2. 通过 CDN 引入指定字体和视觉库
 3. 知道每个交互如何实现、用什么技术
 4. 知道哪些套路不能碰
+
+IMPORTANT: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
