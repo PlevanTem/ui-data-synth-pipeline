@@ -1,0 +1,30 @@
+{
+  "case_id": "forensic-appraise",
+  "version": "v4",
+  "date": "20260408",
+  "quality_checklist": {
+    "is_single_file": true,
+    "uses_tailwind_cdn": true,
+    "has_clear_design_direction": true,
+    "interactions_completed": true,
+    "responsive_ready": true,
+    "generative_visuals_included": true
+  },
+  "cdn_libs_used": [
+    "Tailwind CSS (CDN)",
+    "Chart.js (CDN)",
+    "Phosphor Icons (CDN)"
+  ],
+  "visual_effects_summary": {
+    "background": "Canvas 绘制微弱缓慢上升的粒子，隐喻数据流与生命线，增强医疗科技感。",
+    "charts": "Chart.js 实现折线图渐变填充与柱状图组合，环形图配合自定义交互图例。",
+    "animations": "CSS keyframes 实现案件流转管道的流动光线（dasharray）和积压节点的琥珀色脉冲警告（pulse）。"
+  },
+  "interaction_coverage": {
+    "navigation": "顶部时间筛选器联动主图表数据更新。",
+    "data_linkage": "环形图自定义图例支持 hover 联动高亮对应扇区。",
+    "forms": "Timeline Estimator 表单支持输入，带有 loading 状态模拟 AI 计算延迟，并平滑展示结果。",
+    "components": "KPI 卡片数字带有递增动画，管道节点 hover 状态反馈。"
+  },
+  "known_issues_or_limitations": "当前时间筛选器仅模拟了 'Week' 和 'Month' 的数据切换，实际应用需接入后端 API。预估器逻辑为前端简易模拟。"
+}

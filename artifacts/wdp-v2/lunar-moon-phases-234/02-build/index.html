@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>农历月相馆 · 初一至三十</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Mulish:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              wdp: {
+                void: '#07060c',
+                nebula: '#12101f',
+                limb: '#e6e2d8',
+                shadow: '#1a1f28',
+                accent: '#7eb8da',
+                gold: '#c9a962',
+                text: '#e8e6f0',
+                muted: '#9a96ab'
+              }
+            },
+            fontFamily: {
+              display: ['"Bodoni Moda"', 'serif'],
+              sans: ['Mulish', 'system-ui', 'sans-serif']
+            },
+            boxShadow: {
+              wdp: '0 24px 80px rgba(0,0,0,0.45)'
+            }
+          }
+        }
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer base {
+        body {
+          @apply bg-wdp-void text-wdp-text font-sans antialiased;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="./css/base.css" />
+  </head>
+  <body class="min-h-screen wdp-starfield wdp-starfield--drift">
+    <div
+      data-wdp-root
+      class="relative mx-auto max-w-6xl px-4 pb-24 pt-12 sm:px-6 lg:px-10"
+    >
+      <header class="mb-10 text-center sm:text-left">
+        <p class="mb-2 font-display text-wdp-accent tracking-wide">教育 / 天文可视化</p>
+        <h1 class="font-display text-wdp-text tracking-tight">农历月相馆</h1>
+        <p class="mt-4 max-w-2xl text-[1.375rem] leading-relaxed text-wdp-muted sm:text-[1.5rem] sm:leading-relaxed">
+          从初一到三十，逐日观察月面照明变化。使用朔望月常量
+          <span class="text-wdp-text">29.53059</span>
+          天近似串联月龄（课堂演示模型，非实时农历历表）。
+        </p>
+      </header>
+
+      <div
+        class="grid gap-8 rounded-3xl border border-white/10 bg-wdp-nebula/55 p-6 shadow-wdp backdrop-blur-md lg:grid-cols-12 lg:gap-10 lg:p-10"
+      >
+        <section class="lg:col-span-5" aria-labelledby="wdp-readout-heading">
+          <h2 id="wdp-readout-heading" class="font-display text-2xl text-wdp-text">当日读数</h2>
+          <p class="mt-2 text-[1.375rem] text-wdp-muted">键盘 ← → 切换日；滑块快速跳转。</p>
+
+          <div class="mt-8 space-y-6">
+            <div>
+              <p class="text-sm uppercase tracking-widest text-wdp-muted">农历日序</p>
+              <p id="wdp-day-large" class="mt-1 font-sans text-5xl font-semibold text-wdp-text sm:text-6xl">
+                1
+              </p>
+            </div>
+            <div>
+              <p class="text-sm uppercase tracking-widest text-wdp-muted">八相名称</p>
+              <p id="wdp-phase-name" class="mt-1 font-display text-3xl text-wdp-accent">新月</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="rounded-2xl border border-white/10 bg-wdp-void/40 p-4">
+                <p class="text-sm text-wdp-muted">照明率</p>
+                <p id="wdp-illum" class="mt-1 font-sans text-2xl font-semibold text-wdp-limb">0%</p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-wdp-void/40 p-4">
+                <p class="text-sm text-wdp-muted">月龄（模型）</p>
+                <p id="wdp-age-days" class="mt-1 font-sans text-lg font-medium text-wdp-text">0.00 天（模型内）</p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-wdp-muted" for="wdp-slider">选择农历日（1–30）</label>
+              <input
+                id="wdp-slider"
+                type="range"
+                min="1"
+                max="30"
+                value="1"
+                class="wdp-focus h-11 w-full cursor-pointer accent-wdp-accent"
+              />
+            </div>
+
+            <button
+              type="button"
+              id="wdp-hemisphere"
+              class="wdp-focus min-h-[44px] rounded-full border border-white/15 bg-wdp-void/50 px-5 py-3 text-base font-medium text-wdp-text transition-colors duration-200 hover:border-wdp-accent/50"
+              aria-pressed="false"
+            >
+              北半球视角
+            </button>
+          </div>
+        </section>
+
+        <section class="flex flex-col items-center justify-center lg:col-span-7" aria-label="主月相示意">
+          <canvas id="wdp-moon-main" class="wdp-moon-canvas" width="512" height="512"></canvas>
+          <p class="mt-6 max-w-md text-center text-[1.375rem] leading-relaxed text-wdp-muted sm:text-[1.5rem]">
+            月面由 Canvas 绘制：假设初一接近朔，照明随日序在一个月内完整走一圈。
+            切换「南半球视角」可镜像亮面方位。
+          </p>
+        </section>
+      </div>
+
+      <section class="mt-12" aria-labelledby="wdp-grid-heading">
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <h2 id="wdp-grid-heading" class="font-display text-2xl text-wdp-text">三十日一览</h2>
+          <p class="text-[1.125rem] text-wdp-muted">初一<span class="text-wdp-gold">·朔附近</span> → 十五前后渐盈 → 月末再趋朔</p>
+        </div>
+        <ul
+          class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] list-none p-0 m-0"
+          role="list"
+        >
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="1" aria-label="农历初一，第 1 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="true">
+              <span class="mb-1 block text-xs text-wdp-muted">初一</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="2" aria-label="农历初二，第 2 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初二</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="3" aria-label="农历初三，第 3 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初三</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="4" aria-label="农历初四，第 4 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初四</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="5" aria-label="农历初五，第 5 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初五</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="6" aria-label="农历初六，第 6 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初六</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="7" aria-label="农历初七，第 7 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初七</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="8" aria-label="农历初八，第 8 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初八</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="9" aria-label="农历初九，第 9 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初九</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="10" aria-label="农历初十，第 10 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">初十</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="11" aria-label="农历十一，第 11 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十一</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="12" aria-label="农历十二，第 12 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十二</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="13" aria-label="农历十三，第 13 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十三</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="14" aria-label="农历十四，第 14 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十四</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="15" aria-label="农历十五，第 15 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-gold">十五</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="16" aria-label="农历十六，第 16 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十六</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="17" aria-label="农历十七，第 17 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十七</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="18" aria-label="农历十八，第 18 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十八</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="19" aria-label="农历十九，第 19 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">十九</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="20" aria-label="农历二十，第 20 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">二十</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="21" aria-label="农历廿一，第 21 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿一</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="22" aria-label="农历廿二，第 22 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿二</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="23" aria-label="农历廿三，第 23 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿三</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="24" aria-label="农历廿四，第 24 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿四</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="25" aria-label="农历廿五，第 25 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿五</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="26" aria-label="农历廿六，第 26 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿六</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="27" aria-label="农历廿七，第 27 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿七</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="28" aria-label="农历廿八，第 28 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿八</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="29" aria-label="农历廿九，第 29 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">廿九</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+          <li class="min-w-0 list-none">
+            <button type="button" data-wdp-day-tile data-day="30" aria-label="农历三十，第 30 天" class="wdp-focus group w-full rounded-2xl border border-white/10 bg-wdp-nebula/50 p-2 text-left transition duration-200 hover:border-wdp-accent/40 min-h-[88px]" aria-pressed="false">
+              <span class="mb-1 block text-xs text-wdp-muted">三十</span>
+              <canvas class="wdp-tile-canvas" width="128" height="128" aria-hidden="true"></canvas>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <footer class="mt-16 border-t border-white/10 pt-8 text-center text-[1.375rem] leading-relaxed text-wdp-muted">
+        WDP v2 case <span class="text-wdp-text">lunar-moon-phases-234</span> · 静态构建 Vanilla + Tailwind CDN
+      </footer>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

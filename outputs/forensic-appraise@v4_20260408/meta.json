@@ -1,0 +1,13 @@
+{
+  "case_id": "forensic-appraise",
+  "version": "v4",
+  "date": "20260408",
+  "domain": "medical-analytics",
+  "user_req": "ForensicAppraise - Case Volume & Resource Analytics Dashboard",
+  "pipeline_status": "completed",
+  "outputs": {
+    "pm": "01_pm/prd.md",
+    "designer": "02_designer/design_brief.md",
+    "frontend": "03_frontend/index.html"
+  }
+}

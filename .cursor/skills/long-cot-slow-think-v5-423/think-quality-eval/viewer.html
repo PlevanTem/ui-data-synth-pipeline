@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Think Quality Eval</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #171b26;
+      --surface-2: #1e2333;
+      --border: #2a2f42;
+      --border-light: #333851;
+      --text: #e8eaf0;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --accent: #6366f1;
+      --accent-glow: rgba(99,102,241,0.15);
+      --accent-hover: #818cf8;
+      --green: #34d399;
+      --green-bg: rgba(52,211,153,0.10);
+      --yellow: #fbbf24;
+      --yellow-bg: rgba(251,191,36,0.10);
+      --red: #f87171;
+      --red-bg: rgba(248,113,113,0.10);
+      --blue: #60a5fa;
+      --blue-bg: rgba(96,165,250,0.10);
+      --purple: #a78bfa;
+      --purple-bg: rgba(167,139,250,0.10);
+      --orange: #fb923c;
+      --orange-bg: rgba(251,146,60,0.10);
+      --radius: 8px;
+      --radius-sm: 5px;
+      --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.875rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 1rem;
+    }
+    .header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .header-logo {
+      width: 28px; height: 28px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .header h1 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .header-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.125rem;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .progress-pill {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.25rem 0.75rem;
+    }
+    .progress-pill span { color: var(--text); }
+
+    /* ── Main layout ── */
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      overflow: hidden;
+    }
+
+    /* ── Left sidebar: sample list + scores ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .sample-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .sample-item {
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 1px solid transparent;
+      margin-bottom: 0.25rem;
+    }
+    .sample-item:hover { background: var(--surface-2); }
+    .sample-item.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+    }
+    .sample-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.375rem;
+    }
+    .sample-id {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      font-family: var(--mono);
+    }
+    .sample-item.active .sample-id { color: var(--accent-hover); }
+    .sample-score-badge {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 99px;
+    }
+    .score-excellent { background: var(--green-bg); color: var(--green); }
+    .score-good { background: var(--blue-bg); color: var(--blue); }
+    .score-average { background: var(--yellow-bg); color: var(--yellow); }
+    .score-poor { background: var(--red-bg); color: var(--red); }
+    .score-na { background: var(--surface-2); color: var(--text-muted); }
+    .sample-prompt-preview {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .sample-dim-bars {
+      display: flex;
+      gap: 3px;
+      margin-top: 0.5rem;
+    }
+    .dim-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .dim-bar-track {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .dim-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .dim-bar-label {
+      font-size: 0.5rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* ── Right panel: detail view ── */
+    .detail {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .detail-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      padding: 0 1rem;
+    }
+    .detail-tab {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .detail-tab:hover { color: var(--text); }
+    .detail-tab.active { color: var(--accent-hover); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; flex: 1; overflow: hidden; }
+    .tab-panel.active { display: flex; flex-direction: column; }
+
+    /* ── Scores tab ── */
+    .scores-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .overall-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .overall-score-ring {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .overall-score-ring svg { display: block; }
+    .overall-score-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .overall-num {
+      font-size: 1.625rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .overall-denom {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .overall-meta { flex: 1; }
+    .overall-tier {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .overall-case {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      margin-bottom: 0.5rem;
+    }
+    .overall-length {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .section-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .dim-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+    .dim-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.875rem 1rem;
+    }
+    .dim-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .dim-name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dim-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dim-score-num {
+      font-size: 0.875rem;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+    .dim-score-track {
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 0.625rem;
+    }
+    .dim-score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .dim-analysis {
+      font-size: 0.8125rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    .system2-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.875rem 1rem;
+    }
+    .system2-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .system2-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .system2-icon {
+      width: 20px; height: 20px;
+      background: var(--purple-bg);
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+    }
+    .system2-count {
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--purple-bg);
+      color: var(--purple);
+      padding: 0.125rem 0.5rem;
+      border-radius: 99px;
+    }
+    .evidence-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    .evidence-item {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--purple);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 0.375rem 0.625rem;
+      line-height: 1.4;
+      font-family: var(--mono);
+    }
+
+    .recs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rec-item {
+      display: flex;
+      gap: 0.625rem;
+      align-items: flex-start;
+      font-size: 0.8125rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.625rem 0.75rem;
+    }
+    .rec-num {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      background: var(--orange-bg);
+      color: var(--orange);
+      border-radius: 4px;
+      padding: 0.125rem 0.375rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .strengths-weaknesses {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.625rem;
+    }
+    .sw-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+    }
+    .sw-header {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .sw-header.strengths { color: var(--green); }
+    .sw-header.weaknesses { color: var(--red); }
+    .sw-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    .sw-list li {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+      padding-left: 0.75rem;
+      position: relative;
+    }
+    .sw-list.strengths li::before {
+      content: '+';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+    .sw-list.weaknesses li::before {
+      content: '−';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    /* ── Think tab ── */
+    .think-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+    }
+    .think-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.875rem;
+      flex-wrap: wrap;
+    }
+    .think-filter-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .highlight-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      padding: 0.25rem 0.625rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      transition: all 0.12s;
+      user-select: none;
+    }
+    .highlight-toggle:hover { border-color: var(--border-light); color: var(--text); }
+    .highlight-toggle.active { color: var(--text); }
+    .highlight-toggle.hl-backtrack.active { background: rgba(251,191,36,0.08); border-color: var(--yellow); color: var(--yellow); }
+    .highlight-toggle.hl-verify.active { background: rgba(96,165,250,0.08); border-color: var(--blue); color: var(--blue); }
+    .highlight-toggle.hl-switch.active { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+    .highlight-toggle .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .think-content {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--mono);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .think-content mark.hl-backtrack {
+      background: rgba(251,191,36,0.18);
+      color: var(--yellow);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+    .think-content mark.hl-verify {
+      background: rgba(96,165,250,0.15);
+      color: var(--blue);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+    .think-content mark.hl-switch {
+      background: var(--purple-bg);
+      color: var(--purple);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 3rem;
+      text-align: center;
+      gap: 0.75rem;
+    }
+    .empty-icon {
+      font-size: 2.5rem;
+      opacity: 0.3;
+    }
+    .empty-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .empty-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    /* ── Error state ── */
+    .error-card {
+      background: var(--red-bg);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-size: 0.8125rem;
+      color: var(--red);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">🧠</div>
+      <div>
+        <h1 id="skill-name">Think Quality Eval</h1>
+        <div class="header-meta">slow-think-causal-chain-v3 · 5维度推理质量评测</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="progress-pill">
+        <span id="scored-count">0</span> / <span id="total-count">0</span> 已评测
+      </div>
+      <div class="progress-pill" id="avg-pill" style="display:none;">
+        均分 <span id="avg-score" style="color:var(--accent-hover);font-weight:700;">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Left sidebar: sample list -->
+    <div class="sidebar">
+      <div class="sidebar-header">样本列表</div>
+      <div class="sample-list" id="sample-list"></div>
+    </div>
+
+    <!-- Right detail panel -->
+    <div class="detail">
+      <!-- Tabs -->
+      <div class="detail-tabs">
+        <button class="detail-tab active" data-tab="scores" onclick="switchTab('scores')">评分详情</button>
+        <button class="detail-tab" data-tab="think" onclick="switchTab('think')">Think 推理</button>
+      </div>
+
+      <!-- Scores tab -->
+      <div class="tab-panel active" id="tab-scores">
+        <div class="scores-panel" id="scores-panel">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <div class="empty-text">请从左侧选择样本</div>
+            <div class="empty-sub">每个样本展示 5 维度评分与改进建议</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Think tab -->
+      <div class="tab-panel" id="tab-think">
+        <div class="think-panel" id="think-panel">
+          <div class="empty-state">
+            <div class="empty-icon">💭</div>
+            <div class="empty-text">请从左侧选择样本</div>
+            <div class="empty-sub">展示原始 &lt;think&gt; 推理内容</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*__EMBEDDED_DATA__*/
+
+    // ── State ──
+    let currentId = null;
+    let activeHighlights = { backtrack: true, verify: true, switchpoint: true };
+
+    // Backtracking signal words
+    const BACKTRACK_PATTERNS = [
+      /等等[，,、]?[^。\n]{0,60}/g,
+      /退一步重新想[^。\n]{0,60}/g,
+      /这里需要回去改一下[^。\n]{0,60}/g,
+      /不对[，,]?之前那个[^。\n]{0,60}/g,
+      /这个问题让我重新审视[^。\n]{0,60}/g,
+      /让我回头[^。\n]{0,60}/g,
+    ];
+
+    // Verification signal words
+    const VERIFY_PATTERNS = [
+      /验证一下[^。\n]{0,60}/g,
+      /回头检查[^。\n]{0,60}/g,
+      /这个决定放到[^。\n]{0,60}/g,
+      /我算一下[^。\n]{0,60}/g,
+      /让我核查[^。\n]{0,60}/g,
+      /这里有个隐患[^。\n]{0,60}/g,
+      /没问题[，,]?继续[^。\n]{0,20}/g,
+    ];
+
+    // ── Dimension config ──
+    const DIM_CONFIG = {
+      reframing:       { label: '问题重构深度', shortLabel: '重构', color: '#6366f1', desc: 'Reframing' },
+      empathy:         { label: '共情与语境化', shortLabel: '共情', color: '#34d399', desc: 'Empathy' },
+      divergence:      { label: '路径搜索广度', shortLabel: '发散', color: '#60a5fa', desc: 'Divergence' },
+      self_correction: { label: '自我反思与纠错', shortLabel: '纠错', color: '#fbbf24', desc: 'Self-Correction' },
+      feasibility:     { label: '结论闭环性', shortLabel: '闭环', color: '#fb923c', desc: 'Feasibility' },
+    };
+
+    // ── Init ──
+    function init() {
+      const data = EMBEDDED_DATA;
+      document.getElementById('skill-name').textContent = data.skill_name;
+
+      const results = data.results || [];
+      document.getElementById('total-count').textContent = results.length;
+
+      const scored = results.filter(r => r.eval && r.eval.evaluation_summary);
+      document.getElementById('scored-count').textContent = scored.length;
+
+      if (scored.length > 0) {
+        const avg = scored.reduce((s, r) => s + (r.eval.evaluation_summary.overall_score || 0), 0) / scored.length;
+        document.getElementById('avg-score').textContent = avg.toFixed(1);
+        document.getElementById('avg-pill').style.display = 'inline-flex';
+      }
+
+      renderSampleList(results);
+
+      if (results.length > 0) {
+        selectSample(results[0].sample_id);
+      }
+    }
+
+    // ── Sample list ──
+    function renderSampleList(results) {
+      const container = document.getElementById('sample-list');
+      container.innerHTML = '';
+
+      for (const r of results) {
+        const item = document.createElement('div');
+        item.className = 'sample-item';
+        item.dataset.id = r.sample_id;
+        item.onclick = () => selectSample(r.sample_id);
+
+        const evalData = r.eval;
+        const summary = evalData && evalData.evaluation_summary;
+        const tier = summary ? summary.quality_tier : null;
+        const score = summary ? summary.overall_score : null;
+
+        const tierClass = tier === 'Excellent' ? 'score-excellent'
+                        : tier === 'Good'      ? 'score-good'
+                        : tier === 'Average'   ? 'score-average'
+                        : tier === 'Poor'      ? 'score-poor'
+                        : 'score-na';
+
+        const scoreLabel = score != null ? `${score} · ${tier || '?'}` : (r.error ? '错误' : '未评测');
+
+        item.innerHTML = `
+          <div class="sample-item-header">
+            <span class="sample-id">${escHtml(r.sample_id)}</span>
+            <span class="sample-score-badge ${tierClass}">${escHtml(scoreLabel)}</span>
+          </div>
+          <div class="sample-prompt-preview">${escHtml((r.user_prompt || '').slice(0, 100))}</div>
+          ${renderDimBars(evalData)}
+        `;
+
+        container.appendChild(item);
+      }
+    }
+
+    function renderDimBars(evalData) {
+      if (!evalData || !evalData.dimension_scores) return '';
+      const dims = evalData.dimension_scores;
+      const keys = ['reframing', 'empathy', 'divergence', 'self_correction', 'feasibility'];
+      const bars = keys.map(k => {
+        const cfg = DIM_CONFIG[k];
+        const score = (dims[k] && dims[k].score) || 0;
+        const pct = (score / 10) * 100;
+        return `<div class="dim-bar-wrap">
+          <div class="dim-bar-track">
+            <div class="dim-bar-fill" style="width:${pct}%;background:${cfg.color};"></div>
+          </div>
+          <div class="dim-bar-label">${cfg.shortLabel}</div>
+        </div>`;
+      }).join('');
+      return `<div class="sample-dim-bars">${bars}</div>`;
+    }
+
+    // ── Select sample ──
+    function selectSample(id) {
+      currentId = id;
+
+      // Update active state
+      document.querySelectorAll('.sample-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+
+      const result = (EMBEDDED_DATA.results || []).find(r => r.sample_id === id);
+      if (!result) return;
+
+      renderScoresPanel(result);
+      renderThinkPanel(result);
+    }
+
+    // ── Scores panel ──
+    function renderScoresPanel(result) {
+      const container = document.getElementById('scores-panel');
+
+      if (result.error && !result.eval) {
+        container.innerHTML = `<div class="error-card">评测错误：${escHtml(result.error)}</div>`;
+        return;
+      }
+
+      if (!result.eval) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">尚未评测</div></div>`;
+        return;
+      }
+
+      const ev = result.eval;
+      const summary = ev.evaluation_summary || {};
+      const dims = ev.dimension_scores || {};
+      const sys2 = ev.system2_evidence || {};
+      const recs = ev.improvement_recommendations || [];
+
+      const tierColor = summary.quality_tier === 'Excellent' ? 'var(--green)'
+                      : summary.quality_tier === 'Good'      ? 'var(--blue)'
+                      : summary.quality_tier === 'Average'   ? 'var(--yellow)'
+                      : 'var(--red)';
+
+      const overallScore = summary.overall_score || 0;
+      const circumference = 2 * Math.PI * 36;
+      const dashOffset = circumference * (1 - overallScore / 10);
+
+      let html = `
+        <!-- Overall card -->
+        <div class="overall-card">
+          <div class="overall-score-ring">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <circle cx="44" cy="44" r="36" fill="none" stroke="var(--border)" stroke-width="5"/>
+              <circle cx="44" cy="44" r="36" fill="none" stroke="${tierColor}" stroke-width="5"
+                stroke-dasharray="${circumference.toFixed(2)}"
+                stroke-dashoffset="${dashOffset.toFixed(2)}"
+                stroke-linecap="round"
+                transform="rotate(-90 44 44)"
+                style="transition: stroke-dashoffset 0.6s ease;"/>
+            </svg>
+            <div class="overall-score-text">
+              <div class="overall-num" style="color:${tierColor};">${overallScore}</div>
+              <div class="overall-denom">/ 10</div>
+            </div>
+          </div>
+          <div class="overall-meta">
+            <div class="overall-tier" style="color:${tierColor};">${escHtml(summary.quality_tier || '—')}</div>
+            <div class="overall-case">${escHtml(result.case_id || result.sample_id)}</div>
+            <div class="overall-length">${result.think_length ? `Think 长度：${result.think_length.toLocaleString()} 字符` : ''}</div>
+          </div>
+        </div>
+
+        <!-- Strengths & Weaknesses -->
+        <div>
+          <div class="section-label">亮点与不足</div>
+          <div class="strengths-weaknesses">
+            <div class="sw-card">
+              <div class="sw-header strengths">✦ 亮点</div>
+              <ul class="sw-list strengths">
+                ${(summary.key_strengths || []).map(s => `<li>${escHtml(s)}</li>`).join('') || '<li style="color:var(--text-muted);font-style:italic;">无</li>'}
+              </ul>
+            </div>
+            <div class="sw-card">
+              <div class="sw-header weaknesses">✦ 不足</div>
+              <ul class="sw-list weaknesses">
+                ${(summary.key_weaknesses || []).map(w => `<li>${escHtml(w)}</li>`).join('') || '<li style="color:var(--text-muted);font-style:italic;">无</li>'}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dimension scores -->
+        <div>
+          <div class="section-label">5 维度评分</div>
+          <div class="dim-cards">
+            ${Object.entries(DIM_CONFIG).map(([key, cfg]) => {
+              const d = dims[key] || {};
+              const score = d.score || 0;
+              const pct = (score / 10) * 100;
+              return `<div class="dim-card">
+                <div class="dim-card-header">
+                  <div class="dim-name">
+                    <span class="dim-dot" style="background:${cfg.color};"></span>
+                    ${cfg.label}
+                    <span style="font-size:0.6875rem;color:var(--text-muted);font-weight:400;">${cfg.desc}</span>
+                  </div>
+                  <div class="dim-score-num" style="color:${cfg.color};">${score}<span style="font-size:0.6875rem;color:var(--text-muted);font-weight:400;">/10</span></div>
+                </div>
+                <div class="dim-score-track">
+                  <div class="dim-score-fill" style="width:${pct}%;background:${cfg.color};"></div>
+                </div>
+                <div class="dim-analysis">${escHtml(d.analysis || '—')}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- System 2 evidence -->
+        <div>
+          <div class="section-label">System 2 推理证据</div>
+          <div class="system2-card">
+            <div class="system2-header">
+              <div class="system2-title">
+                <div class="system2-icon">⚡</div>
+                路径切换点
+              </div>
+              <div class="system2-count">${sys2.path_switches_detected || 0} 处</div>
+            </div>
+            <div class="evidence-list">
+              ${(sys2.evidence_quotes || []).length > 0
+                ? sys2.evidence_quotes.map(q => `<div class="evidence-item">"${escHtml(q)}"</div>`).join('')
+                : '<div style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">未检测到路径切换证据</div>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Improvement recommendations -->
+        ${recs.length > 0 ? `
+        <div>
+          <div class="section-label">改进建议</div>
+          <div class="recs-list">
+            ${recs.map((rec, i) => `
+              <div class="rec-item">
+                <span class="rec-num">${i + 1}</span>
+                <span>${escHtml(rec)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // ── Think panel ──
+    function renderThinkPanel(result) {
+      const container = document.getElementById('think-panel');
+
+      if (!result.think_content) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">💭</div><div class="empty-text">无 &lt;think&gt; 内容</div></div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="think-toolbar">
+          <span class="think-filter-label">高亮显示：</span>
+          <button class="highlight-toggle hl-backtrack ${activeHighlights.backtrack ? 'active' : ''}"
+                  onclick="toggleHighlight('backtrack', this)">
+            <span class="dot"></span>Backtracking 回溯
+          </button>
+          <button class="highlight-toggle hl-verify ${activeHighlights.verify ? 'active' : ''}"
+                  onclick="toggleHighlight('verify', this)">
+            <span class="dot"></span>Verification 验证
+          </button>
+          <button class="highlight-toggle hl-switch ${activeHighlights.switchpoint ? 'active' : ''}"
+                  onclick="toggleHighlight('switchpoint', this)">
+            <span class="dot"></span>Path Switches 路径切换
+          </button>
+        </div>
+        <div class="think-content" id="think-content"></div>
+      `;
+
+      applyThinkHighlights(result.think_content, result.eval);
+    }
+
+    function applyThinkHighlights(rawText, evalData) {
+      const container = document.getElementById('think-content');
+      if (!container) return;
+
+      let text = escHtml(rawText);
+
+      // Collect evidence quotes for path switch highlights
+      const switchQuotes = evalData && evalData.system2_evidence
+        ? (evalData.system2_evidence.evidence_quotes || [])
+        : [];
+
+      // Apply path switch highlights (evidence quotes from LLM)
+      if (activeHighlights.switchpoint && switchQuotes.length > 0) {
+        for (const quote of switchQuotes) {
+          if (!quote || quote.length < 3) continue;
+          const safeQ = escHtml(quote).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          try {
+            text = text.replace(new RegExp(safeQ, 'g'),
+              `<mark class="hl-switch">${escHtml(quote)}</mark>`);
+          } catch (e) { /* invalid regex, skip */ }
+        }
+      }
+
+      // Apply backtracking highlights
+      if (activeHighlights.backtrack) {
+        const btWords = ['等等，', '等等,', '退一步重新想', '这里需要回去改', '不对，之前', '不对,之前', '让我回头', '停一下'];
+        for (const w of btWords) {
+          const safe = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          text = text.replace(new RegExp(safe + '[^。\\n]{0,50}', 'g'),
+            m => `<mark class="hl-backtrack">${m}</mark>`);
+        }
+      }
+
+      // Apply verification highlights
+      if (activeHighlights.verify) {
+        const verifyWords = ['验证一下', '回头检查', '我算一下', '让我核查', '这里有个隐患', '没问题，继续', '没问题,继续'];
+        for (const w of verifyWords) {
+          const safe = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          text = text.replace(new RegExp(safe + '[^。\\n]{0,50}', 'g'),
+            m => `<mark class="hl-verify">${m}</mark>`);
+        }
+      }
+
+      container.innerHTML = text;
+    }
+
+    // ── Highlight toggle ──
+    function toggleHighlight(type, btn) {
+      activeHighlights[type] = !activeHighlights[type];
+      btn.classList.toggle('active', activeHighlights[type]);
+
+      if (currentId) {
+        const result = (EMBEDDED_DATA.results || []).find(r => r.sample_id === currentId);
+        if (result && result.think_content) {
+          applyThinkHighlights(result.think_content, result.eval);
+        }
+      }
+    }
+
+    // ── Tab switching ──
+    function switchTab(name) {
+      document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    }
+
+    // ── Util ──
+    function escHtml(str) {
+      if (str == null) return '';
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

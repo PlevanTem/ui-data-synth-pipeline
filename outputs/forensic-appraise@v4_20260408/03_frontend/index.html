@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForensicAppraise - Case Volume & Resource Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617; /* slate-950 */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6); /* slate-900 */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5); /* slate-700 */
+        }
+
+        /* Pipeline Flow Animation */
+        .flow-line {
+            stroke-dasharray: 10;
+            animation: flow 2s linear infinite;
+        }
+
+        @keyframes flow {
+            from { stroke-dashoffset: 20; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Pulse Animation for Backlog */
+        .pulse-warning {
+            animation: pulse-amber 2s infinite;
+        }
+
+        @keyframes pulse-amber {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        clinical: {
+                            cyan: '#06b6d4',
+                            blue: '#3b82f6',
+                            amber: '#f59e0b',
+                            red: '#ef4444',
+                            emerald: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col">
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Header -->
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-clinical-cyan/20 flex items-center justify-center border border-clinical-cyan/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                <i class="ph ph-activity text-clinical-cyan text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-semibold tracking-wide text-slate-100">ForensicAppraise</h1>
+                <p class="text-xs text-slate-400 font-mono">Case Volume & Resource Analytics</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-sm text-slate-300 bg-slate-800/50 px-3 py-1.5 rounded-md border border-slate-700">
+                <i class="ph ph-clock text-clinical-emerald"></i>
+                <span class="font-mono">System Status: Optimal</span>
+            </div>
+            <select id="time-filter" class="bg-slate-800 border border-slate-700 text-sm rounded-md px-3 py-1.5 focus:outline-none focus:border-clinical-cyan text-slate-200 cursor-pointer">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                <span class="text-xs font-medium">Dr. L</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto w-full">
+        
+        <!-- Left Column: Metrics & Charts (Span 8) -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- KPI 1 -->
+                <div class="glass-panel rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-clinical-cyan"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-sm font-medium text-slate-400">Total Appraisees</h3>
+                        <i class="ph ph-users text-clinical-cyan text-lg opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold font-mono text-white counter" data-target="142">0</span>
+                        <span class="text-xs text-clinical-emerald flex items-center"><i class="ph ph-trend-up mr-1"></i>+12%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">vs. previous period</p>
+                </div>
+
+                <!-- KPI 2 -->
+                <div class="glass-panel rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-clinical-amber"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-sm font-medium text-slate-400">Current Backlog</h3>
+                        <i class="ph ph-warning-circle text-clinical-amber text-lg opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold font-mono text-white counter" data-target="38">0</span>
+                        <span class="text-xs text-clinical-red flex items-center"><i class="ph ph-trend-up mr-1"></i>+5%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Awaiting physical exam</p>
+                </div>
+
+                <!-- KPI 3 -->
+                <div class="glass-panel rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-clinical-blue"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-sm font-medium text-slate-400">Avg. Wait Time</h3>
+                        <i class="ph ph-hourglass-medium text-clinical-blue text-lg opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold font-mono text-white"><span class="counter" data-target="4.2">0</span><span class="text-lg ml-1">hrs</span></span>
+                        <span class="text-xs text-clinical-emerald flex items-center"><i class="ph ph-trend-down mr-1"></i>-1.1h</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">From registration to exam</p>
+                </div>
+            </div>
+
+            <!-- Main Chart: Temporal Volume Analytics -->
+            <div class="glass-panel rounded-xl p-5 flex-1 min-h-[350px] flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-base font-semibold text-slate-100">Temporal Volume Analytics</h2>
+                        <p class="text-xs text-slate-400">Daily appraisee influx vs. completed cases</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-2 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors border border-slate-700">Export</button>
+                    </div>
+                </div>
+                <div class="flex-1 relative w-full h-full min-h-[250px]">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Pipeline Section -->
+            <div class="glass-panel rounded-xl p-5">
+                <div class="mb-6">
+                    <h2 class="text-base font-semibold text-slate-100">Case Status Flow</h2>
+                    <p class="text-xs text-slate-400">Real-time movement through appraisal stages</p>
+                </div>
+                
+                <div class="relative flex items-center justify-between px-4 py-8">
+                    <!-- Connecting Lines -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0;">
+                        <line x1="10%" y1="50%" x2="45%" y2="50%" stroke="#334155" stroke-width="2" />
+                        <line x1="10%" y1="50%" x2="45%" y2="50%" stroke="#06b6d4" stroke-width="2" class="flow-line" />
+                        
+                        <line x1="55%" y1="50%" x2="90%" y2="50%" stroke="#334155" stroke-width="2" />
+                        <line x1="55%" y1="50%" x2="90%" y2="50%" stroke="#f59e0b" stroke-width="2" class="flow-line" style="animation-duration: 3s;" />
+                    </svg>
+
+                    <!-- Node 1 -->
+                    <div class="relative z-10 flex flex-col items-center group">
+                        <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center mb-3 group-hover:border-clinical-cyan transition-colors shadow-glass">
+                            <i class="ph ph-clipboard-text text-xl text-slate-300 group-hover:text-clinical-cyan"></i>
+                        </div>
+                        <span class="text-sm font-medium text-slate-200">Registration</span>
+                        <span class="text-xs font-mono text-slate-400 mt-1 bg-slate-800/80 px-2 py-0.5 rounded">12 pending</span>
+                    </div>
+
+                    <!-- Node 2 -->
+                    <div class="relative z-10 flex flex-col items-center group">
+                        <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-clinical-amber pulse-warning flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                            <i class="ph ph-stethoscope text-2xl text-clinical-amber"></i>
+                            <div class="absolute -top-2 -right-2 bg-clinical-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">38</div>
+                        </div>
+                        <span class="text-sm font-medium text-slate-200">Physical Exam</span>
+                        <span class="text-xs font-mono text-clinical-amber mt-1 bg-clinical-amber/10 border border-clinical-amber/20 px-2 py-0.5 rounded">Bottleneck</span>
+                    </div>
+
+                    <!-- Node 3 -->
+                    <div class="relative z-10 flex flex-col items-center group">
+                        <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center mb-3 group-hover:border-clinical-emerald transition-colors shadow-glass">
+                            <i class="ph ph-file-doc text-xl text-slate-300 group-hover:text-clinical-emerald"></i>
+                        </div>
+                        <span class="text-sm font-medium text-slate-200">Report Issuance</span>
+                        <span class="text-xs font-mono text-slate-400 mt-1 bg-slate-800/80 px-2 py-0.5 rounded">92 completed</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Distribution & Tools (Span 4) -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Injury Distribution Mapping -->
+            <div class="glass-panel rounded-xl p-5 flex flex-col">
+                <div class="mb-4">
+                    <h2 class="text-base font-semibold text-slate-100">Injury Distribution</h2>
+                    <p class="text-xs text-slate-400">By Technical Identification Category</p>
+                </div>
+                <div class="relative w-full aspect-square max-h-[280px] mx-auto mb-4">
+                    <canvas id="distributionChart"></canvas>
+                    <!-- Center Text -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-3xl font-bold font-mono text-white">142</span>
+                        <span class="text-xs text-slate-400">Total Cases</span>
+                    </div>
+                </div>
+                <!-- Custom Legend -->
+                <div class="grid grid-cols-2 gap-2 mt-auto" id="custom-legend">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Interactive Widget: Appraisal Timeline Estimator -->
+            <div class="glass-panel rounded-xl p-5 border-t-2 border-t-clinical-blue relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-clinical-blue/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="ph ph-cpu text-clinical-blue text-xl"></i>
+                    <h2 class="text-base font-semibold text-slate-100">Timeline Estimator</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-5">AI-calculated completion estimate for current queue.</p>
+
+                <form id="estimator-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Current Appraisees (Queue)</label>
+                        <input type="number" id="queue-input" value="38" class="w-full bg-slate-900/80 border border-slate-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-clinical-blue font-mono transition-colors" required min="1">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Average Case Complexity</label>
+                        <select id="complexity-input" class="w-full bg-slate-900/80 border border-slate-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-clinical-blue transition-colors">
+                            <option value="1.5">Low (Routine)</option>
+                            <option value="2.5" selected>Medium (Standard)</option>
+                            <option value="4.0">High (Complex Injury)</option>
+                            <option value="6.5">Severe (Multi-disciplinary)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-clinical-blue/20 hover:bg-clinical-blue/30 text-clinical-blue border border-clinical-blue/50 rounded-md py-2 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 group">
+                        <i class="ph ph-magic-wand group-hover:rotate-12 transition-transform"></i>
+                        Calculate Estimate
+                    </button>
+                </form>
+
+                <!-- Result Area (Hidden by default) -->
+                <div id="estimator-result" class="mt-5 pt-4 border-t border-slate-800 hidden opacity-0 transition-opacity duration-300">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400">Estimated Clearance</p>
+                            <p class="text-lg font-bold text-clinical-cyan mt-1" id="est-date">--</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400">Required Hours</p>
+                            <p class="text-lg font-mono text-white mt-1" id="est-hours">--</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-slate-900/50 rounded p-2 border border-slate-800 flex items-start gap-2">
+                        <i class="ph ph-info text-clinical-blue text-sm mt-0.5"></i>
+                        <p class="text-[10px] text-slate-400 leading-tight">Based on current staffing of 3 appraisers and historical processing times for selected complexity.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- 1. Canvas Background Generative Effect (Data Particles) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedY = Math.random() * 0.5 + 0.1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < -10) {
+                    this.y = canvas.height + 10;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(6, 182, 212, ${this.opacity})`; // clinical-cyan
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        // --- 2. Number Counter Animation ---
+        function animateValue(obj, start, end, duration, isFloat = false) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Ease out quad
+                const easeProgress = progress * (2 - progress);
+                const current = start + easeProgress * (end - start);
+                obj.innerHTML = isFloat ? current.toFixed(1) : Math.floor(current);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.querySelectorAll('.counter').forEach(el => {
+            const target = parseFloat(el.getAttribute('data-target'));
+            const isFloat = el.getAttribute('data-target').includes('.');
+            animateValue(el, 0, target, 1500, isFloat);
+        });
+
+        // --- 3. Chart.js Setup ---
+        Chart.defaults.color = '#94a3b8'; // slate-400
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Mock Data based on Time Filter
+        const dataStore = {
+            week: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                influx: [25, 32, 28, 45, 38, 15, 12],
+                completed: [20, 28, 30, 35, 40, 10, 8]
+            },
+            month: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                influx: [150, 180, 142, 160],
+                completed: [140, 165, 150, 155]
+            }
+        };
+
+        // Volume Chart (Line/Bar combo)
+        const ctxVolume = document.getElementById('volumeChart').getContext('2d');
+        
+        // Create Gradient for Line
+        const gradientLine = ctxVolume.createLinearGradient(0, 0, 0, 300);
+        gradientLine.addColorStop(0, 'rgba(6, 182, 212, 0.2)'); // cyan
+        gradientLine.addColorStop(1, 'rgba(6, 182, 212, 0)');
+
+        let volumeChart = new Chart(ctxVolume, {
+            type: 'line',
+            data: {
+                labels: dataStore.week.labels,
+                datasets: [
+                    {
+                        label: 'New Appraisees (Influx)',
+                        data: dataStore.week.influx,
+                        borderColor: '#06b6d4', // cyan
+                        backgroundColor: gradientLine,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#020617',
+                        pointBorderColor: '#06b6d4',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Completed Cases',
+                        data: dataStore.week.completed,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // blue with opacity
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 12, usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(51, 65, 85, 0.5)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                        boxPadding: 4
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(51, 65, 85, 0.3)', drawBorder: false },
+                        border: { display: false }
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Distribution Chart (Doughnut)
+        const ctxDist = document.getElementById('distributionChart').getContext('2d');
+        const distData = {
+            labels: ['Traffic Injury', 'Clinical Negligence', 'Occupational', 'Assault/Trauma', 'Other'],
+            data: [45, 25, 15, 10, 5],
+            colors: ['#06b6d4', '#3b82f6', '#f59e0b', '#ef4444', '#64748b']
+        };
+
+        const distributionChart = new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: distData.labels,
+                datasets: [{
+                    data: distData.data,
+                    backgroundColor: distData.colors,
+                    borderWidth: 2,
+                    borderColor: '#020617', // Match background
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false }, // Using custom legend
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) label += ': ';
+                                label += context.raw + '%';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Populate Custom Legend
+        const legendContainer = document.getElementById('custom-legend');
+        distData.labels.forEach((label, i) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white transition-colors';
+            div.innerHTML = `
+                <span class="w-2 h-2 rounded-full" style="background-color: ${distData.colors[i]}"></span>
+                <span class="truncate">${label}</span>
+                <span class="ml-auto font-mono text-slate-500">${distData.data[i]}%</span>
+            `;
+            // Interactive Legend
+            div.addEventListener('mouseenter', () => {
+                const activeElements = [{datasetIndex: 0, index: i}];
+                distributionChart.setActiveElements(activeElements);
+                distributionChart.update();
+            });
+            div.addEventListener('mouseleave', () => {
+                distributionChart.setActiveElements([]);
+                distributionChart.update();
+            });
+            legendContainer.appendChild(div);
+        });
+
+        // --- 4. Interactivity ---
+
+        // Time Filter Interaction
+        document.getElementById('time-filter').addEventListener('change', (e) => {
+            const val = e.target.value;
+            // Simulate data update
+            if(dataStore[val]) {
+                volumeChart.data.labels = dataStore[val].labels;
+                volumeChart.data.datasets[0].data = dataStore[val].influx;
+                volumeChart.data.datasets[1].data = dataStore[val].completed;
+                volumeChart.update();
+            }
+        });
+
+        // Estimator Logic
+        const estimatorForm = document.getElementById('estimator-form');
+        const estimatorResult = document.getElementById('estimator-result');
+        const estDateEl = document.getElementById('est-date');
+        const estHoursEl = document.getElementById('est-hours');
+        const btnIcon = estimatorForm.querySelector('button i');
+
+        estimatorForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // UI Loading state
+            btnIcon.className = "ph ph-spinner animate-spin";
+            estimatorResult.classList.remove('hidden');
+            estimatorResult.classList.remove('opacity-100');
+            estimatorResult.classList.add('opacity-0');
+
+            const queue = parseInt(document.getElementById('queue-input').value);
+            const complexity = parseFloat(document.getElementById('complexity-input').value);
+            
+            // Simple Mock AI Calculation
+            // Total hours = queue * complexity
+            // Assuming 3 appraisers, 8 hours a day = 24 hours capacity per day
+            const totalHours = queue * complexity;
+            const daysNeeded = Math.ceil(totalHours / 24);
+            
+            // Calculate future date
+            const date = new Date();
+            date.setDate(date.getDate() + daysNeeded);
+            const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+
+            // Simulate network/calculation delay
+            setTimeout(() => {
+                estHoursEl.textContent = totalHours.toFixed(1);
+                estDateEl.textContent = dateString;
+                
+                btnIcon.className = "ph ph-magic-wand group-hover:rotate-12 transition-transform";
+                estimatorResult.classList.remove('opacity-0');
+                estimatorResult.classList.add('opacity-100');
+            }, 800);
+        });
+
+    </script>
+</body>
+</html>

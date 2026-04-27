@@ -1,0 +1,26 @@
+{
+  "schema": "wdp.evalRound/v1",
+  "case_id": "five-platform-payment-hub-710",
+  "round": 1,
+  "reasoning": {
+    "design_quality": "实机首屏（r01-desktop-full.png）呈现统一的深色「文档体」层级：编号条款、订单卡与矩阵分区清晰，五平台切换时 `document.title` 与 H1 同步变更（例：京东模板下标题为「京东商城 · 零售订单结算模板」）。条幅与卡片材质一致，整体可读性达标。主要短板在于：版本条幅仍采用「左侧竖向强调条」构图，与 evaluator 静态嗅觉中的模板化套路同型，削弱了「展览级」身份感；页脚与部分标签字阶仍偏工具化，距离 brief 中博物馆级叙事略有差距。",
+    "originality": "五平台以窄色带区分、`html` 字号 110% 与文档编号体系是有效差异化，能力矩阵用「条款展开」承载需求表头也贴合题意。但整体仍接近「深色 B 端控制台 + 卡片栅格」的安全组合，缺少一轮更冒险的视觉语法（如章节转场、材质对比或更非常规的版面节奏），原创性停留在「克制可用」而非「令人记住」。",
+    "craft": "IBM Plex + Noto Sans SC 组合合规且渲染干净；触控目标与矩阵卡片 hover/focus 在桌面与移动宽（r01-mobile-390.png）下均未发现重叠或不可达控件。工艺扣分点：Play CDN 在控制台产生 error 级「不应在生产使用」提示（流水线允许，非运行时异常）；页脚说明字号仍偏小；矩阵第二次收起时，工具快照中仍短暂暴露详情区节点，提示可访问性树与隐藏策略可更严谨。",
+    "functionality": "按 design-brief「页面交互清单」抽检通过：`http://127.0.0.1:18620/`（`npx serve`，实际监听端口以终端为准）上五 tab 切换、支付模拟四键（例：成功→徽章「支付成功」）、能力矩阵卡片展开/收起（`aria-expanded` 在展开态为 expanded）、倒计时条随 interval 递减均可用。未出现阻塞性 JS 异常；外链能力通过矩阵「跳转官网」触发 `window.open` 与 noopener 设计在代码层已满足。整体功能完整度高于视觉冒险度。"
+  },
+  "scores": {
+    "design_quality": 7,
+    "originality": 6,
+    "craft": 7,
+    "functionality": 8
+  },
+  "weighted_total": 6.8,
+  "pass": false,
+  "evidence": {
+    "screenshots": ["r01-desktop-full.png", "r01-mobile-390.png"],
+    "playwright_steps": "1) 在 02-build 启动 npx serve（本会话实例监听于 18620）。2) browser_navigate http://127.0.0.1:18620/ → snapshot：五 tab、矩阵六键、订单区。3) browser_resize 1280×900 → fullPage 截图 r01-desktop-full.png（已复制至 03-eval/screenshots/）。4) 点击「2 京东模板」→ Page Title 与 H1 变为京东文案。5) 点击「成功」→ 支付状态徽章为「支付成功」。6) 点击「支付状态」矩阵卡 → expanded；再点收起 → collapsed。7) browser_console_messages：Tailwind Play CDN 生产警告 1 条；CursorBrowser 对话框覆盖 warning。8) browser_resize 390×844 → fullPage 截图 r01-mobile-390.png。9) browser_lock/unlock 收尾。",
+    "console_errors_summary": "https://cdn.tailwindcss.com 报错级提示「不应在生产使用 Play CDN」（预期，非页面脚本异常）。另有 CursorBrowser 注入的 dialog override warning。未见未捕获的页面 JS 错误。"
+  },
+  "feedback_for_designer": "refine（不建议 pivot）\n\n成功标准（Round 2 可复测）\n1) 身份与 slop：去除「左侧竖条强调」这一与通用模板强相关的构图，改用不牺牲可读性的表面处理（例如顶缘能量渐变、内阴影档案夹、或极细双层边框），使版本声明区仍醒目但不再像组件库范例。\n2) 展览感：为平台切换增加可感知的「章节」节奏——可以是极克制的转场（尊重 reduced-motion）、或 hero 区与环境光的联动，使五套模板像同一档案馆中的五册卷宗，而非仅换色。\n3) 工艺与 a11y：矩阵详情在收起时应从辅助技术视角彻底退场（隐藏 + 清空或等效策略），并校对所有相关 live region 行为；页脚与次要说明的字阶对齐 guardrail 桌面正文底线。\n4) 叙事：保留现有文档体优势，但避免能力矩阵标题过长导致的「规格书堆叠」——可考虑信息分层（主标题短、副标承接英文表头）。\n\n本轮不设 P0 阻断；核心路径已通。",
+  "slop_flags": ["slop-left-accent-card"]
+}

@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - paragraph [ref=e3]: Time capsule
+    - heading "封存一页给未来的信" [level=1] [ref=e4]
+    - paragraph [ref=e5]: 按步骤填写内容，最后以封印动画完成仪式。媒体仅保存在本机浏览器预览，不上传服务器。
+  - main [ref=e6]:
+    - list "步骤" [ref=e7]:
+      - listitem [ref=e8]: 1 文案
+      - listitem [ref=e9]: 2 媒体
+      - listitem [ref=e10]: 3 时间
+      - listitem [ref=e11]: 4 标签
+      - listitem [ref=e12]: 5 正文
+      - listitem [ref=e13]: 6 封存
+    - generic [ref=e14]:
+      - heading "标题与描述" [level=2] [ref=e15]
+      - generic [ref=e16]: 标题
+      - textbox "标题" [ref=e17]
+      - generic [ref=e18]: 描述
+      - textbox "描述" [ref=e19]
+    - text: 从这里开始写下你想封存的故事…
+    - generic [ref=e20]:
+      - button "上一步" [disabled] [ref=e21]
+      - button "下一步" [ref=e22] [cursor=pointer]

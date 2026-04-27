@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "node .cursor/hooks/grind-design-eval.js",
+        "loop_limit": 3
+      }
+    ]
+  }
+}

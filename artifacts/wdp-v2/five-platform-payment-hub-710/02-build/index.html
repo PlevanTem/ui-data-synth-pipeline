@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>五合一支付前台模板 · 文档体套件</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              wdp: {
+                ink: '#0c0f14',
+                panel: '#141a22',
+                line: '#2a3442',
+                text: '#e8edf5',
+                muted: '#8b98ab',
+                warn: '#f0b429',
+                ok: '#3dd68c',
+                bad: '#ff6b6b'
+              }
+            },
+            fontFamily: {
+              sans: ['"Noto Sans SC"', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
+              mono: ['IBM Plex Sans', 'ui-monospace', 'monospace']
+            },
+            boxShadow: {
+              wdp: '0 18px 50px rgba(0,0,0,0.35)'
+            }
+          }
+        }
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer base {
+        :root {
+          color-scheme: dark;
+          --wdp-radius: 1rem;
+          --wdp-density: 1;
+          --wdp-accent: #22c55e;
+        }
+        html {
+          font-size: 110%;
+        }
+        body {
+          @apply bg-wdp-ink text-wdp-text font-sans antialiased;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      }
+      .wdp-grain::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      .wdp-banner-surface {
+        position: relative;
+        isolation: isolate;
+      }
+      .wdp-banner-surface::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        border-radius: var(--wdp-radius) var(--wdp-radius) 0 0;
+        background: linear-gradient(90deg, var(--wdp-accent), color-mix(in srgb, var(--wdp-accent) 15%, transparent) 42%, rgba(255, 255, 255, 0.04) 100%);
+        pointer-events: none;
+      }
+      .wdp-hero-band {
+        position: relative;
+      }
+      .wdp-hero-band::after {
+        content: '';
+        position: absolute;
+        right: -12%;
+        top: -55%;
+        width: min(380px, 78vw);
+        height: min(240px, 42vh);
+        background: radial-gradient(ellipse at center, color-mix(in srgb, var(--wdp-accent) 18%, transparent), transparent 68%);
+        pointer-events: none;
+        opacity: 0.65;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        @keyframes wdp-chapter {
+          from {
+            opacity: 0.74;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
+        }
+        #wdp-platform-panel.wdp-chapter-tick {
+          animation: wdp-chapter 400ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+      }
+      .wdp-order-ticket {
+        position: relative;
+        background-color: rgba(20, 26, 34, 0.97);
+        background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 2.5rem 100%;
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .wdp-order-ticket::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 7px;
+        pointer-events: none;
+        opacity: 0.85;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0 11px,
+          rgba(255, 255, 255, 0.12) 11px 12px,
+          transparent 12px 22px
+        );
+        border-radius: 0 0 var(--wdp-radius) var(--wdp-radius);
+      }
+      .wdp-clause-deck {
+        background:
+          linear-gradient(165deg, rgba(255, 255, 255, 0.03) 0%, transparent 42%),
+          repeating-linear-gradient(
+            -11deg,
+            transparent 0,
+            transparent 14px,
+            rgba(255, 255, 255, 0.025) 14px,
+            rgba(255, 255, 255, 0.025) 15px
+          );
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--wdp-radius);
+      }
+    </style>
+  </head>
+  <body class="wdp-grain min-h-full">
+    <div
+      data-wdp-root
+      class="relative mx-auto max-w-5xl px-4 pb-20 pt-10 sm:px-6 lg:px-8"
+    >
+      <header class="wdp-hero-band mb-8 border-b border-wdp-line pb-8">
+        <p class="font-mono text-sm tracking-wide text-wdp-muted">WDP‑710 · 单页 HTML5 · 文档体（doc tone）</p>
+        <h1 id="hero-title" class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          美团生活服务 · 聚合收银通道模板
+        </h1>
+        <p id="hero-sub" class="mt-3 max-w-prose text-[1.125rem] leading-relaxed text-wdp-muted sm:text-[1.25rem]">
+          模板 A：面向到店/外卖合并收银场景；以下订单卡与能力矩阵为演示数据，可在联调阶段替换为真实接口字段。
+        </p>
+      </header>
+
+      <section
+        class="wdp-banner-surface mb-8 rounded-[var(--wdp-radius)] border border-white/[0.06] bg-wdp-panel/90 p-5 pt-6 shadow-wdp backdrop-blur-sm sm:p-6 sm:pt-7"
+        style="box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset"
+        aria-label="版本说明"
+      >
+        <div class="min-w-0 space-y-3 text-[1.0625rem] leading-relaxed text-wdp-text/95">
+          <p class="font-semibold">1. 范围与声明</p>
+          <p>
+            本系统基于半成品前台持续迭代：已修正市面常见版本中多处交互与文案细节。若存在争议，建议以本页状态机与矩阵行为为准进行并排比对；差异点通常集中在边界状态提示、过期回退与取消确认链路上。
+          </p>
+          <p class="text-wdp-muted">
+            2. 免责声明：以下为高保真静态模板，不连接真实支付网关；外链仅为「跳转官网」能力演示。
+          </p>
+        </div>
+      </section>
+
+      <nav class="mb-8" aria-label="平台模板切换">
+        <p class="mb-3 text-sm font-medium uppercase tracking-wider text-wdp-muted">3. 模板选择（五套独立标题）</p>
+        <div
+          id="platform-tabs"
+          class="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="tablist"
+        ></div>
+      </nav>
+
+      <div
+        id="wdp-platform-panel"
+        role="tabpanel"
+        aria-labelledby="wdp-tab-meituan"
+        class="space-y-10"
+      >
+      <section
+        class="wdp-order-ticket overflow-hidden rounded-[var(--wdp-radius)] border border-wdp-line p-5 sm:p-8"
+        aria-labelledby="order-card-heading"
+      >
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div class="min-w-0 flex-1 space-y-4">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+              <h2 id="order-card-heading" class="text-xl font-semibold sm:text-2xl">4. 订单摘要（演示）</h2>
+              <p
+                class="select-none font-mono text-[0.65rem] uppercase tracking-[0.28em] text-[var(--wdp-accent)] opacity-60 sm:text-[0.7rem]"
+                aria-hidden="true"
+              >
+                存根 · stub
+              </p>
+            </div>
+            <dl class="grid gap-3 text-[1.0625rem] sm:grid-cols-2">
+              <div>
+                <dt class="text-sm text-wdp-muted">订单号</dt>
+                <dd id="order-id" class="mt-1 font-mono text-wdp-text">MT-20260425-8F2C</dd>
+              </div>
+              <div>
+                <dt class="text-sm text-wdp-muted">应付金额</dt>
+                <dd id="order-amount" class="mt-1 font-mono text-2xl font-semibold text-wdp-text">¥ 128.50</dd>
+              </div>
+              <div class="sm:col-span-2">
+                <dt class="text-sm text-wdp-muted">支付剩余时间</dt>
+                <dd class="mt-2">
+                  <div class="h-2 overflow-hidden rounded-full bg-wdp-line">
+                    <div
+                      id="ttl-bar"
+                      class="h-full rounded-full bg-[var(--wdp-accent)] transition-[width] duration-300"
+                      style="width: 72%"
+                    ></div>
+                  </div>
+                  <p id="ttl-label" class="mt-2 text-wdp-muted">约 10:48 后订单过期（演示时钟）</p>
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div class="flex w-full shrink-0 flex-col gap-3 lg:w-56">
+            <p class="text-sm text-wdp-muted">5. 支付状态</p>
+            <p id="pay-status-badge" class="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-white/10 bg-wdp-ink px-4 text-base font-medium text-wdp-warn">
+              待支付
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                id="btn-sim-pending"
+                class="min-h-[44px] min-w-[44px] flex-1 rounded-xl border border-wdp-line bg-wdp-ink px-3 text-sm font-medium text-wdp-text transition hover:border-white/20"
+              >
+                待支付
+              </button>
+              <button
+                type="button"
+                id="btn-sim-processing"
+                class="min-h-[44px] min-w-[44px] flex-1 rounded-xl border border-wdp-line bg-wdp-ink px-3 text-sm font-medium text-wdp-text transition hover:border-white/20"
+              >
+                处理中
+              </button>
+              <button
+                type="button"
+                id="btn-sim-ok"
+                class="min-h-[44px] min-w-[44px] flex-1 rounded-xl border border-wdp-line bg-wdp-ink px-3 text-sm font-medium text-wdp-text transition hover:border-white/20"
+              >
+                成功
+              </button>
+              <button
+                type="button"
+                id="btn-sim-fail"
+                class="min-h-[44px] min-w-[44px] flex-1 rounded-xl border border-wdp-line bg-wdp-ink px-3 text-sm font-medium text-wdp-text transition hover:border-white/20"
+              >
+                失败
+              </button>
+            </div>
+            <button
+              type="button"
+              id="btn-reset-demo"
+              class="min-h-[44px] rounded-xl border border-dashed border-wdp-line px-3 text-sm text-wdp-muted hover:border-white/25 hover:text-wdp-text"
+            >
+              重置演示状态
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="wdp-clause-deck p-5 sm:p-7" aria-labelledby="matrix-heading">
+        <h2 id="matrix-heading" class="mb-2 text-xl font-semibold sm:text-2xl">
+          6. 能力矩阵
+        </h2>
+        <p class="mb-1 font-mono text-[0.95rem] leading-relaxed text-wdp-muted sm:text-[1rem]">
+          Payment Status · Cancellation · Delivery · Expiration · Success · Official
+        </p>
+        <p class="mb-6 max-w-prose text-[1.0625rem] text-wdp-muted">
+          下列六项对应需求表头。点击卡片展开「条款式说明」；部分操作会联动订单卡状态，便于验收边界行为。
+        </p>
+        <div id="matrix-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div
+          id="matrix-detail"
+          class="mt-6 hidden rounded-[var(--wdp-radius)] border border-wdp-line bg-wdp-ink/80 p-5 text-[1.0625rem] leading-relaxed"
+          role="region"
+          aria-live="polite"
+          aria-hidden="true"
+        ></div>
+      </section>
+      </div>
+
+      <footer class="mt-14 border-t border-wdp-line pt-8 text-base text-wdp-muted">
+        <p>构建：Web Design Pipeline v2 · <code class="font-mono text-wdp-text/80">single_html</code></p>
+        <p class="mt-2">调试追加 <code class="font-mono">?debug=1</code> 可在控制台查看状态快照。</p>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        /** @typedef {'meituan'|'jd'|'pdd'|'didi'|'ctrip'} PlatformKey */
+
+        /** @type {Record<PlatformKey, { docTitle: string; heroTitle: string; heroSub: string; accent: string; orderPrefix: string; amount: string; ttlHint: string }>} */
+        var PLATFORMS = {
+          meituan: {
+            docTitle: '美团模板 · 生活服务聚合收银',
+            heroTitle: '美团生活服务 · 聚合收银通道模板',
+            heroSub:
+              '模板 A：到店/外卖合并收银。强调到店核销与配送并行时的统一状态回写；下列为演示字段。',
+            accent: '#22c55e',
+            orderPrefix: 'MT',
+            amount: '¥ 128.50',
+            ttlHint: '适用于到店自提与即时配送混合单'
+          },
+          jd: {
+            docTitle: '京东模板 · 商城零售结算前台',
+            heroTitle: '京东商城 · 零售订单结算模板',
+            heroSub: '模板 B：自营/第三方店铺统一结算壳层；突出发货节点与售后入口的并列展示。',
+            accent: '#e11d48',
+            orderPrefix: 'JD',
+            amount: '¥ 899.00',
+            ttlHint: '与仓储出库状态联动（演示为静态）'
+          },
+          pdd: {
+            docTitle: '拼多多模板 · 拼团支付通道',
+            heroTitle: '拼多多 · 拼团低价订单支付模板',
+            heroSub: '模板 C：成团倒计时与失败回补提示；矩阵用于验收取消/过期文案是否可达。',
+            accent: '#f97316',
+            orderPrefix: 'PDD',
+            amount: '¥ 39.90',
+            ttlHint: '低价单更易触发边界：请重点看过期与失败提示'
+          },
+          didi: {
+            docTitle: '滴滴模板 · 出行费用结算前台',
+            heroTitle: '滴滴出行 · 行程费用收银模板',
+            heroSub: '模板 D：行程结束后的费用确认与支付；强调行中/行后状态切换的连贯性。',
+            accent: '#f59e0b',
+            orderPrefix: 'DD',
+            amount: '¥ 46.10',
+            ttlHint: '演示：行后待支付 → 成功闭环'
+          },
+          ctrip: {
+            docTitle: '携程模板 · 酒旅订单支付',
+            heroTitle: '携程旅行 · 酒旅订单支付模板',
+            heroSub: '模板 E：酒店/机票合并入口的支付壳层；发货语义映射为「出票/确认入住」节点。',
+            accent: '#38bdf8',
+            orderPrefix: 'CTRIP',
+            amount: '¥ 1,560.00',
+            ttlHint: '适用于预约类商品的过期策略展示'
+          }
+        };
+
+        /** @type {PlatformKey[]} */
+        var ORDER = ['meituan', 'jd', 'pdd', 'didi', 'ctrip'];
+
+        var MATRIX = [
+          {
+            key: 'pay_status',
+            title: '支付状态',
+            en: 'Payment Status',
+            icon: '◆',
+            body: '定义：支付在订单生命周期中的主状态机（待支付 / 处理中 / 成功 / 失败）。本模板将失败原因收敛为可复制的错误码与重试入口，避免仅展示 Toast。'
+          },
+          {
+            key: 'cancel',
+            title: '订单取消',
+            en: 'Order Cancellation',
+            icon: '✕',
+            body: '定义：用户或系统触发的取消。演示：点击后订单卡标记为已取消，支付按钮禁用，并保留审计痕迹（时间戳占位）。',
+            action: 'cancel'
+          },
+          {
+            key: 'delivery',
+            title: '订单发货',
+            en: 'Order Delivery',
+            icon: '↗',
+            body: '定义：履约节点回写。出行/酒旅场景映射为「开始服务 / 出票 / 入住确认」；此处以静态时间线占位，接口联调时替换为真实事件列表。',
+            action: 'deliver'
+          },
+          {
+            key: 'expire',
+            title: '订单过期',
+            en: 'Order Expiration',
+            icon: '⏱',
+            body: '定义：支付超时关闭。演示将进度条推满并切换为「已过期」；可点「重置演示状态」恢复。',
+            action: 'expire'
+          },
+          {
+            key: 'success',
+            title: '支付成功',
+            en: 'Payment Success',
+            icon: '✓',
+            body: '定义：渠道回调与前端终态一致。演示：成功态下高亮对账摘要并降低次要操作噪声。',
+            action: 'success'
+          },
+          {
+            key: 'official',
+            title: '跳转官网',
+            en: 'Jump to Official Page',
+            icon: '↗',
+            body: '定义：向外站官方页引流的能力占位。点击下方按钮在新窗口打开演示域（非真实业务域名）。',
+            action: 'official'
+          }
+        ];
+
+        var state = {
+          platform: /** @type {PlatformKey} */ ('meituan'),
+          payment: /** @type {'pending'|'processing'|'success'|'failed'} */ ('pending'),
+          cancelled: false,
+          delivered: false,
+          expired: false,
+          matrixKey: /** @type {string|null} */ (null),
+          ttl: 72,
+          ttlTimer: /** @type {number|null} */ (null)
+        };
+
+        var lastPlatform = /** @type {PlatformKey|null} */ (null);
+        var chapterAnimTimer = /** @type {number|null} */ (null);
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function logDebug() {
+          if (!/\bdebug=1\b/.test(location.search)) return;
+          console.info('[wdp-710]', JSON.parse(JSON.stringify(state)));
+        }
+
+        function setAccent(accent) {
+          document.documentElement.style.setProperty('--wdp-accent', accent);
+        }
+
+        function syncPanelAria() {
+          var panel = $('wdp-platform-panel');
+          if (panel) panel.setAttribute('aria-labelledby', 'wdp-tab-' + state.platform);
+        }
+
+        function pulseChapterAnim() {
+          var panel = $('wdp-platform-panel');
+          if (!panel || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          panel.classList.remove('wdp-chapter-tick');
+          panel.offsetWidth;
+          panel.classList.add('wdp-chapter-tick');
+          if (chapterAnimTimer) window.clearTimeout(chapterAnimTimer);
+          chapterAnimTimer = window.setTimeout(function () {
+            panel.classList.remove('wdp-chapter-tick');
+            chapterAnimTimer = null;
+          }, 450);
+        }
+
+        function renderTabs() {
+          var host = $('platform-tabs');
+          host.innerHTML = '';
+          ORDER.forEach(function (key, idx) {
+            var p = PLATFORMS[key];
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.role = 'tab';
+            btn.id = 'wdp-tab-' + key;
+            btn.setAttribute('aria-controls', 'wdp-platform-panel');
+            btn.setAttribute('aria-selected', key === state.platform ? 'true' : 'false');
+            btn.dataset.platform = key;
+            btn.className =
+              'shrink-0 rounded-2xl border px-4 py-3 text-left text-[1rem] font-medium transition min-h-[48px] sm:min-w-[140px] ' +
+              (key === state.platform
+                ? 'border-white/25 bg-wdp-ink text-wdp-text shadow-lg'
+                : 'border-wdp-line bg-wdp-panel/60 text-wdp-muted hover:border-white/15 hover:text-wdp-text');
+            btn.innerHTML =
+              '<span class="block text-xs font-mono text-wdp-muted/90">' +
+              String(idx + 1) +
+              '</span><span class="mt-1 block">' +
+              p.docTitle.split(' · ')[0] +
+              '</span>';
+            btn.addEventListener('click', function () {
+              switchPlatform(key);
+            });
+            host.appendChild(btn);
+          });
+          syncPanelAria();
+        }
+
+        function renderMatrix() {
+          var grid = $('matrix-grid');
+          grid.innerHTML = '';
+          MATRIX.forEach(function (item) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className =
+              'group flex min-h-[120px] w-full flex-col rounded-[var(--wdp-radius)] border border-wdp-line bg-wdp-panel/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-white/20 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wdp-accent)]';
+            btn.setAttribute('aria-expanded', state.matrixKey === item.key ? 'true' : 'false');
+            btn.innerHTML =
+              '<span class="font-mono text-sm text-[var(--wdp-accent)]">' +
+              item.icon +
+              '</span>' +
+              '<span class="mt-2 text-lg font-semibold text-wdp-text">' +
+              item.title +
+              '</span>' +
+              '<span class="mt-1 font-mono text-xs text-wdp-muted">' +
+              item.en +
+              '</span>' +
+              '<span class="mt-3 line-clamp-2 text-[0.95rem] text-wdp-muted group-hover:text-wdp-text/90">' +
+              item.body.slice(0, 72) +
+              '…' +
+              '</span>';
+            btn.addEventListener('click', function () {
+              onMatrix(item);
+            });
+            grid.appendChild(btn);
+          });
+        }
+
+        function showMatrixDetail(html) {
+          var el = $('matrix-detail');
+          el.innerHTML = html;
+          el.classList.remove('hidden');
+          el.removeAttribute('aria-hidden');
+        }
+
+        function hideMatrixDetail() {
+          var el = $('matrix-detail');
+          el.classList.add('hidden');
+          el.innerHTML = '';
+          el.setAttribute('aria-hidden', 'true');
+        }
+
+        function onMatrix(item) {
+          if (state.matrixKey === item.key) {
+            state.matrixKey = null;
+            hideMatrixDetail();
+            renderMatrix();
+            logDebug();
+            return;
+          }
+          state.matrixKey = item.key;
+          if (item.action === 'cancel') {
+            state.cancelled = true;
+            state.payment = 'failed';
+          } else if (item.action === 'deliver') {
+            state.delivered = true;
+          } else if (item.action === 'expire') {
+            state.expired = true;
+            state.ttl = 0;
+            state.payment = 'failed';
+            if (state.ttlTimer) {
+              clearInterval(state.ttlTimer);
+              state.ttlTimer = null;
+            }
+          } else if (item.action === 'success') {
+            state.expired = false;
+            state.cancelled = false;
+            state.payment = 'success';
+          } else if (item.action === 'official') {
+            window.open('https://example.com/official-placeholder', '_blank', 'noopener,noreferrer');
+          }
+          var extra = '';
+          if (item.action === 'official') {
+            extra =
+              '<p class="mt-3 text-wdp-muted">已尝试打开新窗口：<code class="font-mono text-wdp-text/90">example.com</code>（占位）。</p>';
+          }
+          showMatrixDetail(
+            '<h3 class="text-lg font-semibold text-wdp-text">' +
+              item.title +
+              ' · <span class="font-mono text-sm text-wdp-muted">' +
+              item.en +
+              '</span></h3><p class="mt-3">' +
+              item.body +
+              '</p>' +
+              extra
+          );
+          syncOrderUi();
+          renderTabs();
+          renderMatrix();
+          logDebug();
+        }
+
+        function fmtOrderId(prefix) {
+          var t = new Date();
+          var y = t.getFullYear();
+          var m = String(t.getMonth() + 1).padStart(2, '0');
+          var d = String(t.getDate()).padStart(2, '0');
+          var r = Math.random().toString(16).slice(2, 6).toUpperCase();
+          return prefix + '-' + y + m + d + '-' + r;
+        }
+
+        function switchPlatform(key) {
+          var changed = lastPlatform !== null && lastPlatform !== key;
+          lastPlatform = key;
+          state.platform = key;
+          var p = PLATFORMS[key];
+          document.title = p.docTitle;
+          $('hero-title').textContent = p.heroTitle;
+          $('hero-sub').textContent = p.heroSub;
+          setAccent(p.accent);
+          $('order-id').textContent = fmtOrderId(p.orderPrefix);
+          $('order-amount').textContent = p.amount;
+          $('ttl-label').textContent = '约 15:00 演示窗口 · ' + p.ttlHint;
+          state.matrixKey = null;
+          hideMatrixDetail();
+          resetDemo(false);
+          if (changed) pulseChapterAnim();
+          logDebug();
+        }
+
+        function paymentLabel() {
+          if (state.cancelled) return { text: '已取消', cls: 'text-wdp-muted border-white/10' };
+          if (state.expired) return { text: '已过期', cls: 'text-wdp-bad border-red-500/30' };
+          if (state.payment === 'processing') return { text: '处理中', cls: 'text-wdp-warn border-amber-400/30' };
+          if (state.payment === 'success') return { text: '支付成功', cls: 'text-wdp-ok border-emerald-400/30' };
+          if (state.payment === 'failed') return { text: '支付失败', cls: 'text-wdp-bad border-red-500/30' };
+          return { text: '待支付', cls: 'text-wdp-warn border-amber-400/20' };
+        }
+
+        function syncOrderUi() {
+          var badge = $('pay-status-badge');
+          var pl = paymentLabel();
+          badge.textContent = pl.text;
+          badge.className =
+            'inline-flex min-h-[44px] items-center justify-center rounded-xl border px-4 text-base font-medium ' + pl.cls;
+          var bar = $('ttl-bar');
+          bar.style.width = String(Math.max(0, Math.min(100, state.ttl))) + '%';
+          if (state.expired) bar.classList.add('bg-wdp-bad');
+          else bar.classList.remove('bg-wdp-bad');
+          var deliveredNote = state.delivered ? ' · 履约节点已回写（演示）' : '';
+          $('ttl-label').textContent =
+            (state.expired ? '订单已过期，请重新下单或联系客服。' : '支付窗口剩余可视化：' + Math.round(state.ttl) + '%') +
+            deliveredNote;
+        }
+
+        function resetDemo(full) {
+          if (state.ttlTimer) {
+            clearInterval(state.ttlTimer);
+            state.ttlTimer = null;
+          }
+          state.payment = 'pending';
+          state.cancelled = false;
+          state.delivered = false;
+          state.expired = false;
+          state.ttl = 72;
+          if (full) state.matrixKey = null;
+          if (full) hideMatrixDetail();
+          syncOrderUi();
+          renderTabs();
+          renderMatrix();
+          startTtlTick();
+          logDebug();
+        }
+
+        function startTtlTick() {
+          if (state.ttlTimer) return;
+          state.ttlTimer = window.setInterval(function () {
+            if (state.expired || state.cancelled || state.payment === 'success') return;
+            state.ttl = Math.max(0, state.ttl - 0.35);
+            if (state.ttl <= 0) {
+              state.expired = true;
+              state.payment = 'failed';
+              clearInterval(/** @type {number} */ (state.ttlTimer));
+              state.ttlTimer = null;
+            }
+            syncOrderUi();
+          }, 600);
+        }
+
+        function wireChrome() {
+          $('btn-sim-pending').addEventListener('click', function () {
+            state.payment = 'pending';
+            state.expired = false;
+            state.cancelled = false;
+            syncOrderUi();
+            logDebug();
+          });
+          $('btn-sim-processing').addEventListener('click', function () {
+            state.payment = 'processing';
+            syncOrderUi();
+            logDebug();
+          });
+          $('btn-sim-ok').addEventListener('click', function () {
+            state.payment = 'success';
+            state.expired = false;
+            syncOrderUi();
+            logDebug();
+          });
+          $('btn-sim-fail').addEventListener('click', function () {
+            state.payment = 'failed';
+            syncOrderUi();
+            logDebug();
+          });
+          $('btn-reset-demo').addEventListener('click', function () {
+            resetDemo(true);
+          });
+        }
+
+        function init() {
+          document.documentElement.classList.add('dark');
+          wireChrome();
+          switchPlatform('meituan');
+          logDebug();
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
