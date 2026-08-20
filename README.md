@@ -1,78 +1,169 @@
-# UI Data Synth Pipeline
+# Web Design Pipeline v8.1
 
-端到端 **网站设计与前端生成流水线**：从一句需求或测试 JSON 出发，经 PM → 设计师 → 前端，产出可复用的 PRD、设计系统与可运行前端，并保存完整过程产物，便于批量测试与 UI 数据合成。
+端到端网站与 App 原型生成流水线：把一条自然语言需求或测试集记录依次交给 PM、Designer、Frontend 三个 Agent，最终归档需求规格、设计规范、React 工程源码和可直接打开的单文件前端。
 
-## 能做什么
+当前有效实现位于 `.claude/`。根目录旧文档曾描述 `.agents/skills/`、v4 以及多份阶段产物，这些内容已经不再代表当前主流程。
 
-- **输入**：自然语言需求（query）或测试集 JSON（每条含 `domain`、`user_req` 等）
-- **流程**：解析输入 → PM 产出 PRD/需求拆解/信息架构 → 设计师产出风格研究/设计系统/组件规格/动效 → 前端产出可运行页面与技术决策/自检
-- **输出**：每个 case 独立目录，包含文档与前端代码，支持单文件 HTML 或多文件 React/Vue 等
+## 当前能力
 
-适用于：落地页、Dashboard、开发者工具、SaaS 工作台等需要「需求 → 设计 → 实现」全链路的场景，以及需要沉淀设计资产、做批量 case 测试或合成训练数据的场景。
+- 接受单条自然语言需求，或包含 `id`、`domain`、`user_req` 等字段的测试数据。
+- PM Agent 把模糊需求压缩为固定 11 字段的 `prdSpec.json`。
+- Designer Agent 基于真实 WebSearch 结果生成可执行的 `design_brief.md`，其中包含设计系统、组件规范、交互清单、视觉方案和 Tailwind 配置。
+- Frontend Agent 使用固定工程栈实现页面和完整交互，并打包为自包含的 `bundle.html`。
+- 每个 case 同时保留 `_build/` 工程目录，便于源码审查、调试和二次迭代。
+- `.cursor/skills/` 与 `scripts/` 提供旧版 case 的慢思考数据合成工具，但不属于 v8.1 主生成链路。
 
-## 目录结构
+## v8.1 固定技术栈
 
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS 3.4
+- shadcn/ui
+- pnpm
+- Parcel + `html-inline`
+
+第三方视觉库按需通过 `pnpm add` 安装，并打入 `bundle.html`。当前 v8.1 工程规则禁用 p5.js；噪点或纸感纹理应使用 CSS、SVG `feTurbulence` 等替代方案。
+
+## 三阶段交付
+
+| 阶段 | 输入 | 唯一阶段产物 | 职责 |
+| --- | --- | --- | --- |
+| PM | query 或测试记录 | `01_pm/prdSpec.json` | 固化用户意图、目标用户、页面类型、功能、视觉、交互和隐性要求 |
+| Designer | `prdSpec.json` | `02_designer/design_brief.md` | 实时风格调研、设计系统、组件约束、响应式、动效与 Tailwind 双段配置 |
+| Frontend | `prdSpec.json` + `design_brief.md` | `03_frontend/bundle.html` | 初始化 React 工程、实现功能与交互、构建并内联为单文件 |
+
+Frontend 阶段还会保留 `03_frontend/_build/`。它是可继续开发的工程源码，不是替代 `bundle.html` 的第二个最终交付物。
+
+## 标准输出结构
+
+```text
+outputs/
+└── {case_id}@v8_{YYYYMMDD}/
+    ├── meta.json
+    ├── 01_pm/
+    │   └── prdSpec.json
+    ├── 02_designer/
+    │   └── design_brief.md
+    └── 03_frontend/
+        ├── bundle.html
+        └── _build/
+            ├── package.json
+            ├── tailwind.config.js
+            ├── vite.config.ts
+            ├── node_modules/
+            └── src/
+                ├── main.tsx
+                ├── App.tsx
+                ├── index.css
+                ├── components/
+                └── lib/utils.ts
 ```
-ui-data-synth-pipeline/
-├── .agents/skills/          # 技能包（PM / 设计师 / 前端 / 生成式 UI 等）
-│   ├── web-design-pipeline/ # 主流水线：端到端网站生成
-│   ├── designer/            # 设计灵感调研、UI/UX 设计系统
-│   ├── frontend/            # 生成式 UI + 算法艺术
-│   └── ...
-├── outputs/                 # 按 case 归档的流水线产出
-│   └── <case_id>/
-│       ├── meta.json
-│       ├── 01_pm/           # prd.md, requirement_breakdown.json, ia_structure.json
-│       ├── 02_designer/     # style_research, design_system, component_specs, visual_effects
-│       └── 03_frontend/     # index.html 或 src/, tech_decision.json, self_review.json
-├── test_data/               # 测试输入（如 example_inputs_5.json）
-├── docs/
-└── user_background/
-```
 
-## 输入格式
+命名规则：
 
-**单条 query**：直接给一句产品描述或需求。
-
-**测试集 JSON**：每项建议包含 `id`、`domain`、`user_req`，可选 `original_example_text`。示例见 `test_data/example_inputs_5.json`。
-
-## 示例 Case
-
-- **001_devtools**：PerfScope —— 面向工程师的性能分析工作台（高密度数据、时间线、瓶颈列表、自然语言查询等），技术栈 HTML+Tailwind，含 Canvas 动效。  
-  产出位置：`outputs/001_devtools/`，前端入口 `outputs/001_devtools/03_frontend/index.html`。
+- 测试集 case：`{NNN}_{domain_slug}@v8_{YYYYMMDD}`
+- 单条需求：`{2-4个英文小写词}@v8_{YYYYMMDD}`
+- 同日重复运行：在目录末尾追加 `-2`、`-3`
 
 ## 使用方式
 
-1. 在支持本流水线的环境中，提供 **一条 query** 或 **测试 JSON 文件路径**。
-2. 按顺序执行：PM Agent → Designer Agent → Frontend Agent，产出会写入 `outputs/<case_id>/`。
-3. 前端产物可直接在浏览器中打开或接入现有项目。
+### 1. 环境要求
 
-### 批量生成多个 case 目录（编排脚本）
+- Node.js 18+
+- pnpm 8+
+- Bash
+- 能调用 `.claude/agents/` 的 Claude Code 兼容 Agent 环境
+- Designer 阶段可用的 WebSearch 工具
 
-若要从测试集 **批量建壳** 并生成每个 case 的 Agent 执行说明（基于 **web-design-pipeline**），可使用：
+项目记录的已验证环境为 Node.js 22.11、pnpm 8.7.5。
 
-`python scripts/batch_web_design_pipeline.py --inputs test_data/example_inputs_5.json --out-root outputs --batch-no-pause`
+### 2. 启动主流程
 
-说明见 [`scripts/README.md`](./scripts/README.md)。脚本会创建 `00_RUN_WEB_DESIGN_PIPELINE.md`，仍需在 Cursor Agent 中按文档跑完三阶段；完成后可用 `scripts/batch_synth_causal_chains.py` 对 `outputs/` 下各 case 批量合成因果链数据。
+在项目根目录向 Agent 提供一句网站/App 需求或测试 JSON 路径，并要求使用：
 
-## 技能包说明
+```text
+.claude/skills/web-design-pipeline/SKILL.md
+```
 
-| 技能包 | 用途 |
-|--------|------|
-| `web-design-pipeline` | 主流水线：需求澄清、设计规范、前端实现与归档 |
-| `design-inspiration-ai` | 设计灵感与概念发散 |
-| `ui-ux-pro-max` | UI/UX 设计智能（风格、配色、图表、技术栈） |
-| `generative-ui` | 生成式 UI + 算法艺术（Mode A 背景层 / Mode B 交互组件 / Mode C 独立艺术） |
-| `skill-creator` | 技能包的创建、评估与优化 |
+主流程应连续执行 PM → Designer → Frontend，除非输入缺失会造成实质性架构分叉，否则不在阶段之间等待确认。
 
-## 仓库
+### 3. 验收产物
 
-- **GitHub**：<https://github.com/PlevanTem/ui-data-synth-pipeline>
+至少检查：
 
-## 架构文档
+1. `prdSpec.json` 是合法 JSON，并且包含固定的 11 个字段。
+2. `design_brief.md` 含真实调研依据、设计约束、交互清单和 Tailwind Block A/Block B。
+3. `bundle.html` 存在、以 `<!DOCTYPE html>` 开头且小于 5 MB。
+4. 浏览器通过 `file://` 直接打开 `bundle.html` 后，主流程、筛选、表单、导航和状态反馈可操作。
+5. `_build/` 被保留，并可在其中运行 `pnpm dev` 做后续开发。
 
-完整架构图（流水线总览、Skill 层级、Agent 数据流、目录结构）见 [`ARCHITECTURE.md`](./ARCHITECTURE.md)。
+Frontend Agent 的自动流程只做构建级校验，不在 Agent 内循环启动 dev server 或浏览器验收；最终交互验收由使用者打开 `bundle.html` 完成。
 
-## 许可与贡献
+## 项目目录
 
-当前为项目内部流水线与示例仓库。修改需求或扩展 case 时，建议先更新对应 PRD/设计文档再改代码，以保持可追溯性。
+```text
+.
+├── .claude/
+│   ├── agents/
+│   │   ├── pm-agent.md
+│   │   ├── designer-agent.md
+│   │   └── frontend-agent.md
+│   └── skills/web-design-pipeline/
+│       ├── SKILL.md
+│       ├── CHANGELOG.md
+│       ├── references/
+│       │   ├── output-structure.md
+│       │   ├── design-guardrails.md
+│       │   └── engineering-guardrails.md
+│       └── scripts/
+│           ├── init-artifact.sh
+│           ├── bundle-artifact.sh
+│           └── shadcn-components.tar.gz
+├── .cursor/skills/
+│   ├── slow-think-causal-chain/
+│   └── slow-think-long-chain/
+├── scripts/                    # 批处理与训练数据合成工具
+├── test/                       # 测试数据
+├── outputs/                    # case 归档
+├── README.md
+└── ARCHITECTURE.md
+```
+
+## 辅助脚本与兼容状态
+
+| 工具 | 作用 | 当前状态 |
+| --- | --- | --- |
+| `scripts/batch_web_design_pipeline.py` | 批量创建 case 骨架和 Cursor 执行说明 | 遗留 v4 实现：默认版本、技能路径和交付清单均未同步到 v8.1，不应直接作为 v8.1 主入口 |
+| `scripts/run_cursor_agent_batch.sh` | 按 manifest 调用 Cursor CLI | 依赖上面的遗留骨架格式 |
+| `scripts/batch_synth_causal_chains.py` | 通过 OpenAI 兼容 API 批量生成因果链 JSONL | 可扫描多种源码路径，但提示规范仍以旧版多文件产物为主，使用前需核对 v8.1 case 内容 |
+| `scripts/run_cursor_agent_batch_causal_chain.sh` | 通过 Cursor Agent 逐 case 合成因果链 | 面向 `.cursor/skills/slow-think-causal-chain` 的后处理流程 |
+| `scripts/build_causal_chains_003.py` | 为固定的 003 case 拼装回归样本 | 固定路径的历史工具，不是通用入口 |
+
+脚本细节见 [`scripts/README.md`](./scripts/README.md)。其中的 v4 示例和旧产物名属于历史行为，不应覆盖本 README 的 v8.1 主流程说明。
+
+## 规范来源与已知不一致
+
+当前行为按以下优先级理解：
+
+1. [`output-structure.md`](./.claude/skills/web-design-pipeline/references/output-structure.md) 的 v8.1 归档规则。
+2. [`frontend-agent.md`](./.claude/agents/frontend-agent.md) 与 [`engineering-guardrails.md`](./.claude/skills/web-design-pipeline/references/engineering-guardrails.md) 的实现规则。
+3. [`SKILL.md`](./.claude/skills/web-design-pipeline/SKILL.md) 的顶层编排规则。
+4. 根目录 `scripts/` 中尚未迁移的 v4 辅助流程。
+
+仓库当前仍有三处需要后续代码/规则修正的冲突：
+
+- `SKILL.md` front matter 仍写 `version: 8.0`，而 `CHANGELOG.md` 和 `output-structure.md` 已定义 v8.1。
+- `SKILL.md` 部分段落仍要求打包后删除 `_build/`、仍把 p5.js 列为可选库；v8.1 的实际规则是保留 `_build/` 并禁用 p5.js。
+- 批量建壳脚本仍默认 v4，并生成 `.agents/skills/...` 路径和旧版多文件交付清单。
+
+这些冲突在本次仅更新说明文档的范围内没有修改。执行 v8.1 时，以前述优先级为准。
+
+## 进一步阅读
+
+- [架构与数据流](./ARCHITECTURE.md)
+- [当前输出规范](./.claude/skills/web-design-pipeline/references/output-structure.md)
+- [设计约束](./.claude/skills/web-design-pipeline/references/design-guardrails.md)
+- [工程约束](./.claude/skills/web-design-pipeline/references/engineering-guardrails.md)
+- [版本记录](./.claude/skills/web-design-pipeline/CHANGELOG.md)
+

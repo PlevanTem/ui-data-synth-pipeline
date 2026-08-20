@@ -1,334 +1,266 @@
-# Architecture
+# Web Design Pipeline v8.1 Architecture
 
-UI Data Synth Pipeline 的整体架构、Agent 实体关系与数据流文档。
+本文描述当前 `.claude/` 主流程的真实架构，并把 `.cursor/` 与 `scripts/` 中尚未迁移的旧版工具明确隔离。当前主流程不是旧文档中的 `.agents/skills/` v4 多产物架构。
 
----
-
-## 1. 端到端流水线总览
-
-从一条 query 或测试 JSON 出发，经 `PM -> Designer -> Frontend` 三阶段，产出可运行前端与完整过程数据。
+## 1. 系统边界
 
 ```mermaid
-flowchart TD
-    INPUT[/"📥 Input\n自然语言 Query\n或测试 JSON"/]
+flowchart LR
+    U["用户需求或测试记录"] --> O["Web Design Pipeline 编排器"]
 
-    subgraph PIPELINE ["🔄 Web Design Pipeline"]
-        direction TB
-        PM["🗂️ PM Agent\n需求压缩\n信息架构\nPRD 生成"]
-        D["🎨 Designer Agent\n趋势调研\n风格探索\n设计系统与组件规格\n视觉特效判断"]
-        FE["💻 Frontend Agent\n技术栈选型\n代码实现\nself_review"]
-
-        PM -->|"prd.md\nrequirement_breakdown.json\nia_structure.json"| D
-        D -->|"design_brief.md\ndesign_system.json\ncomponent_specs.json\nvisual_effects.json"| FE
+    subgraph MAIN["v8.1 主生成链路 · .claude/"]
+        O --> PM["PM Agent"]
+        PM --> D["Designer Agent"]
+        D --> FE["Frontend Agent"]
+        D --> WS["WebSearch"]
+        FE --> BS["本地脚手架与打包脚本"]
     end
 
-    subgraph TOOLS ["🔧 Standalone Skills"]
-        DI["design-inspiration-ai\n趋势扫描\nWebSearch\n概念发散"]
-        UU["ui-ux-pro-max\n设计系统收敛\nsearch.py\nanimated-components.csv"]
-        GU["generative-ui\nMode A 背景层\nMode B 交互组件\nMode C 算法艺术\nMode D 动效组件库"]
+    BS --> CASE["outputs/{case}@v8_{date}/"]
+
+    subgraph POST["可选后处理 · .cursor/ + scripts/"]
+        CASE -.-> CC["因果链样本合成"]
+        CASE -.-> LC["长链样本合成"]
     end
 
-    subgraph ASSETS ["📚 Asset Library"]
-        AL["trend-notes/\nstyle-recipes/\npalette-strategies/\nmotion-patterns/\ngenerative-recipes/\nanti-patterns.md"]
-    end
-
-    subgraph OUT ["📦 Outputs"]
-        direction LR
-        O1["01_pm"]
-        O2["02_designer"]
-        O3["03_frontend"]
-        META["meta.json"]
-    end
-
-    INPUT --> PIPELINE
-
-    D -.->|"读取 SKILL\n趋势扫描"| DI
-    D -.->|"读取 SKILL\n检索资产"| UU
-    FE -.->|"按需读取 SKILL\n生成视觉或动效组件"| GU
-
-    PM --> O1
-    D --> O2
-    FE --> O3
-    PM --> META
-    D -->|"沉淀可复用结论"| AL
-    AL -.->|"历史资产查询"| D
+    LEGACY["v4 批量建壳脚本"] -.->|"尚未迁移，不属于 v8.1 主入口"| O
 ```
 
----
+主链路只负责生成网站/App case。慢思考数据合成是读取已完成 case 的后处理流程，不参与页面生成。
 
-## 2. Skill 层级与调用依赖
+## 2. 组件与职责
 
-两层结构：上层是独立工具库，下层是 pipeline 编排层。
+| 组件 | 位置 | 读取 | 写入 | 责任边界 |
+| --- | --- | --- | --- | --- |
+| Pipeline 编排规则 | `.claude/skills/web-design-pipeline/SKILL.md` | 用户输入、输出规范 | case 目录与元数据 | 控制三阶段顺序、命名和交付纪律 |
+| PM Agent | `.claude/agents/pm-agent.md` | query/测试记录 | `01_pm/prdSpec.json` | 把需求压缩为固定 Schema，不负责视觉实现 |
+| Designer Agent | `.claude/agents/designer-agent.md` | `prdSpec.json`、设计约束、WebSearch 结果 | `02_designer/design_brief.md` | 把需求转成可执行设计系统，不写前端代码 |
+| Frontend Agent | `.claude/agents/frontend-agent.md` | `prdSpec.json`、`design_brief.md`、工程约束 | `_build/`、`bundle.html` | 实现功能与交互，完成构建和归档 |
+| 初始化脚本 | `.claude/skills/web-design-pipeline/scripts/init-artifact.sh` | 目标 `_build` 路径、shadcn 预包 | React/Vite/Tailwind/shadcn 工程 | 创建一致的工程基线 |
+| 打包脚本 | `.claude/skills/web-design-pipeline/scripts/bundle-artifact.sh` | `_build` 工程 | `_build/bundle.html` | Parcel 构建并通过 `html-inline` 内联资源 |
+| 设计约束 | `references/design-guardrails.md` | 产品和视觉需求 | Designer 决策约束 | 防止模板化、不可读和不可用的设计 |
+| 工程约束 | `references/engineering-guardrails.md` | 设计规范和源码 | Frontend 实现约束 | 固定技术栈、模块兼容、文件协议和体积要求 |
+| 输出规范 | `references/output-structure.md` | 管线版本 | case 目录结构 | 当前 v8.1 归档事实来源 |
 
-```mermaid
-flowchart TB
-    subgraph L1 ["第一层：独立可复用 Skill"]
-        DI["designer/\ndesign-inspiration-ai"]
-        UU["designer/\nui-ux-pro-max\n(含 animated-components.csv)"]
-        GU["frontend/\ngenerative-ui\n(Mode A/B/C/D)"]
-        SC["skill-creator"]
-    end
+表中 `references/` 均位于 `.claude/skills/web-design-pipeline/` 下。
 
-    subgraph L2 ["第二层：Pipeline 编排层"]
-        subgraph WDP ["web-design-pipeline/"]
-            ENTRY["SKILL.md\n入口编排"]
-            PMA["agents/pm-agent.md"]
-            DA["agents/designer-agent.md"]
-            FEA["agents/frontend-agent.md"]
-            REF["references/\noutput-structure.md\nuiux-asset-library/\nCHANGELOG.md"]
+## 3. 数据契约
 
-            ENTRY --> PMA
-            ENTRY --> DA
-            ENTRY --> FEA
-            ENTRY --> REF
-        end
-    end
+### 3.1 输入
 
-    DA  -->|"读取并遵循"| DI
-    DA  -->|"读取并调用 search.py"| UU
-    FEA -->|"按需读取"| GU
-    DA  <-->|"读取已有资产\n沉淀新结论"| REF
+流水线接受两类输入：
 
-    style L1 fill:#f0f7ff,stroke:#4a9eff
-    style L2 fill:#fff8f0,stroke:#ff9a4a
-    style WDP fill:#fff8f0,stroke:#ff9a4a,stroke-dasharray:4
+- 自然语言 query。
+- 测试记录；需求文本为必需信息，`id`、`domain`、`user_req` 等字段用于命名和上下文补全。
+
+只有缺失信息会造成实质性架构分叉时，才在 PM 阶段前向用户提问。
+
+### 3.2 PM → Designer/Frontend
+
+`prdSpec.json` 固定包含 11 个字段，字段名不可新增、删除或重命名：
+
+```text
+user_intent
+target_user
+usage_context
+platform
+page_type
+primary_task
+secondary_tasks
+functional_requirements
+visual_requirements
+interaction_requirements
+implicit_requirements
 ```
 
----
+Designer 主要消费视觉、交互、用户与场景字段；Frontend 把 `functional_requirements` 与 `implicit_requirements` 作为验收红线。
 
-## 3. Agent 实体关系与交付物
+### 3.3 Designer → Frontend
 
-这一层强调每个 Agent 的输入、输出与外部依赖。
+`design_brief.md` 是单一设计契约，至少包含：
 
-```mermaid
-erDiagram
-    INPUT {
-        string query_or_json "用户输入"
-        string id "可选：case ID"
-        string domain "可选：领域标签"
-        string user_req "可选：需求文本"
-    }
+- 设计问题陈述与 WebSearch 趋势证据。
+- 视觉主题、色彩角色、排版、间距、层级和响应式策略。
+- 核心组件样式、状态和 shadcn 映射。
+- 页面交互清单、动效节奏和降级策略。
+- Tailwind Block A：`src/index.css` 的 shadcn HSL CSS 变量。
+- Tailwind Block B：`tailwind.config.js` 的 `theme.extend`。
 
-    PM_AGENT {
-        string role "需求压缩 + 信息架构"
-        string reads "INPUT"
-        string produces "01_pm/ 三份文件"
-    }
+Frontend 不应重新发明设计系统，而应把这份契约直接映射到工程。
 
-    DESIGNER_AGENT {
-        string role "风格探索 + 设计系统 + 视觉特效判断"
-        string reads "01_pm/ + uiux-asset-library/"
-        string invokes "design-inspiration-ai + ui-ux-pro-max"
-        string produces "02_designer/ 五份文件"
-    }
+### 3.4 Frontend → 使用者
 
-    FRONTEND_AGENT {
-        string role "技术选型 + 代码实现（TypeScript / 组件框架）"
-        string reads "01_pm/ + 02_designer/"
-        string invokes "generative-ui（按需：Mode A/B/C/D）"
-        string produces "03_frontend/ 多文件源码 + 两份 JSON"
-    }
+`bundle.html` 是唯一最终前端交付：
 
-    PM_DELIVERABLES {
-        file prd_md "产品需求文档"
-        file requirement_breakdown "MoSCoW 需求拆解 JSON"
-        file ia_structure "信息架构 JSON"
-    }
+- 自包含 HTML、CSS、JavaScript 和 npm 依赖。
+- Google Fonts 可以保持外链。
+- 必须支持 `file://` 直接打开。
+- 目标体积小于 5 MB。
 
-    DESIGNER_DELIVERABLES {
-        file style_research_md "风格探索记录（含趋势证据 + generative 调研）"
-        file design_brief_md "给 Frontend 的执行摘要"
-        file design_system_json "色彩/排版/间距/动效 token + generative 美学参数"
-        file component_specs_json "组件规格 + 状态 + 交互 + 组件间联动"
-        file visual_effects_json "特效建议：effect_type / generative_combination / component_library_selections"
-    }
+`_build/` 是保留的工程源码与依赖缓存，用于审查和迭代，不改变 `bundle.html` 的最终交付地位。
 
-    FRONTEND_DELIVERABLES {
-        file source_code "可运行前端（多文件项目，TypeScript / 组件框架）"
-        file tech_decision_json "技术栈选型 + 前沿候选比较 + generative 策略"
-        file self_review_json "完成项 + 交互完整性 + 已知缺口 + 修复建议"
-    }
-
-    META {
-        string case_id
-        string pipeline_version "如 v4"
-        string generated_date "YYYYMMDD"
-        string domain
-        string selected_stack
-        array component_library_used "如 magicui reactbits"
-        bool uses_visual_effects
-        string interaction_completeness
-    }
-
-    INPUT ||--|| PM_AGENT : "触发"
-    PM_AGENT ||--|{ PM_DELIVERABLES : "产出"
-    PM_DELIVERABLES ||--|| DESIGNER_AGENT : "输入"
-    DESIGNER_AGENT ||--|{ DESIGNER_DELIVERABLES : "产出"
-    DESIGNER_DELIVERABLES ||--|| FRONTEND_AGENT : "输入"
-    PM_DELIVERABLES ||--|| FRONTEND_AGENT : "补充输入"
-    FRONTEND_AGENT ||--|{ FRONTEND_DELIVERABLES : "产出"
-    PM_AGENT ||--|| META : "写入"
-    FRONTEND_AGENT ||--|| META : "更新"
-```
-
----
-
-## 4. 单次执行数据流（时序）
-
-下图展示单个 case 从触发到归档的完整时序。
+## 4. 单次执行时序
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant WDP  as Web Design Pipeline
-    participant PM   as PM Agent
-    participant SRCH as WebSearch
-    participant DI   as design-inspiration-ai
-    participant UU   as ui-ux-pro-max
-    participant D    as Designer Agent
-    participant GU   as generative-ui
-    participant FE   as Frontend Agent
-    participant FS   as File System
+    participant P as Pipeline
+    participant PM as PM Agent
+    participant D as Designer Agent
+    participant W as WebSearch
+    participant FE as Frontend Agent
+    participant S as init/bundle scripts
+    participant FS as File System
 
-    User ->> WDP : query / test JSON
+    User->>P: query 或测试记录
+    P->>FS: 创建 outputs/{case}@v8_{date}/
+    P->>PM: 输入需求和 case 路径
+    PM->>FS: 写入 01_pm/prdSpec.json
 
-    WDP ->> FS : 创建 outputs/{case_id}@v{N}_{YYYYMMDD}/
-    WDP ->> PM : 传入 query + case 目录
-    PM ->> FS : 写入 01_pm/prd.md
-    PM ->> FS : 写入 01_pm/requirement_breakdown.json
-    PM ->> FS : 写入 01_pm/ia_structure.json
+    P->>D: 传入 prdSpec.json
+    D->>W: 执行 3-5 次实时风格调研
+    W-->>D: 趋势信号和参考证据
+    D->>FS: 写入 02_designer/design_brief.md
 
-    WDP ->> D : 传入 01_pm/ + asset-library 路径
-    D ->> DI : 读取 SKILL.md，执行 STEP 1.5
-    DI ->> SRCH : 3~5 次 WebSearch
-    SRCH -->> DI : 趋势信号 + 参考案例
-    DI -->> D : 趋势洞察摘要
-    D ->> UU : 读取 SKILL.md，调用 search.py
-    UU -->> D : 设计资产查询结果
-    D ->> FS : 写入 02_designer/style_research.md
-    D ->> FS : 写入 02_designer/design_system.json
-    D ->> FS : 写入 02_designer/component_specs.json
-    D ->> FS : 写入 02_designer/design_brief.md
-    D ->> FS : 写入 02_designer/visual_effects.json
-    D ->> FS : 沉淀结论到 uiux-asset-library/
-
-    WDP ->> FE : 传入 01_pm/ + 02_designer/
-    FE ->> FS : 写入 03_frontend/tech_decision.json
-    alt visual_effects.json 建议生成式视觉层
-        FE ->> GU : 读取 SKILL.md
-        note over GU: Mode A 背景层<br/>Mode B 交互组件<br/>Mode C 算法艺术<br/>Mode D 动效组件库（MagicUI/ReactBits/AnimateUI）
-        GU -->> FE : 工程约束 + 实现模式 + MCP 安装命令
-    end
-    FE ->> FS : 写入 03_frontend/ 多文件源码
-    FE ->> FS : 写入 03_frontend/self_review.json
-    WDP ->> FS : 更新 meta.json
-    note over WDP,FS: 写入 pipeline_version / generated_date / status
-
-    WDP -->> User : 汇报栈选择、设计方向与交付物路径
+    P->>FE: 传入 prdSpec.json + design_brief.md
+    FE->>S: init-artifact.sh 初始化 _build
+    S->>FS: 写入 React/Vite/Tailwind/shadcn 工程
+    FE->>FS: 注入主题并实现组件、状态和交互
+    FE->>S: bundle-artifact.sh 构建
+    S->>FS: 生成 _build/bundle.html
+    FE->>FS: 移动为 03_frontend/bundle.html
+    Note over FE,FS: v8.1 保留完整 _build/
+    FE-->>P: 返回文件存在性、DOCTYPE 与体积检查结果
+    P-->>User: 汇报产物路径和关键决策
 ```
 
----
+Designer 必须先取得真实 WebSearch 结果再写设计结论。Frontend 直接执行构建，不在 Agent 内通过 dev server 或浏览器工具进行反复验收，以避免无终止循环。
 
-## 5. 输出目录结构
-
-每个 case 的标准归档格式如下（`v4` 起）。
-
-```text
-outputs/
-├── v1-pipeline/                       # v1 历史存档（只读）
-├── v2-pipeline/                       # v2 历史存档（只读）
-├── v3-pipeline/                       # v3 历史存档（只读）
-└── {case_id}@v{N}_{YYYYMMDD}/         # v4 起，如 010_meeting-collab@v4_20260315
-    ├── meta.json                      # case 元数据：版本、日期、域、技术栈、状态
-    │
-    ├── 01_pm/
-    │   ├── prd.md                     # 产品需求文档（面向下游 agent）
-    │   ├── requirement_breakdown.json # MoSCoW 需求拆解
-    │   └── ia_structure.json          # 信息架构（页面结构 + 用户流）
-    │
-    ├── 02_designer/
-    │   ├── style_research.md          # 趋势调研、generative 调研、方向探索、最终选型
-    │   ├── design_brief.md            # 给 Frontend 的执行摘要（含组件联动清单）
-    │   ├── design_system.json         # 色彩、排版、间距、动效 token + generative 参数
-    │   ├── component_specs.json       # 组件清单、状态、交互规范、组件间联动
-    │   └── visual_effects.json        # 特效建议与组件库选择
-    │
-    └── 03_frontend/
-        ├── [框架惯用结构]/             # 多文件项目，按所选框架自由组织
-        ├── src/generative/            # Canvas / WebGL / p5.js / Three.js 模块
-        ├── tech_decision.json         # 技术决策、前沿候选比较、generative 策略
-        └── self_review.json           # 完成项、交互完整性、已知缺口、修复候选
-
-.agents/skills/web-design-pipeline/references/uiux-asset-library/
-├── trend-notes/                       # 跨 case 趋势观察
-├── style-recipes/                     # 可复用风格配方
-├── palette-strategies/                # 配色策略
-├── motion-patterns/                   # 动效模式
-├── generative-recipes/                # generative 视觉与代码艺术组合策略
-└── anti-patterns.md                   # 同质化风险清单
-```
-
----
-
-## 6. 技术栈选型决策树
-
-这是 Frontend Agent 在 `tech_decision.json` 中做出的核心判断。本项目以视觉品质优先，不按实现成本排序。
+## 5. 前端构建链路
 
 ```mermaid
 flowchart TD
-    Q1{页面主要目标}
-
-    Q1 -->|"复杂交互 · 状态管理 · SaaS / AI 工具"| Q2{是否需要 SSR / SEO？}
-    Q1 -->|"强交互 · 动画性能优先 · 轻量交付"| SV["svelte / sveltekit\n轻量、响应快\nThrelte 可做 3D"]
-    Q1 -->|"内容结构明确 · 组件编排复杂"| VU["vue / nuxt\nTresJS 可做 3D"]
-    Q1 -->|"极简展示 · 快速验证"| AS["astro / vite + TypeScript\n门槛低，仍建议 TS"]
-
-    Q2 -->|"是"| NX["nextjs\nSSR / ISR / API routes"]
-    Q2 -->|"否"| RC["react\nhooks、状态管理、组件复用"]
-
-    RC --> Q3
-    NX --> Q3
-    SV --> Q3
-    VU --> Q3
-    AS --> Q3
-
-    Q3{是否需要视觉增强层？}
-
-    Q3 -->|"文字动效 · 特效背景 · 品牌组件"| MD["Mode D 动效组件库\nMagicUI / ReactBits / AnimateUI\n通过 MCP 安装（仅 React / Next.js）"]
-    Q3 -->|"算法生成视觉 · 氛围背景层"| MA["Mode A\nCanvas 2D / p5.js\nPerlin noise、流场、粒子"]
-    Q3 -->|"GPU 级质感 · shader · 大规模粒子"| WGL["Mode A WebGL\nThree.js / React Three Fiber\nGLSL shader"]
-    Q3 -->|"交互组件 · 数据可视化"| MB["Mode B\nCanvas / D3 / Chart.js\n图表、模拟器等交互组件"]
-    Q3 -->|"独立算法艺术作品"| MC["Mode C\np5.js + seeded randomness\n算法艺术"]
-    Q3 -->|"无明确需求 / 偏内容型"| DONE["✅ 按基础选型交付"]
-
-    MD --> DONE
-    MA --> DONE
-    WGL --> DONE
-    MB --> DONE
-    MC --> DONE
-
-    NOTE["说明：Mode 可组合\n例如 Mode D + Mode A\n= 动效组件 + 自写生成背景"]
-    NOTE -.-> DONE
+    A["init-artifact.sh"] --> B["React 18 + TypeScript + Vite"]
+    B --> C["Tailwind 3.4 + shadcn/ui 预装组件"]
+    C --> D["注入 design_brief Block A / Block B"]
+    D --> E["实现 App、组件、状态和交互"]
+    E --> F["按需 pnpm add 视觉库"]
+    F --> G["bundle-artifact.sh"]
+    G --> H["Parcel 构建"]
+    H --> I["html-inline 内联资源"]
+    I --> J["03_frontend/bundle.html"]
+    I --> K["保留 03_frontend/_build/"]
 ```
 
----
+工程约束：
 
-## 7. 管线版本与迭代
+- 禁止 Tailwind CDN 和运行时 `tailwind.config = {}` 字面量。
+- 主题由 shadcn HSL CSS 变量与 `theme.extend` 共同驱动。
+- 第三方库使用 npm 依赖，不通过 CDN 引入。
+- `main.tsx` 必须使用 Root Error Boundary 包裹 `<App />`。
+- 浏览器通过 `file://` 加载时不得依赖服务端路由、运行时模块请求或开发服务器。
+- v8.1 禁用 p5.js；需要粒子、噪声或生成纹理时使用兼容 Parcel 和单文件加载的替代实现。
 
-| 版本 | 日期 | 主要变更 |
-|------|------|----------|
-| v1 | 2026 早期 | 基本流水线，单阶段生成，测试集批量跑通 |
-| v2 | 2026 早期 | 三阶段流水线（PM → Designer → Frontend），uiux-asset-library 资产沉淀 |
-| v3 | 2026 早期 | generative-ui skill，强制多文件 TS 交付，禁纯静态 HTML，视觉品质门槛 |
-| **v4** | **2026-03-15** | **动效组件库层（Mode D）+ MCP 集成 + 输出目录命名规范 + 结构模板解放** |
+## 6. 状态与交互模型
 
-详细变更记录见：`.agents/skills/web-design-pipeline/CHANGELOG.md`
+页面被视为有状态的交互系统，而不是静态截图集合。Frontend 至少需要覆盖与需求相关的这些状态转换：
 
-| 扩展点 | 操作 |
-|--------|------|
-| 增加新的独立工具 | 在 `.agents/skills/designer/` 或 `.agents/skills/frontend/` 下新建目录 |
-| 调整 Pipeline 某阶段行为 | 修改 `.agents/skills/web-design-pipeline/agents/<agent>.md` |
-| 增加输出格式 | 更新 `references/output-structure.md` + 对应 agent prompt |
-| 沉淀设计资产 | 直接写入 `references/uiux-asset-library/` 对应子目录 |
-| 调整技术栈选型逻辑 | 修改 `frontend-agent.md` 的选型建议部分 |
-| 管线版本升级 | 更新 `SKILL.md` 版本号 + `output-structure.md` 命名格式 + 追加 `CHANGELOG.md` |
+```mermaid
+stateDiagram-v2
+    [*] --> Initializing
+    Initializing --> Ready: 初始数据完成
+    Initializing --> Error: 初始化失败
+    Ready --> Loading: 提交、搜索或切换
+    Loading --> Success: 操作成功
+    Loading --> Error: 操作失败
+    Success --> Ready: 反馈完成
+    Error --> Ready: 重试或恢复
+    Ready --> Empty: 筛选结果为空
+    Empty --> Ready: 清除筛选或新增数据
+```
+
+具体实现由 `prdSpec.json` 和 `design_brief.md` 决定，但导航、筛选、排序、表单校验、组件联动、加载、空状态、错误恢复和过渡动画不能只保留视觉外壳。
+
+## 7. 归档结构与生命周期
+
+```text
+outputs/{case_id}@v8_{YYYYMMDD}/
+├── meta.json
+├── 01_pm/
+│   └── prdSpec.json
+├── 02_designer/
+│   └── design_brief.md
+└── 03_frontend/
+    ├── bundle.html
+    └── _build/
+        ├── package.json
+        ├── tailwind.config.js
+        ├── postcss.config.js
+        ├── tsconfig.json
+        ├── vite.config.ts
+        ├── index.html
+        ├── node_modules/
+        └── src/
+```
+
+生命周期规则：
+
+1. Pipeline 创建 case 目录和三个阶段目录。
+2. 每个 Agent 只写自己的阶段目录，下游通过文件契约读取上游结果。
+3. `bundle.html` 构建成功后从 `_build/` 移到 `03_frontend/` 一级。
+4. `_build/` 和其中的 `node_modules/` 默认保留；磁盘紧张时可由用户手动删除 `node_modules/`。
+5. 删除依赖后可在 `_build/` 运行 `pnpm install` 恢复开发环境。
+
+## 8. 后处理与遗留边界
+
+```mermaid
+flowchart LR
+    CASE["已完成 case"] --> API["batch_synth_causal_chains.py"]
+    CASE --> CURSOR["run_cursor_agent_batch_causal_chain.sh"]
+    API --> JSONL["因果链 JSONL"]
+    CURSOR --> JSON["每 case 因果链 JSON"]
+    CASE -.-> LONG["slow-think-long-chain skill"]
+
+    OLD["batch_web_design_pipeline.py"] --> V4["v4 骨架 + 旧 .agents 路径 + 旧交付清单"]
+    V4 -.->|"不能视为 v8.1 数据契约"| CASE
+```
+
+边界判断：
+
+- `.cursor/skills/slow-think-*` 是训练数据合成规范，不是页面生成 Agent。
+- `batch_synth_causal_chains.py` 能递归读取部分 v8.1 `_build/src` 文件，但其提示规范仍含旧产物字段，不能据此推断已经完成 v8.1 迁移。
+- `batch_web_design_pipeline.py` 当前默认 `--pipeline-version 4`，并生成 `.agents/skills/web-design-pipeline/...` 路径及 `prd.md`、多份 Designer JSON、`tech_decision.json` 等旧交付清单。
+- 在脚本迁移完成前，v8.1 的可靠入口是 `.claude/skills/web-design-pipeline/SKILL.md` 驱动的 Agent 流程。
+
+## 9. 规则优先级与冲突
+
+当前仓库存在版本迁移未完全收尾的问题。执行时采用以下优先级：
+
+1. `references/output-structure.md`：v8.1 目录和保留策略。
+2. `frontend-agent.md` + `references/engineering-guardrails.md`：当前实现行为。
+3. `SKILL.md`：顶层编排意图。
+4. 根目录 `scripts/`：尚未迁移的批处理行为。
+
+已确认的冲突：
+
+| 冲突点 | 旧描述 | 当前 v8.1 口径 |
+| --- | --- | --- |
+| 版本元数据 | `SKILL.md` front matter 仍为 `version: 8.0` | `CHANGELOG.md`、`output-structure.md` 为 v8.1 |
+| `_build/` 生命周期 | `SKILL.md` 部分段落要求删除 | `output-structure.md`、`frontend-agent.md` 要求保留 |
+| p5.js | `SKILL.md` 仍列为可选 npm 包 | v8.1 输出与工程规范禁用 |
+| 批量建壳 | v4 默认值与 `.agents` 路径 | 主实现位于 `.claude`，输出契约为三份核心文件 |
+| 慢思考输入 | 依赖旧版多文件产物 | v8.1 核心产物已收敛，需适配后再作为稳定工具 |
+
+这份架构文档描述当前可执行口径，但不把上述代码和规则冲突伪装成已修复。
+
+## 10. 变更落点
+
+| 变更目标 | 应修改的位置 |
+| --- | --- |
+| 调整顶层流程或适用场景 | `.claude/skills/web-design-pipeline/SKILL.md` |
+| 修改需求 Schema | `.claude/agents/pm-agent.md`，并同步 Designer/Frontend 消费规则 |
+| 修改设计交付格式 | `.claude/agents/designer-agent.md` 与 `design-guardrails.md` |
+| 修改前端栈或打包方式 | `.claude/agents/frontend-agent.md`、`engineering-guardrails.md` 与两个本地脚本 |
+| 修改 case 目录或保留策略 | `references/output-structure.md`，再同步所有 Agent 和辅助脚本 |
+| 升级管线版本 | `SKILL.md`、`CHANGELOG.md`、`output-structure.md`、Agent 描述和批处理脚本同时更新 |
+| 适配 v8.1 训练数据合成 | `.cursor/skills/slow-think-*` 与 `scripts/batch_synth_causal_chains.py` |

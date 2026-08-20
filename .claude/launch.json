@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "travel-journal",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3131", "outputs/travel-photo-journal@v7_20260509/03_frontend"],
+      "port": 3131
+    },
+    {
+      "name": "wishlist-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "outputs/wishlist-tracker@v8_20260515/03_frontend/_build", "dev", "--port", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "wishlist-bundle",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4173", "outputs/wishlist-tracker@v8_20260515/03_frontend"],
+      "port": 4173
+    }
+  ]
+}

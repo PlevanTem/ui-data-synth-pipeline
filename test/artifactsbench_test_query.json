@@ -1,0 +1,62 @@
+[
+    {
+      "index": 234,
+      "question": "Generate a single HTML5 app. Create a webpage showing the moon's phase changes from the first to the thirtieth day of the lunar calendar.",
+      "class": "Web Applications-Education/Learning",
+      "difficulty": "hard"
+    },
+    {
+      "index": 1285,
+      "question": "Generate a single HTML5 app. Create a web-based intelligent music player that can automatically add playlists for different times and play the scheduled music when the time arrives. Please provide detailed implementation process and complete code.",
+      "class": "Web Applications-Entertainment",
+      "difficulty": "hard"
+    },
+    {
+      "index": 710,
+      "question": "Generate a single HTML5 app. Build a 5-in-1 payment system frontend template in doce language for: 1. Meituan / 2. JD / 3. Pinduoduo / 4. DiDi / 5. Ctrip, each template should have its own dedicated title name.\n\nThis system is based on a semi-finished product that has been further developed and fixed. Many versions in the market have detail issues, but I have fixed many of these details. Mine is the only version on the market with these fixes. If anyone disagrees, they can compare their site with mine - I can definitely identify many problems!\n\n|  Payment Status | Order Cancellation | Order Delivery |\n| Order Expiration | Payment Success | Jump to Official Page |",
+      "class": "Web Applications-Online Shopping",
+      "difficulty": "hard"
+    },
+    {
+      "index": 343,
+      "question": "Generate a single HTML5 app. Help me create an interactive HTML page for classroom group scoring. I will provide a student list, and teachers can directly award points to groups or individual students during class, with all points summed into group totals. The page should also include a random student selection function. The interface should be clean and visually appealing. Please generate the code.",
+      "class": "Web Applications-Education/Learning",
+      "difficulty": "easy"
+    },
+    {
+      "index": 398,
+      "question": "Generate a single HTML5 app. Write an HTML text-to-speech program that categorizes voices by language, with a rich variety of voice options. Include support for downloading audio, pausing and resuming playback, and provide a good user interface and interaction experience. Use responsive design to adapt to different screen sizes.",
+      "class": "Web Applications-Communication",
+      "difficulty": "easy"
+    },
+    {
+      "index": 218,
+      "question": "Generate a single HTML5 app. Help me create an HTML webpage that compares chip performance.",
+      "class": "Web Applications-Education/Learning",
+      "difficulty": "medium"
+    },
+    {
+      "index": 456,
+      "question": "Generate a single HTML5 app. Please help me create a website for selling products, with diverse functionality, minimalist design, and a strong tech-oriented feel.",
+      "class": "Web Applications-Online Shopping",
+      "difficulty": "medium"
+    },
+    {
+      "index": 579,
+      "question": "Generate a single HTML5 app. Design a blog recommendation system that displays a list of related recommended blogs at the bottom of the blog detail page. The blog recommendations should be based on article tags and content relevance.",
+      "class": "Web Applications-Blogs/Forums",
+      "difficulty": "hard"
+    },
+    {
+      "index": 1381,
+      "question": "Generate a single HTML5 app. Help me write a web code for an anesthesia record form, then verify if the web code can run properly. If not, modify it again until it's perfect.",
+      "class": "Web Applications-Education/Learning",
+      "difficulty": "hard"
+    },
+    {
+      "index": 303,
+      "question": "Generate a single HTML5 app. Now, start creating a capsule page according to your design concept:\n\nUse a step-by-step design, for example:\nInput title and description.\nUpload images or videos.\nSet opening time (supporting date and time picker).\nAdd tags (optional).\n\nRich text editor:\nSupport text formatting (bold, italic, underline, etc.).\nSupport inserting images, videos, emoticons, etc.\n\nAnimation effects:\nAdd a \"capsule sealed\" animation effect (such as capsule closing, time-lapse animation) after the user completes creation.",
+      "class": "Web Applications-Other",
+      "difficulty": "easy"
+    }
+  ]
